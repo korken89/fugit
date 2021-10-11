@@ -1,6 +1,8 @@
 use super::{helpers::Helpers, Ratio};
 use core::cmp::Ordering;
+use std::ops;
 
+#[derive(Clone, Copy)]
 pub struct Duration<const NOM: u32, const DENOM: u32> {
     pub ticks: u32,
 }
@@ -19,9 +21,9 @@ impl<const NOM: u32, const DENOM: u32> Duration<NOM, DENOM> {
 }
 
 impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
-    PartialOrd<Duration<L_NOM, L_DENOM>> for Duration<R_NOM, R_DENOM>
+    PartialOrd<Duration<R_NOM, R_DENOM>> for Duration<L_NOM, L_DENOM>
 {
-    fn partial_cmp(&self, other: &Duration<L_NOM, L_DENOM>) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &Duration<R_NOM, R_DENOM>) -> Option<Ordering> {
         //
         // We want to check:
         //
@@ -61,9 +63,9 @@ impl<const NOM: u32, const DENOM: u32> Ord for Duration<NOM, DENOM> {
 }
 
 impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
-    PartialEq<Duration<L_NOM, L_DENOM>> for Duration<R_NOM, R_DENOM>
+    PartialEq<Duration<R_NOM, R_DENOM>> for Duration<L_NOM, L_DENOM>
 {
-    fn eq(&self, other: &Duration<L_NOM, L_DENOM>) -> bool {
+    fn eq(&self, other: &Duration<R_NOM, R_DENOM>) -> bool {
         if Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::SAME_BASE {
             // If we are in the same base, comparison in trivial
             self.ticks.eq(&other.ticks)
@@ -85,3 +87,25 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
 }
 
 impl<const NOM: u32, const DENOM: u32> Eq for Duration<NOM, DENOM> {}
+
+// Duration - Duration = Duration
+impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
+    ops::Sub<Duration<R_NOM, R_DENOM>> for Duration<L_NOM, L_DENOM>
+{
+    type Output = Duration<R_NOM, R_DENOM>;
+
+    fn sub(self, other: Duration<R_NOM, R_DENOM>) -> Self::Output {
+        todo!()
+    }
+}
+
+// Duration + Duration = Duration
+impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
+    ops::Add<Duration<R_NOM, R_DENOM>> for Duration<L_NOM, L_DENOM>
+{
+    type Output = Duration<R_NOM, R_DENOM>;
+
+    fn add(self, other: Duration<R_NOM, R_DENOM>) -> Self::Output {
+        todo!()
+    }
+}

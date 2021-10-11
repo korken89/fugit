@@ -19,8 +19,8 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
     Helpers<L_NOM, L_DENOM, R_NOM, R_DENOM>
 {
     pub const DIVISOR: u32 = gcd_binary_u32(L_DENOM * R_NOM, R_DENOM * L_NOM);
-    pub const RH_CHECK: u32 = (R_DENOM * L_NOM) / Self::DIVISOR;
-    pub const LH_CHECK: u32 = (L_DENOM * R_NOM) / Self::DIVISOR;
+    pub const LH_CHECK: u32 = (R_DENOM * L_NOM) / Self::DIVISOR;
+    pub const RH_CHECK: u32 = (L_DENOM * R_NOM) / Self::DIVISOR;
     pub const SAME_BASE: bool = Self::RH_CHECK == Self::LH_CHECK;
 
     // TODO: Add asserting method for giving compile time errors
