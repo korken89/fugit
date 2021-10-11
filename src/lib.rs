@@ -60,20 +60,25 @@ pub mod helpers {
     }
 }
 
+pub struct Ratio {
+    pub nom: u32,
+    pub denom: u32,
+}
+
 pub mod duration {
     use core::cmp::Ordering;
+    use super::Ratio;
 
     pub struct Duration<const NOM: u32, const DENOM: u32> {
         pub value: u32,
     }
 
     impl<const NOM: u32, const DENOM: u32> Duration<NOM, DENOM> {
-        pub const fn nom() -> u32 {
-            NOM
-        }
-
-        pub const fn denom() -> u32 {
-            DENOM
+        pub const fn ratio() -> Ratio {
+            Ratio {
+                nom: NOM,
+                denom: DENOM,
+            }
         }
     }
 
@@ -106,8 +111,35 @@ pub mod instant {
     }
 }
 
-const U: u32 = helpers::gcd_binary_u32(10_000, 480_000_000);
+#[cfg(test)]
+mod test {
+    #[test]
+    fn duration_compare() {
+        todo!()
+    }
 
-fn main() {
-    println!("U: {}", U);
+    #[test]
+    fn instant_compare() {
+        todo!()
+    }
+
+    #[test]
+    fn instant_duration_math() {
+        todo!()
+    }
+
+    #[test]
+    fn duration_duration_math() {
+        todo!()
+    }
+
+    #[test]
+    fn duration_ratio_conversion() {
+        todo!()
+    }
+
+    #[test]
+    fn instant_ratio_conversion() {
+        todo!()
+    }
 }
