@@ -1,7 +1,7 @@
 use crate::duration::Duration;
 use std::ops;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Instant<const NOM: u32, const DENOM: u32> {
     pub ticks: u32,
 }

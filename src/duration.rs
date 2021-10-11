@@ -2,7 +2,7 @@ use super::{helpers::Helpers, Ratio};
 use core::cmp::Ordering;
 use std::ops;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Duration<const NOM: u32, const DENOM: u32> {
     pub ticks: u32,
 }
@@ -45,11 +45,11 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
         } else {
             Some(
                 self.ticks
-                    .checked_mul(Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::LH_CHECK)?
+                    .checked_mul(Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::RD_TIMES_LN)?
                     .cmp(
                         &other
                             .ticks
-                            .checked_mul(Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::RH_CHECK)?,
+                            .checked_mul(Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::LD_TIMES_RN)?,
                     ),
             )
         }
@@ -72,10 +72,10 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
         } else {
             let lh = self
                 .ticks
-                .checked_mul(Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::LH_CHECK);
+                .checked_mul(Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::RD_TIMES_LN);
             let rh = other
                 .ticks
-                .checked_mul(Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::RH_CHECK);
+                .checked_mul(Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::LD_TIMES_RN);
 
             if let (Some(lh), Some(rh)) = (lh, rh) {
                 lh == rh

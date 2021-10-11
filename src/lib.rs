@@ -1,7 +1,6 @@
-/// Test PR
-
-pub mod helpers;
 pub mod duration;
+/// Test PR
+pub mod helpers;
 pub mod instant;
 
 pub struct Ratio {
@@ -37,17 +36,20 @@ mod test {
     }
 
     #[test]
+    fn duration_duration_math() {
+        assert_eq!(
+            Duration::<1, 10_000>::new(10) + Duration::<1, 1_000>::new(1),
+            Duration::<1, 1_000>::new(2)
+        );
+    }
+
+    #[test]
     fn instant_compare() {
         todo!()
     }
 
     #[test]
     fn instant_duration_math() {
-        todo!()
-    }
-
-    #[test]
-    fn duration_duration_math() {
         todo!()
     }
 
