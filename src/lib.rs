@@ -66,8 +66,8 @@ pub struct Ratio {
 }
 
 pub mod duration {
-    use core::cmp::Ordering;
     use super::Ratio;
+    use core::cmp::Ordering;
 
     pub struct Duration<const NOM: u32, const DENOM: u32> {
         pub value: u32,
