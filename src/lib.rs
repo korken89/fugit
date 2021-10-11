@@ -1,3 +1,5 @@
+/// Test PR
+
 pub mod helpers {
     /// Needed due to not being allowed to call const-fn in `PartialEq` fo some reasion
     /// get the error:
@@ -20,8 +22,8 @@ pub mod helpers {
         Helpers<L_NOM, L_DENOM, R_NOM, R_DENOM>
     {
         pub const DIVISOR: u32 = gcd_binary_u32(L_DENOM * R_NOM, R_DENOM * L_NOM);
-        pub const LH_CHECK: u32 = (R_DENOM * L_NOM) / Self::DIVISOR;
-        pub const RH_CHECK: u32 = (L_DENOM * R_NOM) / Self::DIVISOR;
+        pub const RH_CHECK: u32 = (R_DENOM * L_NOM) / Self::DIVISOR;
+        pub const LH_CHECK: u32 = (L_DENOM * R_NOM) / Self::DIVISOR;
 
         // TODO: Add asserting method for giving compile time errors
     }
@@ -66,11 +68,11 @@ pub struct Ratio {
 }
 
 pub mod duration {
-    use super::Ratio;
+    use super::{helpers::Helpers, Ratio};
     use core::cmp::Ordering;
 
     pub struct Duration<const NOM: u32, const DENOM: u32> {
-        pub value: u32,
+        pub ticks: u32,
     }
 
     impl<const NOM: u32, const DENOM: u32> Duration<NOM, DENOM> {
@@ -80,19 +82,40 @@ pub mod duration {
                 denom: DENOM,
             }
         }
+
+        pub const fn new(ticks: u32) -> Self {
+            Duration { ticks }
+        }
     }
 
     impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
         PartialOrd<Duration<L_NOM, L_DENOM>> for Duration<R_NOM, R_DENOM>
     {
         fn partial_cmp(&self, other: &Duration<L_NOM, L_DENOM>) -> Option<Ordering> {
-            // Lol this works
-            // let test = Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::LH_CHECK;
+            //
+            // We want to check:
+            //
+            // n_lh / d_lh * lh_ticks {cmp} n_rh / d_rh * rh_ticks
+            //
+            // simplify to
+            //
+            // n_lh * d_rh * lh_ticks {cmp} n_rh * d_lh * rh_ticks
+            //
+            // find gdc(n_lh * d_rh, n_rh * d_lh) and use that to make the constants minimal (done
+            // with the `helpers::Helpers` struct)
+            //
+            // then perform the comparison in a comparable basis
+            //
 
-            // This not
-            // const TEST: u32 = gcd_binary_u32(L_DENOM * R_NOM, R_DENOM * L_NOM);
-
-            todo!()
+            Some(
+                self.ticks
+                    .checked_mul(Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::LH_CHECK)?
+                    .cmp(
+                        &other
+                            .ticks
+                            .checked_mul(Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::RH_CHECK)?,
+                    ),
+            )
         }
     }
 
@@ -100,22 +123,53 @@ pub mod duration {
         PartialEq<Duration<L_NOM, L_DENOM>> for Duration<R_NOM, R_DENOM>
     {
         fn eq(&self, other: &Duration<L_NOM, L_DENOM>) -> bool {
-            todo!()
+            let lh = self
+                .ticks
+                .checked_mul(Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::LH_CHECK);
+            let rh = other
+                .ticks
+                .checked_mul(Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::RH_CHECK);
+
+            if let (Some(lh), Some(rh)) = (lh, rh) {
+                lh == rh
+            } else {
+                false
+            }
         }
     }
 }
 
 pub mod instant {
     pub struct Instant<const NOM: u32, const DENOM: u32> {
-        pub value: u32,
+        pub ticks: u32,
     }
 }
 
 #[cfg(test)]
 mod test {
+    use crate::duration::Duration;
+
     #[test]
     fn duration_compare() {
-        todo!()
+        // Same fraction
+        assert!(Duration::<1, 1_000>::new(2) > Duration::<1, 1_000>::new(1));
+        assert!(Duration::<1, 1_000>::new(2) >= Duration::<1, 1_000>::new(1));
+        assert!(Duration::<1, 1_000>::new(1) >= Duration::<1, 1_000>::new(1));
+        assert!(Duration::<1, 1_000>::new(1) < Duration::<1, 1_000>::new(2));
+        assert!(Duration::<1, 1_000>::new(1) <= Duration::<1, 1_000>::new(1));
+        assert!(Duration::<1, 1_000>::new(1) <= Duration::<1, 1_000>::new(2));
+        assert!(Duration::<1, 1_000>::new(1) == Duration::<1, 1_000>::new(1));
+        assert!(Duration::<1, 1_000>::new(1) != Duration::<1, 1_000>::new(2));
+
+        // Different fraction
+        assert!(Duration::<1, 10_000>::new(11) > Duration::<1, 1_000>::new(1));
+        assert!(Duration::<1, 10_000>::new(11) >= Duration::<1, 1_000>::new(1));
+        assert!(Duration::<1, 10_000>::new(10) >= Duration::<1, 1_000>::new(1));
+        assert!(Duration::<1, 10_000>::new(11) < Duration::<1, 1_000>::new(2));
+        assert!(Duration::<1, 10_000>::new(1) <= Duration::<1, 1_000>::new(1));
+        assert!(Duration::<1, 10_000>::new(10) <= Duration::<1, 1_000>::new(1));
+        assert!(Duration::<1, 10_000>::new(10) == Duration::<1, 1_000>::new(1));
+        assert!(Duration::<1, 10_000>::new(9) != Duration::<1, 1_000>::new(2));
     }
 
     #[test]
