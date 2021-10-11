@@ -92,6 +92,21 @@ pub mod duration {
         PartialOrd<Duration<L_NOM, L_DENOM>> for Duration<R_NOM, R_DENOM>
     {
         fn partial_cmp(&self, other: &Duration<L_NOM, L_DENOM>) -> Option<Ordering> {
+            //
+            // We want to check:
+            //
+            // n_lh / d_lh * lh_ticks {cmp} n_rh / d_rh * rh_ticks
+            //
+            // simplify to
+            //
+            // n_lh * d_rh * lh_ticks {cmp} n_rh * d_lh * rh_ticks
+            //
+            // find gdc(n_lh * d_rh, n_rh * d_lh) and use that to make the constants minimal (done
+            // with the `helpers::Helpers` struct)
+            //
+            // then perform the comparison in a comparable basis
+            //
+
             Some(
                 self.ticks
                     .checked_mul(Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::LH_CHECK)?
