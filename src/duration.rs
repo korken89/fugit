@@ -38,6 +38,7 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
         //
 
         if Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::SAME_BASE {
+            // If we are in the same base, comparison in trivial
             Some(self.ticks.cmp(&other.ticks))
         } else {
             Some(
@@ -64,6 +65,7 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
 {
     fn eq(&self, other: &Duration<L_NOM, L_DENOM>) -> bool {
         if Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::SAME_BASE {
+            // If we are in the same base, comparison in trivial
             self.ticks.eq(&other.ticks)
         } else {
             let lh = self
