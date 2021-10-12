@@ -28,6 +28,34 @@ impl<const NOM: u32, const DENOM: u32> Instant<NOM, DENOM> {
         }
     }
 
+    pub const fn checked_sub_duration<const O_NOM: u32, const O_DENOM: u32>(
+        self,
+        other: Duration<O_NOM, O_DENOM>,
+    ) -> Option<Self> {
+        if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
+            if let Some(ticks) = self.ticks.checked_sub(other.ticks()) {
+                Some(Instant::new(ticks))
+            } else {
+                None
+            }
+        } else {
+            if let Some(lh) = other
+                .ticks()
+                .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN)
+            {
+                let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN;
+
+                if let Some(ticks) = self.ticks.checked_sub(ticks) {
+                    Some(Instant::new(ticks))
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        }
+    }
+
     pub const fn checked_add_duration<const O_NOM: u32, const O_DENOM: u32>(
         self,
         other: Duration<O_NOM, O_DENOM>,
@@ -77,7 +105,7 @@ impl<const NOM: u32, const DENOM: u32> PartialEq for Instant<NOM, DENOM> {
 
 impl<const NOM: u32, const DENOM: u32> Eq for Instant<NOM, DENOM> {}
 
-// Instant - Instant = Instant
+// Instant - Instant = Duration
 impl<const NOM: u32, const DENOM: u32> ops::Sub<Instant<NOM, DENOM>> for Instant<NOM, DENOM> {
     type Output = Duration<NOM, DENOM>;
 
@@ -86,6 +114,21 @@ impl<const NOM: u32, const DENOM: u32> ops::Sub<Instant<NOM, DENOM>> for Instant
             v
         } else {
             panic!("Sub failed! Other > self");
+        }
+    }
+}
+
+// Instant + Duration = Instant
+impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
+    ops::Sub<Duration<R_NOM, R_DENOM>> for Instant<L_NOM, L_DENOM>
+{
+    type Output = Instant<L_NOM, L_DENOM>;
+
+    fn sub(self, other: Duration<R_NOM, R_DENOM>) -> Self::Output {
+        if let Some(v) = self.checked_sub_duration(other) {
+            v
+        } else {
+            panic!("Add failed! Overflow");
         }
     }
 }

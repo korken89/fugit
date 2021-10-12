@@ -83,6 +83,22 @@ mod test {
 
     #[test]
     fn instant_duration_math() {
-        todo!()
+        // Instant - Instant, Same base
+        let sum: Duration<1, 1_000> = Instant::<1, 1_000>::new(10) - Instant::<1, 1_000>::new(1);
+        assert_eq!(sum, Duration::<1, 1_000>::new(9));
+
+        // Instant + Duration, Same base
+        let sum: Instant<1, 1_000> = Instant::<1, 1_000>::new(10) + Duration::<1, 1_000>::new(1);
+        assert_eq!(sum, Instant::<1, 1_000>::new(11));
+
+        let diff: Instant<1, 1_000> = Instant::<1, 1_000>::new(10) - Duration::<1, 1_000>::new(1);
+        assert_eq!(diff, Instant::<1, 1_000>::new(9));
+
+        // Instant - Duration, Different base
+        let sum: Instant<1, 10_000> = Instant::<1, 10_000>::new(10) + Duration::<1, 1_000>::new(1);
+        assert_eq!(sum, Instant::<1, 10_000>::new(20));
+
+        let diff: Instant<1, 10_000> = Instant::<1, 10_000>::new(10) - Duration::<1, 1_000>::new(1);
+        assert_eq!(diff, Instant::<1, 10_000>::new(0));
     }
 }
