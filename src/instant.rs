@@ -20,9 +20,9 @@ impl<const NOM: u32, const DENOM: u32> Instant<NOM, DENOM> {
         self.ticks
     }
 
-    pub const fn checked_duration_since(self, other: Self) -> Option<Duration<NOM, DENOM>> {
-        if let Some(v) = self.ticks.checked_sub(other.ticks) {
-            Some(Duration::new(v))
+    pub fn checked_duration_since(self, other: Self) -> Option<Duration<NOM, DENOM>> {
+        if self >= other {
+            Some(Duration::new(self.ticks.wrapping_sub(other.ticks)))
         } else {
             None
         }
@@ -33,11 +33,7 @@ impl<const NOM: u32, const DENOM: u32> Instant<NOM, DENOM> {
         other: Duration<O_NOM, O_DENOM>,
     ) -> Option<Self> {
         if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
-            if let Some(ticks) = self.ticks.checked_sub(other.ticks()) {
-                Some(Instant::new(ticks))
-            } else {
-                None
-            }
+            Some(Instant::new(self.ticks.wrapping_sub(other.ticks())))
         } else {
             if let Some(lh) = other
                 .ticks()
@@ -45,11 +41,7 @@ impl<const NOM: u32, const DENOM: u32> Instant<NOM, DENOM> {
             {
                 let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN;
 
-                if let Some(ticks) = self.ticks.checked_sub(ticks) {
-                    Some(Instant::new(ticks))
-                } else {
-                    None
-                }
+                Some(Instant::new(self.ticks.wrapping_sub(ticks)))
             } else {
                 None
             }
@@ -61,11 +53,7 @@ impl<const NOM: u32, const DENOM: u32> Instant<NOM, DENOM> {
         other: Duration<O_NOM, O_DENOM>,
     ) -> Option<Self> {
         if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
-            if let Some(ticks) = self.ticks.checked_add(other.ticks()) {
-                Some(Instant::new(ticks))
-            } else {
-                None
-            }
+            Some(Instant::new(self.ticks.wrapping_add(other.ticks())))
         } else {
             if let Some(lh) = other
                 .ticks()
@@ -73,11 +61,7 @@ impl<const NOM: u32, const DENOM: u32> Instant<NOM, DENOM> {
             {
                 let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN;
 
-                if let Some(ticks) = self.ticks.checked_add(ticks) {
-                    Some(Instant::new(ticks))
-                } else {
-                    None
-                }
+                Some(Instant::new(self.ticks.wrapping_add(ticks)))
             } else {
                 None
             }
