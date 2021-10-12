@@ -106,6 +106,11 @@ mod test {
 
     #[test]
     fn instant_compare() {
+        // Wrapping
+        assert!(Instant::<1, 1_000>::new(1) > Instant::<1, 1_000>::new(u32::MAX));
+        assert!(Instant::<1, 1_000>::new(u32::MAX - 1) < Instant::<1, 1_000>::new(u32::MAX));
+
+        // Non-wrapping
         assert!(Instant::<1, 1_000>::new(2) > Instant::<1, 1_000>::new(1));
         assert!(Instant::<1, 1_000>::new(2) >= Instant::<1, 1_000>::new(1));
         assert!(Instant::<1, 1_000>::new(1) >= Instant::<1, 1_000>::new(1));
