@@ -87,13 +87,20 @@ impl<const NOM: u32, const DENOM: u32> Instant<NOM, DENOM> {
 
 impl<const NOM: u32, const DENOM: u32> PartialOrd for Instant<NOM, DENOM> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.ticks.partial_cmp(&other.ticks)
+        Some(self.cmp(other))
     }
 }
 
 impl<const NOM: u32, const DENOM: u32> Ord for Instant<NOM, DENOM> {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.ticks.cmp(&other.ticks)
+        if self.ticks == other.ticks {
+            Ordering::Equal
+        } else {
+            self.ticks
+                .wrapping_sub(other.ticks)
+                .cmp(&(u32::MAX / 2))
+                .reverse()
+        }
     }
 }
 
@@ -106,6 +113,9 @@ impl<const NOM: u32, const DENOM: u32> PartialEq for Instant<NOM, DENOM> {
 impl<const NOM: u32, const DENOM: u32> Eq for Instant<NOM, DENOM> {}
 
 // Instant - Instant = Duration
+// We have limited this to use same numerator and denominator in both left and right hand sides,
+// this allows for the extension traits to work. For usage with different fraction, use
+// `checked_duration_since`.
 impl<const NOM: u32, const DENOM: u32> ops::Sub<Instant<NOM, DENOM>> for Instant<NOM, DENOM> {
     type Output = Duration<NOM, DENOM>;
 
@@ -118,28 +128,30 @@ impl<const NOM: u32, const DENOM: u32> ops::Sub<Instant<NOM, DENOM>> for Instant
     }
 }
 
-// Instant + Duration = Instant
-impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
-    ops::Sub<Duration<R_NOM, R_DENOM>> for Instant<L_NOM, L_DENOM>
-{
-    type Output = Instant<L_NOM, L_DENOM>;
+// Instant - Duration = Instant
+// We have limited this to use same numerator and denominator in both left and right hand sides,
+// this allows for the extension traits to work. For usage with different fraction, use
+// `checked_sub_duration`.
+impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<NOM, DENOM>> for Instant<NOM, DENOM> {
+    type Output = Instant<NOM, DENOM>;
 
-    fn sub(self, other: Duration<R_NOM, R_DENOM>) -> Self::Output {
+    fn sub(self, other: Duration<NOM, DENOM>) -> Self::Output {
         if let Some(v) = self.checked_sub_duration(other) {
             v
         } else {
-            panic!("Add failed! Overflow");
+            panic!("Sub failed! Overflow");
         }
     }
 }
 
 // Instant + Duration = Instant
-impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
-    ops::Add<Duration<R_NOM, R_DENOM>> for Instant<L_NOM, L_DENOM>
-{
-    type Output = Instant<L_NOM, L_DENOM>;
+// We have limited this to use same numerator and denominator in both left and right hand sides,
+// this allows for the extension traits to work. For usage with different fraction, use
+// `checked_add_duration`.
+impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<NOM, DENOM>> for Instant<NOM, DENOM> {
+    type Output = Instant<NOM, DENOM>;
 
-    fn add(self, other: Duration<R_NOM, R_DENOM>) -> Self::Output {
+    fn add(self, other: Duration<NOM, DENOM>) -> Self::Output {
         if let Some(v) = self.checked_add_duration(other) {
             v
         } else {

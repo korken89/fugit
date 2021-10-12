@@ -1,3 +1,4 @@
+pub mod clock;
 pub mod duration;
 pub mod helpers;
 pub mod instant;
@@ -28,6 +29,40 @@ mod test {
         assert!(Duration::<1, 10_000>::new(10) <= Duration::<1, 1_000>::new(1));
         assert!(Duration::<1, 10_000>::new(10) == Duration::<1, 1_000>::new(1));
         assert!(Duration::<1, 10_000>::new(9) != Duration::<1, 1_000>::new(2));
+
+        // From instants
+        assert!(
+            Instant::<1, 1_000>::new(10) - Instant::<1, 1_000>::new(5)
+                > Duration::<1, 1_000>::new(4)
+        );
+        assert!(
+            Instant::<1, 1_000>::new(10) - Instant::<1, 1_000>::new(5)
+                >= Duration::<1, 1_000>::new(4)
+        );
+        assert!(
+            Instant::<1, 1_000>::new(10) - Instant::<1, 1_000>::new(5)
+                >= Duration::<1, 1_000>::new(5)
+        );
+        assert!(
+            Instant::<1, 1_000>::new(10) - Instant::<1, 1_000>::new(5)
+                < Duration::<1, 1_000>::new(6)
+        );
+        assert!(
+            Instant::<1, 1_000>::new(10) - Instant::<1, 1_000>::new(5)
+                <= Duration::<1, 1_000>::new(6)
+        );
+        assert!(
+            Instant::<1, 1_000>::new(10) - Instant::<1, 1_000>::new(5)
+                <= Duration::<1, 1_000>::new(5)
+        );
+        assert!(
+            Instant::<1, 1_000>::new(10) - Instant::<1, 1_000>::new(5)
+                == Duration::<1, 1_000>::new(5)
+        );
+        assert!(
+            Instant::<1, 1_000>::new(10) - Instant::<1, 1_000>::new(5)
+                != Duration::<1, 1_000>::new(4)
+        );
     }
 
     #[test]
@@ -83,6 +118,8 @@ mod test {
 
     #[test]
     fn instant_duration_math() {
+        use crate::duration::ExtU32;
+
         // Instant - Instant, Same base
         let sum: Duration<1, 1_000> = Instant::<1, 1_000>::new(10) - Instant::<1, 1_000>::new(1);
         assert_eq!(sum, Duration::<1, 1_000>::new(9));
@@ -94,11 +131,19 @@ mod test {
         let diff: Instant<1, 1_000> = Instant::<1, 1_000>::new(10) - Duration::<1, 1_000>::new(1);
         assert_eq!(diff, Instant::<1, 1_000>::new(9));
 
-        // Instant - Duration, Different base
-        let sum: Instant<1, 10_000> = Instant::<1, 10_000>::new(10) + Duration::<1, 1_000>::new(1);
+        // // Instant - Duration, Different base
+        // let sum: Instant<1, 10_000> = Instant::<1, 10_000>::new(10) + Duration::<1, 1_000>::new(1);
+        // assert_eq!(sum, Instant::<1, 10_000>::new(20));
+
+        // let diff: Instant<1, 10_000> = Instant::<1, 10_000>::new(10) - Duration::<1, 1_000>::new(1);
+        // assert_eq!(diff, Instant::<1, 10_000>::new(0));
+
+        // Instant + Extension trait
+        let sum: Instant<1, 10_000> = Instant::<1, 10_000>::new(10) + 1.millis();
         assert_eq!(sum, Instant::<1, 10_000>::new(20));
 
-        let diff: Instant<1, 10_000> = Instant::<1, 10_000>::new(10) - Duration::<1, 1_000>::new(1);
+        // Instant - Extension trait
+        let diff: Instant<1, 10_000> = Instant::<1, 10_000>::new(10) - 1.millis();
         assert_eq!(diff, Instant::<1, 10_000>::new(0));
     }
 }
