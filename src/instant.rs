@@ -5,11 +5,11 @@ use std::ops;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Instant<const NOM: u32, const DENOM: u32> {
-    pub ticks: u32,
+    ticks: u32,
 }
 
 impl<const NOM: u32, const DENOM: u32> Instant<NOM, DENOM> {
-    pub const fn new(ticks: u32) -> Self {
+    pub const fn from_ticks(ticks: u32) -> Self {
         helpers::greater_than_0::<NOM>();
         helpers::greater_than_0::<DENOM>();
 
@@ -22,7 +22,7 @@ impl<const NOM: u32, const DENOM: u32> Instant<NOM, DENOM> {
 
     pub fn checked_duration_since(self, other: Self) -> Option<Duration<NOM, DENOM>> {
         if self >= other {
-            Some(Duration::new(self.ticks.wrapping_sub(other.ticks)))
+            Some(Duration::from_ticks(self.ticks.wrapping_sub(other.ticks)))
         } else {
             None
         }
@@ -33,7 +33,7 @@ impl<const NOM: u32, const DENOM: u32> Instant<NOM, DENOM> {
         other: Duration<O_NOM, O_DENOM>,
     ) -> Option<Self> {
         if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
-            Some(Instant::new(self.ticks.wrapping_sub(other.ticks())))
+            Some(Instant::from_ticks(self.ticks.wrapping_sub(other.ticks())))
         } else {
             if let Some(lh) = other
                 .ticks()
@@ -41,7 +41,7 @@ impl<const NOM: u32, const DENOM: u32> Instant<NOM, DENOM> {
             {
                 let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN;
 
-                Some(Instant::new(self.ticks.wrapping_sub(ticks)))
+                Some(Instant::from_ticks(self.ticks.wrapping_sub(ticks)))
             } else {
                 None
             }
@@ -53,7 +53,7 @@ impl<const NOM: u32, const DENOM: u32> Instant<NOM, DENOM> {
         other: Duration<O_NOM, O_DENOM>,
     ) -> Option<Self> {
         if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
-            Some(Instant::new(self.ticks.wrapping_add(other.ticks())))
+            Some(Instant::from_ticks(self.ticks.wrapping_add(other.ticks())))
         } else {
             if let Some(lh) = other
                 .ticks()
@@ -61,7 +61,7 @@ impl<const NOM: u32, const DENOM: u32> Instant<NOM, DENOM> {
             {
                 let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN;
 
-                Some(Instant::new(self.ticks.wrapping_add(ticks)))
+                Some(Instant::from_ticks(self.ticks.wrapping_add(ticks)))
             } else {
                 None
             }

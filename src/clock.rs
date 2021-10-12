@@ -15,6 +15,9 @@ pub trait Clock<const NOM: u32, const DENOM: u32>: Sized {
     /// The type to hold the tick count
     type T: sealed::TimeInt;
 
+    // TODO: Should instant take a marker to the `Clock`? So instants are marked with the clock
+    // from which they come.
+
     /// Get the current Instant
     fn now(&self) -> Instant<NOM, DENOM>;
 }

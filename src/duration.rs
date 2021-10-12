@@ -8,7 +8,7 @@ pub struct Duration<const NOM: u32, const DENOM: u32> {
 }
 
 impl<const NOM: u32, const DENOM: u32> Duration<NOM, DENOM> {
-    pub const fn new(ticks: u32) -> Self {
+    pub const fn from_ticks(ticks: u32) -> Self {
         helpers::greater_than_0::<NOM>();
         helpers::greater_than_0::<DENOM>();
 
@@ -25,7 +25,7 @@ impl<const NOM: u32, const DENOM: u32> Duration<NOM, DENOM> {
     ) -> Option<Self> {
         if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
             if let Some(ticks) = self.ticks.checked_add(other.ticks) {
-                Some(Duration::new(ticks))
+                Some(Duration::from_ticks(ticks))
             } else {
                 None
             }
@@ -37,7 +37,7 @@ impl<const NOM: u32, const DENOM: u32> Duration<NOM, DENOM> {
                 let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN;
 
                 if let Some(ticks) = self.ticks.checked_add(ticks) {
-                    Some(Duration::new(ticks))
+                    Some(Duration::from_ticks(ticks))
                 } else {
                     None
                 }
@@ -53,7 +53,7 @@ impl<const NOM: u32, const DENOM: u32> Duration<NOM, DENOM> {
     ) -> Option<Self> {
         if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
             if let Some(ticks) = self.ticks.checked_sub(other.ticks) {
-                Some(Duration::new(ticks))
+                Some(Duration::from_ticks(ticks))
             } else {
                 None
             }
@@ -65,7 +65,7 @@ impl<const NOM: u32, const DENOM: u32> Duration<NOM, DENOM> {
                 let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN;
 
                 if let Some(ticks) = self.ticks.checked_sub(ticks) {
-                    Some(Duration::new(ticks))
+                    Some(Duration::from_ticks(ticks))
                 } else {
                     None
                 }
@@ -76,35 +76,35 @@ impl<const NOM: u32, const DENOM: u32> Duration<NOM, DENOM> {
     }
 
     pub const fn micros(val: u32) -> Duration<NOM, DENOM> {
-        Duration::new(
+        Duration::from_ticks(
             (Helpers::<1, 1_000_000, NOM, DENOM>::RD_TIMES_LN * val)
                 / Helpers::<1, 1_000_000, NOM, DENOM>::LD_TIMES_RN,
         )
     }
 
     pub const fn millis(val: u32) -> Duration<NOM, DENOM> {
-        Duration::new(
+        Duration::from_ticks(
             (Helpers::<1, 1_000, NOM, DENOM>::RD_TIMES_LN * val)
                 / Helpers::<1, 1_000, NOM, DENOM>::LD_TIMES_RN,
         )
     }
 
     pub const fn secs(val: u32) -> Duration<NOM, DENOM> {
-        Duration::new(
+        Duration::from_ticks(
             (Helpers::<1, 1, NOM, DENOM>::RD_TIMES_LN * val)
                 / Helpers::<1, 1, NOM, DENOM>::LD_TIMES_RN,
         )
     }
 
     pub const fn minutes(val: u32) -> Duration<NOM, DENOM> {
-        Duration::new(
+        Duration::from_ticks(
             (Helpers::<60, 1, NOM, DENOM>::RD_TIMES_LN * val)
                 / Helpers::<60, 1, NOM, DENOM>::LD_TIMES_RN,
         )
     }
 
     pub const fn hours(val: u32) -> Duration<NOM, DENOM> {
-        Duration::new(
+        Duration::from_ticks(
             (Helpers::<3_600, 1, NOM, DENOM>::RD_TIMES_LN * val)
                 / Helpers::<3_600, 1, NOM, DENOM>::LD_TIMES_RN,
         )
