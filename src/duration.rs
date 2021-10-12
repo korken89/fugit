@@ -209,6 +209,36 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
     }
 }
 
+// integer * Duration = Duration
+impl<const NOM: u32, const DENOM: u32> ops::Mul<Duration<NOM, DENOM>> for u32 {
+    type Output = Duration<NOM, DENOM>;
+
+    fn mul(self, mut other: Duration<NOM, DENOM>) -> Self::Output {
+        other.ticks *= self;
+        other
+    }
+}
+
+// Duration * integer = Duration
+impl<const NOM: u32, const DENOM: u32> ops::Mul<u32> for Duration<NOM, DENOM> {
+    type Output = Duration<NOM, DENOM>;
+
+    fn mul(mut self, other: u32) -> Self::Output {
+        self.ticks *= other;
+        self
+    }
+}
+
+// Duration / integer = Duration
+impl<const NOM: u32, const DENOM: u32> ops::Div<u32> for Duration<NOM, DENOM> {
+    type Output = Duration<NOM, DENOM>;
+
+    fn div(mut self, other: u32) -> Self::Output {
+        self.ticks /= other;
+        self
+    }
+}
+
 /// Extension trait for simple short-hands
 pub trait ExtU32 {
     fn micros<const NOM: u32, const DENOM: u32>(self) -> Duration<NOM, DENOM>;
