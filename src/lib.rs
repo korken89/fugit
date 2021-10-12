@@ -1,12 +1,6 @@
 pub mod duration;
-/// Test PR
 pub mod helpers;
 pub mod instant;
-
-pub struct Ratio {
-    pub nom: u32,
-    pub denom: u32,
-}
 
 #[cfg(test)]
 mod test {
@@ -37,10 +31,41 @@ mod test {
 
     #[test]
     fn duration_duration_math() {
-        assert_eq!(
-            Duration::<1, 10_000>::new(10) + Duration::<1, 1_000>::new(1),
-            Duration::<1, 1_000>::new(2)
-        );
+        // Same base
+        let sum: Duration<1, 1_000> = Duration::<1, 1_000>::new(10) + Duration::<1, 1_000>::new(1);
+        assert_eq!(sum, Duration::<1, 1_000>::new(11));
+
+        let diff: Duration<1, 1_000> = Duration::<1, 1_000>::new(10) - Duration::<1, 1_000>::new(1);
+        assert_eq!(diff, Duration::<1, 1_000>::new(9));
+
+        // Different base
+        let sum: Duration<1, 10_000> =
+            Duration::<1, 10_000>::new(10) + Duration::<1, 1_000>::new(1);
+        assert_eq!(sum, Duration::<1, 1_000>::new(2));
+
+        let diff: Duration<1, 10_000> =
+            Duration::<1, 10_000>::new(10) - Duration::<1, 1_000>::new(1);
+        assert_eq!(diff, Duration::<1, 1_000>::new(0));
+    }
+
+    #[test]
+    fn duration_shorthands() {
+        use crate::duration::ExtU32;
+
+        let d: Duration<1, 10_000> = 100_000.micros();
+        assert_eq!(d.ticks(), 1_000);
+
+        let d: Duration<1, 10_000> = 1.millis();
+        assert_eq!(d.ticks(), 10);
+
+        let d: Duration<1, 10_000> = 1.secs();
+        assert_eq!(d.ticks(), 10_000);
+
+        let d: Duration<1, 10_000> = 1.minutes();
+        assert_eq!(d.ticks(), 600_000);
+
+        let d: Duration<1, 10_000> = 1.hours();
+        assert_eq!(d.ticks(), 36_000_000);
     }
 
     #[test]
@@ -50,16 +75,6 @@ mod test {
 
     #[test]
     fn instant_duration_math() {
-        todo!()
-    }
-
-    #[test]
-    fn duration_ratio_conversion() {
-        todo!()
-    }
-
-    #[test]
-    fn instant_ratio_conversion() {
         todo!()
     }
 }
