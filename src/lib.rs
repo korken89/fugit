@@ -5,6 +5,7 @@ pub mod instant;
 #[cfg(test)]
 mod test {
     use crate::duration::Duration;
+    use crate::instant::Instant;
 
     #[test]
     fn duration_compare() {
@@ -70,7 +71,14 @@ mod test {
 
     #[test]
     fn instant_compare() {
-        todo!()
+        assert!(Instant::<1, 1_000>::new(2) > Instant::<1, 1_000>::new(1));
+        assert!(Instant::<1, 1_000>::new(2) >= Instant::<1, 1_000>::new(1));
+        assert!(Instant::<1, 1_000>::new(1) >= Instant::<1, 1_000>::new(1));
+        assert!(Instant::<1, 1_000>::new(1) < Instant::<1, 1_000>::new(2));
+        assert!(Instant::<1, 1_000>::new(1) <= Instant::<1, 1_000>::new(1));
+        assert!(Instant::<1, 1_000>::new(1) <= Instant::<1, 1_000>::new(2));
+        assert!(Instant::<1, 1_000>::new(1) == Instant::<1, 1_000>::new(1));
+        assert!(Instant::<1, 1_000>::new(1) != Instant::<1, 1_000>::new(2));
     }
 
     #[test]
