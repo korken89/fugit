@@ -1,7 +1,7 @@
 use crate::duration::Duration;
 use crate::helpers::{self, Helpers};
 use core::cmp::Ordering;
-use std::ops;
+use core::ops;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Instant<T, const NOM: u32, const DENOM: u32> {

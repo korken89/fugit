@@ -1,12 +1,17 @@
-pub mod duration;
-pub mod helpers;
-pub mod instant;
+#![cfg_attr(not(test), no_std)]
+
+mod duration;
+mod helpers;
+mod instant;
+
+pub use duration::{Duration, ExtU32};
+pub use instant::Instant;
 
 #[cfg(test)]
 mod test {
-    use crate::duration::Duration;
-    use crate::duration::ExtU32;
-    use crate::instant::Instant;
+    use crate::Duration;
+    use crate::ExtU32;
+    use crate::Instant;
 
     #[test]
     fn duration_compare_u32() {

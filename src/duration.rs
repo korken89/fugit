@@ -1,7 +1,7 @@
 use super::helpers::{self, Helpers};
 use core::cmp::Ordering;
-use std::convert;
-use std::ops;
+use core::convert;
+use core::ops;
 
 // Used in a pattern.
 
