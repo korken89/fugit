@@ -493,6 +493,35 @@ mod test {
         assert!(Instant::<u32, 1, 1_000>::from_ticks(1) <= Instant::<u32, 1, 1_000>::from_ticks(2));
         assert!(Instant::<u32, 1, 1_000>::from_ticks(1) == Instant::<u32, 1, 1_000>::from_ticks(1));
         assert!(Instant::<u32, 1, 1_000>::from_ticks(1) != Instant::<u32, 1, 1_000>::from_ticks(2));
+
+        // Checked duration since non-wrapping
+        assert_eq!(
+            Instant::<u32, 1, 1_000>::from_ticks(1)
+                .checked_duration_since(Instant::<u32, 1, 1_000>::from_ticks(1)),
+            Some(Duration::<u32, 1, 1_000>::from_ticks(0))
+        );
+        assert_eq!(
+            Instant::<u32, 1, 1_000>::from_ticks(2)
+                .checked_duration_since(Instant::<u32, 1, 1_000>::from_ticks(1)),
+            Some(Duration::<u32, 1, 1_000>::from_ticks(1))
+        );
+        assert_eq!(
+            Instant::<u32, 1, 1_000>::from_ticks(2)
+                .checked_duration_since(Instant::<u32, 1, 1_000>::from_ticks(3)),
+            None
+        );
+
+        // Checked duration since wrapping
+        assert_eq!(
+            Instant::<u32, 1, 1_000>::from_ticks(2)
+                .checked_duration_since(Instant::<u32, 1, 1_000>::from_ticks(u32::MAX)),
+            Some(Duration::<u32, 1, 1_000>::from_ticks(3))
+        );
+        assert_eq!(
+            Instant::<u32, 1, 1_000>::from_ticks(2)
+                .checked_duration_since(Instant::<u32, 1, 1_000>::from_ticks(u32::MAX - 1)),
+            Some(Duration::<u32, 1, 1_000>::from_ticks(4))
+        );
     }
 
     #[test]
@@ -516,6 +545,35 @@ mod test {
         assert!(Instant::<u64, 1, 1_000>::from_ticks(1) <= Instant::<u64, 1, 1_000>::from_ticks(2));
         assert!(Instant::<u64, 1, 1_000>::from_ticks(1) == Instant::<u64, 1, 1_000>::from_ticks(1));
         assert!(Instant::<u64, 1, 1_000>::from_ticks(1) != Instant::<u64, 1, 1_000>::from_ticks(2));
+
+        // Checked duration since non-wrapping
+        assert_eq!(
+            Instant::<u64, 1, 1_000>::from_ticks(1)
+                .checked_duration_since(Instant::<u64, 1, 1_000>::from_ticks(1)),
+            Some(Duration::<u64, 1, 1_000>::from_ticks(0))
+        );
+        assert_eq!(
+            Instant::<u64, 1, 1_000>::from_ticks(2)
+                .checked_duration_since(Instant::<u64, 1, 1_000>::from_ticks(1)),
+            Some(Duration::<u64, 1, 1_000>::from_ticks(1))
+        );
+        assert_eq!(
+            Instant::<u64, 1, 1_000>::from_ticks(2)
+                .checked_duration_since(Instant::<u64, 1, 1_000>::from_ticks(3)),
+            None
+        );
+
+        // Checked duration since wrapping
+        assert_eq!(
+            Instant::<u64, 1, 1_000>::from_ticks(2)
+                .checked_duration_since(Instant::<u64, 1, 1_000>::from_ticks(u64::MAX)),
+            Some(Duration::<u64, 1, 1_000>::from_ticks(3))
+        );
+        assert_eq!(
+            Instant::<u64, 1, 1_000>::from_ticks(2)
+                .checked_duration_since(Instant::<u64, 1, 1_000>::from_ticks(u64::MAX - 1)),
+            Some(Duration::<u64, 1, 1_000>::from_ticks(4))
+        );
     }
 
     #[test]

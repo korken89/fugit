@@ -22,13 +22,35 @@ macro_rules! impl_instant_for_integer {
                 self.ticks
             }
 
-            pub fn checked_duration_since(self, other: Self) -> Option<Duration<$i, NOM, DENOM>> {
-                if self >= other {
-                    Some(Duration::<$i, NOM, DENOM>::from_ticks(
-                        self.ticks.wrapping_sub(other.ticks),
-                    ))
+            pub const fn cmp_const(&self, other: &Self) -> Ordering {
+                if self.ticks == other.ticks {
+                    Ordering::Equal
                 } else {
-                    None
+                    let v = self.ticks.wrapping_sub(other.ticks);
+
+                    if v > <$i>::MAX / 2 {
+                        Ordering::Less
+                    } else if v < <$i>::MAX / 2 {
+                        Ordering::Greater
+                    } else {
+                        Ordering::Equal
+                    }
+                    // Technically we should check for v == 0, but the initial equal
+                    // check makes it so this is not needed
+                }
+            }
+
+            pub const fn checked_duration_since(
+                self,
+                other: Self,
+            ) -> Option<Duration<$i, NOM, DENOM>> {
+                match self.cmp_const(&other) {
+                    Ordering::Greater | Ordering::Equal => {
+                        Some(Duration::<$i, NOM, DENOM>::from_ticks(
+                            self.ticks.wrapping_sub(other.ticks),
+                        ))
+                    }
+                    Ordering::Less => None,
                 }
             }
 
@@ -83,20 +105,13 @@ macro_rules! impl_instant_for_integer {
 
         impl<const NOM: u32, const DENOM: u32> PartialOrd for Instant<$i, NOM, DENOM> {
             fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-                Some(self.cmp(other))
+                Some(self.cmp_const(other))
             }
         }
 
         impl<const NOM: u32, const DENOM: u32> Ord for Instant<$i, NOM, DENOM> {
             fn cmp(&self, other: &Self) -> Ordering {
-                if self.ticks == other.ticks {
-                    Ordering::Equal
-                } else {
-                    self.ticks
-                        .wrapping_sub(other.ticks)
-                        .cmp(&(<$i>::MAX / 2))
-                        .reverse()
-                }
+                self.cmp_const(other)
             }
         }
 
