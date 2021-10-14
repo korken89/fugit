@@ -31,6 +31,7 @@ macro_rules! impl_instant_for_integer {
                 } else {
                     let v = self.ticks.wrapping_sub(other.ticks);
 
+                    // not using `v.cmp(<$i>::MAX / 2).reverse()` due to `cmp` being non-const
                     if v > <$i>::MAX / 2 {
                         Ordering::Less
                     } else if v < <$i>::MAX / 2 {
