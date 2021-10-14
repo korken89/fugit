@@ -11,6 +11,7 @@ pub struct Instant<T, const NOM: u32, const DENOM: u32> {
 macro_rules! impl_instant_for_integer {
     ($i:ty) => {
         impl<const NOM: u32, const DENOM: u32> Instant<$i, NOM, DENOM> {
+            #[inline]
             pub const fn from_ticks(ticks: $i) -> Self {
                 helpers::greater_than_0::<NOM>();
                 helpers::greater_than_0::<DENOM>();
@@ -18,10 +19,12 @@ macro_rules! impl_instant_for_integer {
                 Instant { ticks }
             }
 
+            #[inline]
             pub const fn ticks(&self) -> $i {
                 self.ticks
             }
 
+            #[inline]
             pub const fn cmp_const(&self, other: &Self) -> Ordering {
                 if self.ticks == other.ticks {
                     Ordering::Equal
@@ -35,11 +38,10 @@ macro_rules! impl_instant_for_integer {
                     } else {
                         Ordering::Equal
                     }
-                    // Technically we should check for v == 0, but the initial equal
-                    // check makes it so this is not needed
                 }
             }
 
+            #[inline]
             pub const fn checked_duration_since(
                 self,
                 other: Self,
@@ -54,6 +56,7 @@ macro_rules! impl_instant_for_integer {
                 }
             }
 
+            #[inline]
             pub const fn checked_sub_duration<const O_NOM: u32, const O_DENOM: u32>(
                 self,
                 other: Duration<$i, O_NOM, O_DENOM>,
@@ -78,6 +81,7 @@ macro_rules! impl_instant_for_integer {
                 }
             }
 
+            #[inline]
             pub const fn checked_add_duration<const O_NOM: u32, const O_DENOM: u32>(
                 self,
                 other: Duration<$i, O_NOM, O_DENOM>,
@@ -104,18 +108,21 @@ macro_rules! impl_instant_for_integer {
         }
 
         impl<const NOM: u32, const DENOM: u32> PartialOrd for Instant<$i, NOM, DENOM> {
+            #[inline]
             fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
                 Some(self.cmp_const(other))
             }
         }
 
         impl<const NOM: u32, const DENOM: u32> Ord for Instant<$i, NOM, DENOM> {
+            #[inline]
             fn cmp(&self, other: &Self) -> Ordering {
                 self.cmp_const(other)
             }
         }
 
         impl<const NOM: u32, const DENOM: u32> PartialEq for Instant<$i, NOM, DENOM> {
+            #[inline]
             fn eq(&self, other: &Self) -> bool {
                 self.ticks.eq(&other.ticks)
             }
@@ -132,6 +139,7 @@ macro_rules! impl_instant_for_integer {
         {
             type Output = Duration<$i, NOM, DENOM>;
 
+            #[inline]
             fn sub(self, other: Self) -> Self::Output {
                 if let Some(v) = self.checked_duration_since(other) {
                     v
@@ -150,6 +158,7 @@ macro_rules! impl_instant_for_integer {
         {
             type Output = Instant<$i, NOM, DENOM>;
 
+            #[inline]
             fn sub(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
                 if let Some(v) = self.checked_sub_duration(other) {
                     v
@@ -168,6 +177,7 @@ macro_rules! impl_instant_for_integer {
         {
             type Output = Instant<$i, NOM, DENOM>;
 
+            #[inline]
             fn add(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
                 if let Some(v) = self.checked_add_duration(other) {
                     v
@@ -195,6 +205,7 @@ impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<u32, NOM, DENOM>>
 {
     type Output = Instant<u64, NOM, DENOM>;
 
+    #[inline]
     fn sub(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
         self.sub(Duration::<u64, NOM, DENOM>::from_ticks(other.ticks() as u64))
     }
@@ -209,6 +220,7 @@ impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<u32, NOM, DENOM>>
 {
     type Output = Instant<u64, NOM, DENOM>;
 
+    #[inline]
     fn add(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
         self.add(Duration::<u64, NOM, DENOM>::from_ticks(other.ticks() as u64))
     }
