@@ -3,6 +3,10 @@ use crate::helpers::{self, Helpers};
 use core::cmp::Ordering;
 use core::ops;
 
+/// Represents an instant of time in seconds.
+///
+/// The generic `T` can either be `u32` or `u64`, and the const generics represent the ratio of the
+/// ticks contained within the instant: `instant in seconds = NOM / DENOM * ticks`
 #[derive(Clone, Copy, Debug)]
 pub struct Instant<T, const NOM: u32, const DENOM: u32> {
     ticks: T,

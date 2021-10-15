@@ -1,10 +1,12 @@
-use super::helpers::{self, Helpers};
+use crate::helpers::{self, Helpers};
 use core::cmp::Ordering;
 use core::convert;
 use core::ops;
 
-// Used in a pattern.
-
+/// Represents a duration of time in seconds.
+///
+/// The generic `T` can either be `u32` or `u64`, and the const generics represent the ratio of the
+/// ticks contained within the duration: `duration in seconds = NOM / DENOM * ticks`
 #[derive(Clone, Copy, Debug)]
 pub struct Duration<T, const NOM: u32, const DENOM: u32> {
     ticks: T,
@@ -13,6 +15,12 @@ pub struct Duration<T, const NOM: u32, const DENOM: u32> {
 macro_rules! impl_duration_for_integer {
     ($i:ty) => {
         impl<const NOM: u32, const DENOM: u32> Duration<$i, NOM, DENOM> {
+            /// Create a `Duration` from a ticks value.
+            ///
+            /// ```
+            /// # use const_embedded_time::*;
+            #[doc = concat!("let _d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            /// ```
             #[inline]
             pub const fn from_ticks(ticks: $i) -> Self {
                 helpers::greater_than_0::<NOM>();
@@ -21,11 +29,30 @@ macro_rules! impl_duration_for_integer {
                 Duration { ticks }
             }
 
+            /// Extract the ticks from a `Duration`.
+            ///
+            /// ```
+            /// # use const_embedded_time::*;
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(234);")]
+            ///
+            /// assert_eq!(d.ticks(), 234);
+            /// ```
             #[inline]
             pub const fn ticks(&self) -> $i {
                 self.ticks
             }
 
+            /// Add two durations while checking for overflow.
+            ///
+            /// ```
+            /// # use const_embedded_time::*;
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
+            #[doc = concat!("let d3 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(", stringify!($i), "::MAX);")]
+            ///
+            /// assert_eq!(d1.checked_add(d2).unwrap().ticks(), 3);
+            /// assert_eq!(d1.checked_add(d3), None);
+            /// ```
             #[inline]
             pub const fn checked_add<const O_NOM: u32, const O_DENOM: u32>(
                 self,
@@ -55,6 +82,17 @@ macro_rules! impl_duration_for_integer {
                 }
             }
 
+            /// Subtract two durations while checking for overflow.
+            ///
+            /// ```
+            /// # use const_embedded_time::*;
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
+            #[doc = concat!("let d3 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(", stringify!($i), "::MAX);")]
+            ///
+            /// assert_eq!(d2.checked_sub(d1).unwrap().ticks(), 1);
+            /// assert_eq!(d1.checked_sub(d3), None);
+            /// ```
             #[inline]
             pub const fn checked_sub<const O_NOM: u32, const O_DENOM: u32>(
                 self,
@@ -84,6 +122,7 @@ macro_rules! impl_duration_for_integer {
                 }
             }
 
+            /// Shorthand for creating a duration which represents microseconds.
             #[inline]
             pub const fn micros(val: $i) -> Duration<$i, NOM, DENOM> {
                 Duration::<$i, NOM, DENOM>::from_ticks(
@@ -92,6 +131,7 @@ macro_rules! impl_duration_for_integer {
                 )
             }
 
+            /// Shorthand for creating a duration which represents milliseconds.
             #[inline]
             pub const fn millis(val: $i) -> Duration<$i, NOM, DENOM> {
                 Duration::<$i, NOM, DENOM>::from_ticks(
@@ -100,6 +140,7 @@ macro_rules! impl_duration_for_integer {
                 )
             }
 
+            /// Shorthand for creating a duration which represents seconds.
             #[inline]
             pub const fn secs(val: $i) -> Duration<$i, NOM, DENOM> {
                 Duration::<$i, NOM, DENOM>::from_ticks(
@@ -108,6 +149,7 @@ macro_rules! impl_duration_for_integer {
                 )
             }
 
+            /// Shorthand for creating a duration which represents minutes.
             #[inline]
             pub const fn minutes(val: $i) -> Duration<$i, NOM, DENOM> {
                 Duration::<$i, NOM, DENOM>::from_ticks(
@@ -116,6 +158,7 @@ macro_rules! impl_duration_for_integer {
                 )
             }
 
+            /// Shorthand for creating a duration which represents hours.
             #[inline]
             pub const fn hours(val: $i) -> Duration<$i, NOM, DENOM> {
                 Duration::<$i, NOM, DENOM>::from_ticks(
