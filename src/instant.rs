@@ -61,7 +61,6 @@ macro_rules! impl_instant_for_integer {
                 }
             }
 
-            #[inline]
             pub const fn checked_sub_duration<const O_NOM: u32, const O_DENOM: u32>(
                 self,
                 other: Duration<$i, O_NOM, O_DENOM>,
@@ -86,7 +85,6 @@ macro_rules! impl_instant_for_integer {
                 }
             }
 
-            #[inline]
             pub const fn checked_add_duration<const O_NOM: u32, const O_DENOM: u32>(
                 self,
                 other: Duration<$i, O_NOM, O_DENOM>,
@@ -193,8 +191,7 @@ macro_rules! impl_instant_for_integer {
         }
 
         #[cfg(feature = "defmt")]
-        impl<const NOM: u32, const DENOM: u32> defmt::Format for Instant<$i, NOM, DENOM>
-        {
+        impl<const NOM: u32, const DENOM: u32> defmt::Format for Instant<$i, NOM, DENOM> {
             fn format(&self, f: defmt::Formatter) {
                 if NOM == 3_600 && DENOM == 1 {
                     defmt::write!(f, "{} h", self.ticks)

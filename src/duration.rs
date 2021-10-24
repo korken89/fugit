@@ -53,7 +53,6 @@ macro_rules! impl_duration_for_integer {
             /// assert_eq!(d1.checked_add(d2).unwrap().ticks(), 3);
             /// assert_eq!(d1.checked_add(d3), None);
             /// ```
-            #[inline]
             pub const fn checked_add<const O_NOM: u32, const O_DENOM: u32>(
                 self,
                 other: Duration<$i, O_NOM, O_DENOM>,
@@ -93,7 +92,6 @@ macro_rules! impl_duration_for_integer {
             /// assert_eq!(d2.checked_sub(d1).unwrap().ticks(), 1);
             /// assert_eq!(d1.checked_sub(d3), None);
             /// ```
-            #[inline]
             pub const fn checked_sub<const O_NOM: u32, const O_DENOM: u32>(
                 self,
                 other: Duration<$i, O_NOM, O_DENOM>,
@@ -119,6 +117,58 @@ macro_rules! impl_duration_for_integer {
                     } else {
                         None
                     }
+                }
+            }
+
+            /// Const into, checking for overflow.
+            ///
+            /// ```
+            /// # use const_embedded_time::*;
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
+            #[doc = concat!("let d3 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(", stringify!($i), "::MAX);")]
+            ///
+            /// assert_eq!(d2.checked_sub(d1).unwrap().ticks(), 1);
+            /// assert_eq!(d1.checked_sub(d3), None);
+            /// ```
+            pub fn checked_into<const O_NOM: u32, const O_DENOM: u32>(
+                self,
+            ) -> Option<Duration<$i, O_NOM, O_DENOM>> {
+                if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
+                    Some(Duration::<$i, O_NOM, O_DENOM>::from_ticks(self.ticks))
+                } else {
+                    if let Some(lh) = self
+                        .ticks
+                        .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i)
+                    {
+                        let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN as $i;
+
+                        Some(Duration::<$i, O_NOM, O_DENOM>::from_ticks(ticks))
+                    } else {
+                        None
+                    }
+                }
+            }
+
+            /// Convert between bases for a duration.
+            ///
+            /// Unfortunately not a `From` impl due to collision with the std lib.
+            ///
+            /// ```
+            /// # use const_embedded_time::*;
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_00>::from_ticks(1);")]
+            #[doc = concat!("let d2: Duration::<", stringify!($i), ", 1, 1_000> = d1.convert();")]
+            ///
+            /// assert_eq!(d2.ticks(), 10);
+            /// ```
+            // Sooooon const with const panic
+            pub fn convert<const O_NOM: u32, const O_DENOM: u32>(
+                self,
+            ) -> Duration<$i, O_NOM, O_DENOM> {
+                if let Some(v) = self.checked_into() {
+                    v
+                } else {
+                    panic!("Into failed!");
                 }
             }
 

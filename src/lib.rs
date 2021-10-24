@@ -13,6 +13,18 @@ mod test {
     use crate::ExtU32;
     use crate::Instant;
 
+    fn take_ms(d: Duration<u32, 1, 1_000>) -> Duration<u32, 1, 1_000> {
+        d
+    }
+
+    #[test]
+    fn duration_functions() {
+        assert_eq!(
+            take_ms(Duration::<u32, 1, 100>::from_ticks(1).convert()),
+            Duration::<u32, 1, 1_000>::from_ticks(10)
+        );
+    }
+
     #[test]
     fn duration_compare_u32() {
         // Same fraction
