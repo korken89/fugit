@@ -303,6 +303,48 @@ macro_rules! impl_duration_for_integer {
                 self
             }
         }
+
+        #[cfg(feature = "defmt")]
+        impl<const NOM: u32, const DENOM: u32> defmt::Format for Duration<$i, NOM, DENOM>
+        {
+            fn format(&self, f: defmt::Formatter) {
+                if NOM == 3_600 && DENOM == 1 {
+                    defmt::write!(f, "{} h", self.ticks)
+                } else if NOM == 60 && DENOM == 1 {
+                    defmt::write!(f, "{} min", self.ticks)
+                } else if NOM == 1 && DENOM == 1 {
+                    defmt::write!(f, "{} s", self.ticks)
+                } else if NOM == 1 && DENOM == 1_000 {
+                    defmt::write!(f, "{} ms", self.ticks)
+                } else if NOM == 1 && DENOM == 1_000_000 {
+                    defmt::write!(f, "{} us", self.ticks)
+                } else if NOM == 1 && DENOM == 1_000_000_000 {
+                    defmt::write!(f, "{} ns", self.ticks)
+                } else {
+                    defmt::write!(f, "{} ticks @ ({}/{})", self.ticks, NOM, DENOM)
+                }
+            }
+        }
+
+        impl<const NOM: u32, const DENOM: u32> core::fmt::Display for Duration<$i, NOM, DENOM> {
+            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                if NOM == 3_600 && DENOM == 1 {
+                    write!(f, "{} h", self.ticks)
+                } else if NOM == 60 && DENOM == 1 {
+                    write!(f, "{} min", self.ticks)
+                } else if NOM == 1 && DENOM == 1 {
+                    write!(f, "{} s", self.ticks)
+                } else if NOM == 1 && DENOM == 1_000 {
+                    write!(f, "{} ms", self.ticks)
+                } else if NOM == 1 && DENOM == 1_000_000 {
+                    write!(f, "{} us", self.ticks)
+                } else if NOM == 1 && DENOM == 1_000_000_000 {
+                    write!(f, "{} ns", self.ticks)
+                } else {
+                    write!(f, "{} ticks @ ({}/{})", self.ticks, NOM, DENOM)
+                }
+            }
+        }
     };
 }
 
@@ -329,8 +371,6 @@ impl<const NOM: u32, const DENOM: u32> convert::TryFrom<Duration<u64, NOM, DENOM
 
     #[inline]
     fn try_from(val: Duration<u64, NOM, DENOM>) -> Result<Duration<u32, NOM, DENOM>, ()> {
-        use convert::TryInto;
-
         Ok(Duration::<u32, NOM, DENOM>::from_ticks(
             val.ticks().try_into().map_err(|_| ())?,
         ))

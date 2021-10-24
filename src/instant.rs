@@ -191,6 +191,48 @@ macro_rules! impl_instant_for_integer {
                 }
             }
         }
+
+        #[cfg(feature = "defmt")]
+        impl<const NOM: u32, const DENOM: u32> defmt::Format for Instant<$i, NOM, DENOM>
+        {
+            fn format(&self, f: defmt::Formatter) {
+                if NOM == 3_600 && DENOM == 1 {
+                    defmt::write!(f, "{} h", self.ticks)
+                } else if NOM == 60 && DENOM == 1 {
+                    defmt::write!(f, "{} min", self.ticks)
+                } else if NOM == 1 && DENOM == 1 {
+                    defmt::write!(f, "{} s", self.ticks)
+                } else if NOM == 1 && DENOM == 1_000 {
+                    defmt::write!(f, "{} ms", self.ticks)
+                } else if NOM == 1 && DENOM == 1_000_000 {
+                    defmt::write!(f, "{} us", self.ticks)
+                } else if NOM == 1 && DENOM == 1_000_000_000 {
+                    defmt::write!(f, "{} ns", self.ticks)
+                } else {
+                    defmt::write!(f, "{} ticks @ ({}/{})", self.ticks, NOM, DENOM)
+                }
+            }
+        }
+
+        impl<const NOM: u32, const DENOM: u32> core::fmt::Display for Instant<$i, NOM, DENOM> {
+            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                if NOM == 3_600 && DENOM == 1 {
+                    write!(f, "{} h", self.ticks)
+                } else if NOM == 60 && DENOM == 1 {
+                    write!(f, "{} min", self.ticks)
+                } else if NOM == 1 && DENOM == 1 {
+                    write!(f, "{} s", self.ticks)
+                } else if NOM == 1 && DENOM == 1_000 {
+                    write!(f, "{} ms", self.ticks)
+                } else if NOM == 1 && DENOM == 1_000_000 {
+                    write!(f, "{} us", self.ticks)
+                } else if NOM == 1 && DENOM == 1_000_000_000 {
+                    write!(f, "{} ns", self.ticks)
+                } else {
+                    write!(f, "{} ticks @ ({}/{})", self.ticks, NOM, DENOM)
+                }
+            }
+        }
     };
 }
 
