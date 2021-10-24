@@ -23,7 +23,7 @@ fn foo(d: Duration<u32, 1, 1_000>) {
 }
 
 foo(200.millis()) // <-- Compile time move of base
-foo(Duration::<u32, 1, 1_000_000>::from_ticks(1_000_000)) // <-- Compile time move of base
+foo(Duration::<u32, 1, 1_000_000>::from_ticks(1_000_000).convert()) // <-- Compile time move of base
 
 
 // -----------------------
