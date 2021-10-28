@@ -3,7 +3,7 @@ use crate::helpers::{self, Helpers};
 use core::cmp::Ordering;
 use core::ops;
 
-/// Represents an instant of time in seconds.
+/// Represents an instant in time.
 ///
 /// The generic `T` can either be `u32` or `u64`, and the const generics represent the ratio of the
 /// ticks contained within the instant: `instant in seconds = NOM / DENOM * ticks`
@@ -15,6 +15,12 @@ pub struct Instant<T, const NOM: u32, const DENOM: u32> {
 macro_rules! impl_instant_for_integer {
     ($i:ty) => {
         impl<const NOM: u32, const DENOM: u32> Instant<$i, NOM, DENOM> {
+            /// Create an `Instant` from a ticks value.
+            ///
+            /// ```
+            /// # use const_embedded_time::*;
+            #[doc = concat!("let _i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            /// ```
             #[inline]
             pub const fn from_ticks(ticks: $i) -> Self {
                 helpers::greater_than_0::<NOM>();
@@ -23,13 +29,30 @@ macro_rules! impl_instant_for_integer {
                 Instant { ticks }
             }
 
+            /// Extract the ticks from an `Instant`.
+            ///
+            /// ```
+            /// # use const_embedded_time::*;
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(234);")]
+            ///
+            /// assert_eq!(i.ticks(), 234);
+            /// ```
             #[inline]
             pub const fn ticks(&self) -> $i {
                 self.ticks
             }
 
+            /// Const comparison of `Instant`s.
+            ///
+            /// ```
+            /// # use const_embedded_time::*;
+            #[doc = concat!("let i1 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let i2 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
+            ///
+            /// assert_eq!(i1.const_cmp(i2), core::cmp::Ordering::Less);
+            /// ```
             #[inline]
-            pub const fn cmp_const(&self, other: &Self) -> Ordering {
+            pub const fn const_cmp(self, other: Self) -> Ordering {
                 if self.ticks == other.ticks {
                     Ordering::Equal
                 } else {
@@ -46,12 +69,22 @@ macro_rules! impl_instant_for_integer {
                 }
             }
 
+            /// Duration between `Instant`s.
+            ///
+            /// ```
+            /// # use const_embedded_time::*;
+            #[doc = concat!("let i1 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let i2 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
+            ///
+            /// assert_eq!(i1.checked_duration_since(i2), None);
+            /// assert_eq!(i2.checked_duration_since(i1).unwrap().ticks(), 1);
+            /// ```
             #[inline]
             pub const fn checked_duration_since(
                 self,
                 other: Self,
             ) -> Option<Duration<$i, NOM, DENOM>> {
-                match self.cmp_const(&other) {
+                match self.const_cmp(other) {
                     Ordering::Greater | Ordering::Equal => {
                         Some(Duration::<$i, NOM, DENOM>::from_ticks(
                             self.ticks.wrapping_sub(other.ticks),
@@ -61,6 +94,15 @@ macro_rules! impl_instant_for_integer {
                 }
             }
 
+            /// Subtract a `Duration` from an `Instant` while checking for overflow.
+            ///
+            /// ```
+            /// # use const_embedded_time::*;
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            ///
+            /// assert_eq!(i.checked_sub_duration(d).unwrap().ticks(), 0);
+            /// ```
             pub const fn checked_sub_duration<const O_NOM: u32, const O_DENOM: u32>(
                 self,
                 other: Duration<$i, O_NOM, O_DENOM>,
@@ -85,6 +127,15 @@ macro_rules! impl_instant_for_integer {
                 }
             }
 
+            /// Add a `Duration` to an `Instant` while checking for overflow.
+            ///
+            /// ```
+            /// # use const_embedded_time::*;
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            ///
+            /// assert_eq!(i.checked_add_duration(d).unwrap().ticks(), 2);
+            /// ```
             pub const fn checked_add_duration<const O_NOM: u32, const O_DENOM: u32>(
                 self,
                 other: Duration<$i, O_NOM, O_DENOM>,
@@ -113,14 +164,14 @@ macro_rules! impl_instant_for_integer {
         impl<const NOM: u32, const DENOM: u32> PartialOrd for Instant<$i, NOM, DENOM> {
             #[inline]
             fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-                Some(self.cmp_const(other))
+                Some(self.const_cmp(*other))
             }
         }
 
         impl<const NOM: u32, const DENOM: u32> Ord for Instant<$i, NOM, DENOM> {
             #[inline]
             fn cmp(&self, other: &Self) -> Ordering {
-                self.cmp_const(other)
+                self.const_cmp(*other)
             }
         }
 

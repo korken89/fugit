@@ -18,10 +18,17 @@ pub struct Helpers<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const
 impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
     Helpers<L_NOM, L_DENOM, R_NOM, R_DENOM>
 {
+    /// Helper constants generated at compile time
     pub const DIVISOR: u64 =
         gcd_binary_u64(L_DENOM as u64 * R_NOM as u64, R_DENOM as u64 * L_NOM as u64);
+
+    /// Helper constants generated at compile time
     pub const RD_TIMES_LN: u32 = ((R_DENOM as u64 * L_NOM as u64) / Self::DIVISOR) as u32;
+
+    /// Helper constants generated at compile time
     pub const LD_TIMES_RN: u32 = ((L_DENOM as u64 * R_NOM as u64) / Self::DIVISOR) as u32;
+
+    /// Helper constants generated at compile time
     pub const SAME_BASE: bool = Self::LD_TIMES_RN == Self::RD_TIMES_LN;
 }
 

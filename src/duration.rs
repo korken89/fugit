@@ -3,7 +3,7 @@ use core::cmp::Ordering;
 use core::convert;
 use core::ops;
 
-/// Represents a duration of time in seconds.
+/// Represents a duration of time.
 ///
 /// The generic `T` can either be `u32` or `u64`, and the const generics represent the ratio of the
 /// ticks contained within the duration: `duration in seconds = NOM / DENOM * ticks`
@@ -120,18 +120,109 @@ macro_rules! impl_duration_for_integer {
                 }
             }
 
-            /// Const into, checking for overflow.
+            #[doc = concat!("Const `cmp` for ", stringify!($i))]
+            #[inline(always)]
+            const fn _const_cmp(a: $i, b: $i) -> Ordering {
+                if a < b {
+                    Ordering::Less
+                } else if a > b {
+                    Ordering::Greater
+                } else {
+                    Ordering::Equal
+                }
+            }
+
+            /// Const equality check.
             ///
             /// ```
             /// # use const_embedded_time::*;
-            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
-            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
-            #[doc = concat!("let d3 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(", stringify!($i), "::MAX);")]
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_00>::from_ticks(1);")]
+            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             ///
-            /// assert_eq!(d2.checked_sub(d1).unwrap().ticks(), 1);
-            /// assert_eq!(d1.checked_sub(d3), None);
+            /// assert_eq!(d1.const_partial_cmp(d2), Some(core::cmp::Ordering::Greater));
             /// ```
-            pub fn checked_into<const O_NOM: u32, const O_DENOM: u32>(
+            #[inline]
+            pub const fn const_partial_cmp<const R_NOM: u32, const R_DENOM: u32>(
+                self,
+                other: Duration<$i, R_NOM, R_DENOM>
+            ) -> Option<Ordering> {
+                //
+                // We want to check:
+                //
+                // n_lh / d_lh * lh_ticks {cmp} n_rh / d_rh * rh_ticks
+                //
+                // simplify to
+                //
+                // n_lh * d_rh * lh_ticks {cmp} n_rh * d_lh * rh_ticks
+                //
+                // find gdc(n_lh * d_rh, n_rh * d_lh) and use that to make the constants minimal (done
+                // with the `helpers::Helpers` struct)
+                //
+                // then perform the comparison in a comparable basis
+                //
+
+                if Helpers::<NOM, DENOM, R_NOM, R_DENOM>::SAME_BASE {
+                    // If we are in the same base, comparison in trivial
+                    Some(Self::_const_cmp(self.ticks, other.ticks))
+                } else {
+                    let lh = self
+                        .ticks
+                        .checked_mul(Helpers::<NOM, DENOM, R_NOM, R_DENOM>::RD_TIMES_LN as $i);
+                    let rh = other
+                        .ticks
+                        .checked_mul(Helpers::<NOM, DENOM, R_NOM, R_DENOM>::LD_TIMES_RN as $i);
+
+                    if let (Some(lh), Some(rh)) = (lh, rh) {
+                        Some(Self::_const_cmp(lh, rh))
+                    } else {
+                        None
+                    }
+                }
+            }
+
+            /// Const equality check.
+            ///
+            /// ```
+            /// # use const_embedded_time::*;
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_00>::from_ticks(1);")]
+            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(10);")]
+            ///
+            /// assert!(d1.const_eq(d2));
+            /// ```
+            #[inline]
+            pub const fn const_eq<const R_NOM: u32, const R_DENOM: u32>(
+                self,
+                other: Duration<$i, R_NOM, R_DENOM>
+            ) -> bool {
+                if Helpers::<NOM, DENOM, R_NOM, R_DENOM>::SAME_BASE {
+                    // If we are in the same base, comparison in trivial
+                    self.ticks == other.ticks
+                } else {
+                    let lh = self
+                        .ticks
+                        .checked_mul(Helpers::<NOM, DENOM, R_NOM, R_DENOM>::RD_TIMES_LN as $i);
+                    let rh = other
+                        .ticks
+                        .checked_mul(Helpers::<NOM, DENOM, R_NOM, R_DENOM>::LD_TIMES_RN as $i);
+
+                    if let (Some(lh), Some(rh)) = (lh, rh) {
+                        lh == rh
+                    } else {
+                        false
+                    }
+                }
+            }
+
+            /// Const try into, checking for overflow.
+            ///
+            /// ```
+            /// # use const_embedded_time::*;
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_00>::from_ticks(1);")]
+            #[doc = concat!("let d2: Option<Duration::<", stringify!($i), ", 1, 1_000>> = d1.const_try_into();")]
+            ///
+            /// assert_eq!(d2.unwrap().ticks(), 10);
+            /// ```
+            pub const fn const_try_into<const O_NOM: u32, const O_DENOM: u32>(
                 self,
             ) -> Option<Duration<$i, O_NOM, O_DENOM>> {
                 if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
@@ -165,7 +256,7 @@ macro_rules! impl_duration_for_integer {
             pub fn convert<const O_NOM: u32, const O_DENOM: u32>(
                 self,
             ) -> Duration<$i, O_NOM, O_DENOM> {
-                if let Some(v) = self.checked_into() {
+                if let Some(v) = self.const_try_into() {
                     v
                 } else {
                     panic!("Into failed!");
@@ -223,42 +314,14 @@ macro_rules! impl_duration_for_integer {
         {
             #[inline]
             fn partial_cmp(&self, other: &Duration<$i, R_NOM, R_DENOM>) -> Option<Ordering> {
-                //
-                // We want to check:
-                //
-                // n_lh / d_lh * lh_ticks {cmp} n_rh / d_rh * rh_ticks
-                //
-                // simplify to
-                //
-                // n_lh * d_rh * lh_ticks {cmp} n_rh * d_lh * rh_ticks
-                //
-                // find gdc(n_lh * d_rh, n_rh * d_lh) and use that to make the constants minimal (done
-                // with the `helpers::Helpers` struct)
-                //
-                // then perform the comparison in a comparable basis
-                //
-
-                if Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::SAME_BASE {
-                    // If we are in the same base, comparison in trivial
-                    Some(self.ticks.cmp(&other.ticks))
-                } else {
-                    Some(
-                        self.ticks
-                            .checked_mul(
-                                Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::RD_TIMES_LN as $i,
-                            )?
-                            .cmp(&other.ticks.checked_mul(
-                                Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::LD_TIMES_RN as $i,
-                            )?),
-                    )
-                }
+                self.const_partial_cmp(*other)
             }
         }
 
         impl<const NOM: u32, const DENOM: u32> Ord for Duration<$i, NOM, DENOM> {
             #[inline]
             fn cmp(&self, other: &Self) -> Ordering {
-                self.ticks.cmp(&other.ticks)
+                Self::_const_cmp(self.ticks, other.ticks)
             }
         }
 
@@ -267,36 +330,19 @@ macro_rules! impl_duration_for_integer {
         {
             #[inline]
             fn eq(&self, other: &Duration<$i, R_NOM, R_DENOM>) -> bool {
-                if Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::SAME_BASE {
-                    // If we are in the same base, comparison in trivial
-                    self.ticks.eq(&other.ticks)
-                } else {
-                    let lh = self
-                        .ticks
-                        .checked_mul(Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::RD_TIMES_LN as $i);
-                    let rh = other
-                        .ticks
-                        .checked_mul(Helpers::<L_NOM, L_DENOM, R_NOM, R_DENOM>::LD_TIMES_RN as $i);
-
-                    if let (Some(lh), Some(rh)) = (lh, rh) {
-                        lh == rh
-                    } else {
-                        false
-                    }
-                }
+                self.const_eq(*other)
             }
         }
 
         impl<const NOM: u32, const DENOM: u32> Eq for Duration<$i, NOM, DENOM> {}
 
         // Duration - Duration = Duration
-        impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
-            ops::Sub<Duration<$i, R_NOM, R_DENOM>> for Duration<$i, L_NOM, L_DENOM>
+        impl<const NOM: u32, const DENOM: u32> ops::Sub for Duration<$i, NOM, DENOM>
         {
-            type Output = Duration<$i, L_NOM, L_DENOM>;
+            type Output = Duration<$i, NOM, DENOM>;
 
             #[inline]
-            fn sub(self, other: Duration<$i, R_NOM, R_DENOM>) -> Self::Output {
+            fn sub(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
                 if let Some(v) = self.checked_sub(other) {
                     v
                 } else {
@@ -306,13 +352,12 @@ macro_rules! impl_duration_for_integer {
         }
 
         // Duration + Duration = Duration
-        impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
-            ops::Add<Duration<$i, R_NOM, R_DENOM>> for Duration<$i, L_NOM, L_DENOM>
+        impl<const NOM: u32, const DENOM: u32> ops::Add for Duration<$i, NOM, DENOM>
         {
-            type Output = Duration<$i, L_NOM, L_DENOM>;
+            type Output = Duration<$i, NOM, DENOM>;
 
             #[inline]
-            fn add(self, other: Duration<$i, R_NOM, R_DENOM>) -> Self::Output {
+            fn add(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
                 if let Some(v) = self.checked_add(other) {
                     v
                 } else {

@@ -1,3 +1,57 @@
+//! `fugit` provides a comprehensive library of [`Duration`] and [`Instant`] for the handling of
+//! time in embedded systems. The library is specifically designed to maximize const-ification
+//! which allows for most comparisons and changes of time-base to be made at compile time, rather
+//! than run time.
+//!
+//! The library is aimed at ease-of-use and performance first.
+//!
+//! ```
+//! use const_embedded_time::*;
+//!
+//! fn foo(d: Duration<u32, 1, 1_000>) {
+//!     // ...
+//! }
+//!
+//! foo(200.millis()); // <-- Compile time move of base
+//! foo(Duration::<u32, 1, 1_000_000>::from_ticks(1_000_000).convert()); // <-- Compile time move of base
+//!
+//!
+//! // -----------------------
+//!
+//!
+//! let d = Duration::<u32, 1, 1_000>::from_ticks(111);
+//!
+//! let sum1 = d + 300.millis();
+//! //             ^^^ Compile time move of base, only a sum is needed and no change of base
+//!
+//! let sum2 = d + Duration::<u32, 1, 1_000_000>::from_ticks(1_000_000).convert();
+//! //             ^^^ Compile time move of base, only a sum is needed and no change of base
+//!
+//!
+//! // -----------------------
+//!
+//!
+//! fn bar(d1: Duration<u32, 1, 1_000>, d2: Duration<u32, 1, 1_000_000>) {
+//!     let sum = d1 + d2.convert();
+//!     //        ^^^^^^^ Run time move of base, will use a `mul` and `div` instruction (Cortex-M3+) to
+//!     //                perform the move of base
+//!
+//!     let ops = d1 > d2;
+//!     //        ^^^^^^^ Run time comparison of different base, will use 2 `mul` instructions
+//!     //                (Cortex-M3+) to perform the comparison
+//! }
+//!
+//! fn baz(d1: Duration<u64, 1, 1_000>, d2: Duration<u64, 1, 1_000_000>) {
+//!     let sum = d1 + d2.convert();
+//!     //        ^^^^^^^ Run time move of base, will use a `mul` insruction and `div`
+//!     //                soft-impl (Cortex-M3+) to perform the move of base
+//!
+//!     let ops = d1 > d2;
+//!     //        ^^^^^^^ Run time comparison of different base, will use 4 `mul` instructions
+//!     //                (Cortex-M3+) to perform the comparison
+//! }
+//! ```
+
 #![cfg_attr(not(test), no_std)]
 
 mod duration;
@@ -393,13 +447,17 @@ mod test {
         assert_eq!(diff, Duration::<u32, 1, 1_000>::from_ticks(9));
 
         // Different base
-        let sum: Duration<u32, 1, 10_000> =
-            Duration::<u32, 1, 10_000>::from_ticks(10) + Duration::<u32, 1, 1_000>::from_ticks(1);
+        let sum: Duration<u32, 1, 10_000> = Duration::<u32, 1, 10_000>::from_ticks(10)
+            + Duration::<u32, 1, 1_000>::from_ticks(1).convert();
         assert_eq!(sum, Duration::<u32, 1, 1_000>::from_ticks(2));
 
-        let diff: Duration<u32, 1, 10_000> =
-            Duration::<u32, 1, 10_000>::from_ticks(10) - Duration::<u32, 1, 1_000>::from_ticks(1);
+        let diff: Duration<u32, 1, 10_000> = Duration::<u32, 1, 10_000>::from_ticks(10)
+            - Duration::<u32, 1, 1_000>::from_ticks(1).convert();
         assert_eq!(diff, Duration::<u32, 1, 10_000>::from_ticks(0));
+
+        // Short hand vs u32 (should not need `.into()`)
+        let sum = Duration::<u32, 1, 10_000>::from_ticks(10) + 1.millis();
+        assert_eq!(sum, Duration::<u32, 1, 10_000>::from_ticks(20));
     }
 
     #[test]
@@ -414,12 +472,12 @@ mod test {
         assert_eq!(diff, Duration::<u64, 1, 1_000>::from_ticks(9));
 
         // Different base
-        let sum: Duration<u64, 1, 10_000> =
-            Duration::<u64, 1, 10_000>::from_ticks(10) + Duration::<u64, 1, 1_000>::from_ticks(1);
+        let sum: Duration<u64, 1, 10_000> = Duration::<u64, 1, 10_000>::from_ticks(10)
+            + Duration::<u64, 1, 1_000>::from_ticks(1).convert();
         assert_eq!(sum, Duration::<u64, 1, 1_000>::from_ticks(2));
 
-        let diff: Duration<u64, 1, 10_000> =
-            Duration::<u64, 1, 10_000>::from_ticks(10) - Duration::<u64, 1, 1_000>::from_ticks(1);
+        let diff: Duration<u64, 1, 10_000> = Duration::<u64, 1, 10_000>::from_ticks(10)
+            - Duration::<u64, 1, 1_000>::from_ticks(1).convert();
         assert_eq!(diff, Duration::<u64, 1, 1_000>::from_ticks(0));
 
         // Short hand vs u64 (should not need `.into()`)
