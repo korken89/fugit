@@ -8,31 +8,18 @@
 //! ```
 //! use const_embedded_time::*;
 //!
-//! fn foo(d: Duration<u32, 1, 1_000>) {
-//!     // ...
-//! }
-//!
-//! foo(200.millis()); // <-- Compile time move of base
-//! foo(Duration::<u32, 1, 1_000_000>::from_ticks(1_000_000).convert()); // <-- Compile time move of base
-//!
-//!
-//! // -----------------------
-//!
-//!
+//! // Efficient short-hands (`.millis()`, ...)
 //! let d = Duration::<u32, 1, 1_000>::from_ticks(111);
 //!
 //! let sum1 = d + 300.millis();
 //! //             ^^^ Compile time move of base, only a sum is needed and no change of base
 //!
-//! let sum2 = d + Duration::<u32, 1, 1_000_000>::from_ticks(1_000_000).convert();
-//! //             ^^^ Compile time move of base, only a sum is needed and no change of base
-//!
 //!
 //! // -----------------------
 //!
-//!
+//! // Best effort for fixed types
 //! fn bar(d1: Duration<u32, 1, 1_000>, d2: Duration<u32, 1, 1_000_000>) {
-//!     let sum = d1 + d2.convert();
+//!     let sum = d1 + d2;
 //!     //        ^^^^^^^ Run time move of base, will use a `mul` and `div` instruction (Cortex-M3+) to
 //!     //                perform the move of base
 //!
@@ -42,7 +29,7 @@
 //! }
 //!
 //! fn baz(d1: Duration<u64, 1, 1_000>, d2: Duration<u64, 1, 1_000_000>) {
-//!     let sum = d1 + d2.convert();
+//!     let sum = d1 + d2;
 //!     //        ^^^^^^^ Run time move of base, will use a `mul` insruction and `div`
 //!     //                soft-impl (Cortex-M3+) to perform the move of base
 //!
@@ -447,12 +434,12 @@ mod test {
         assert_eq!(diff, Duration::<u32, 1, 1_000>::from_ticks(9));
 
         // Different base
-        let sum: Duration<u32, 1, 10_000> = Duration::<u32, 1, 10_000>::from_ticks(10)
-            + Duration::<u32, 1, 1_000>::from_ticks(1).convert();
+        let sum: Duration<u32, 1, 10_000> =
+            Duration::<u32, 1, 10_000>::from_ticks(10) + Duration::<u32, 1, 1_000>::from_ticks(1);
         assert_eq!(sum, Duration::<u32, 1, 1_000>::from_ticks(2));
 
-        let diff: Duration<u32, 1, 10_000> = Duration::<u32, 1, 10_000>::from_ticks(10)
-            - Duration::<u32, 1, 1_000>::from_ticks(1).convert();
+        let diff: Duration<u32, 1, 10_000> =
+            Duration::<u32, 1, 10_000>::from_ticks(10) - Duration::<u32, 1, 1_000>::from_ticks(1);
         assert_eq!(diff, Duration::<u32, 1, 10_000>::from_ticks(0));
 
         // Short hand vs u32 (should not need `.into()`)
@@ -472,12 +459,12 @@ mod test {
         assert_eq!(diff, Duration::<u64, 1, 1_000>::from_ticks(9));
 
         // Different base
-        let sum: Duration<u64, 1, 10_000> = Duration::<u64, 1, 10_000>::from_ticks(10)
-            + Duration::<u64, 1, 1_000>::from_ticks(1).convert();
+        let sum: Duration<u64, 1, 10_000> =
+            Duration::<u64, 1, 10_000>::from_ticks(10) + Duration::<u64, 1, 1_000>::from_ticks(1);
         assert_eq!(sum, Duration::<u64, 1, 1_000>::from_ticks(2));
 
-        let diff: Duration<u64, 1, 10_000> = Duration::<u64, 1, 10_000>::from_ticks(10)
-            - Duration::<u64, 1, 1_000>::from_ticks(1).convert();
+        let diff: Duration<u64, 1, 10_000> =
+            Duration::<u64, 1, 10_000>::from_ticks(10) - Duration::<u64, 1, 1_000>::from_ticks(1);
         assert_eq!(diff, Duration::<u64, 1, 1_000>::from_ticks(0));
 
         // Short hand vs u64 (should not need `.into()`)
@@ -496,49 +483,53 @@ mod test {
             Duration::<u64, 1, 1_000>::from_ticks(10) - Duration::<u32, 1, 1_000>::from_ticks(1);
         assert_eq!(diff, Duration::<u64, 1, 1_000>::from_ticks(9));
 
-        // Different base (not supported)
-        // let sum: Duration<u64, 1, 10_000> =
-        //     Duration::<u64, 1, 10_000>::from_ticks(10) + Duration::<u32, 1, 1_000>::from_ticks(1);
-        // assert_eq!(sum, Duration::<u64, 1, 1_000>::from_ticks(2));
+        // Different base
+        let sum: Duration<u64, 1, 10_000> =
+            Duration::<u64, 1, 10_000>::from_ticks(10) + Duration::<u32, 1, 1_000>::from_ticks(1);
+        assert_eq!(sum, Duration::<u64, 1, 1_000>::from_ticks(2));
 
-        // let diff: Duration<u64, 1, 10_000> =
-        //     Duration::<u64, 1, 10_000>::from_ticks(10) - Duration::<u32, 1, 1_000>::from_ticks(1);
-        // assert_eq!(diff, Duration::<u64, 1, 1_000>::from_ticks(0));
+        let diff: Duration<u64, 1, 10_000> =
+            Duration::<u64, 1, 10_000>::from_ticks(10) - Duration::<u32, 1, 1_000>::from_ticks(1);
+        assert_eq!(diff, Duration::<u64, 1, 1_000>::from_ticks(0));
     }
 
     #[test]
     fn duration_shorthands_u32() {
-        let d: Duration<u32, 1, 10_000> = 100_000.micros();
+        let z = Duration::<u32, 1, 10_000>::from_ticks(0);
+
+        let d: Duration<u32, 1, 10_000> = z + 100_000.micros();
         assert_eq!(d.ticks(), 1_000);
 
-        let d: Duration<u32, 1, 10_000> = 1.millis();
+        let d: Duration<u32, 1, 10_000> = z + 1.millis();
         assert_eq!(d.ticks(), 10);
 
-        let d: Duration<u32, 1, 10_000> = 1.secs();
+        let d: Duration<u32, 1, 10_000> = z + 1.secs();
         assert_eq!(d.ticks(), 10_000);
 
-        let d: Duration<u32, 1, 10_000> = 1.minutes();
+        let d: Duration<u32, 1, 10_000> = z + 1.minutes();
         assert_eq!(d.ticks(), 600_000);
 
-        let d: Duration<u32, 1, 10_000> = 1.hours();
+        let d: Duration<u32, 1, 10_000> = z + 1.hours();
         assert_eq!(d.ticks(), 36_000_000);
     }
 
     #[test]
     fn duration_shorthands_u64() {
-        let d: Duration<u64, 1, 10_000> = 100_000.micros().into();
+        let z = Duration::<u64, 1, 10_000>::from_ticks(0);
+
+        let d: Duration<u64, 1, 10_000> = z + 100_000.micros();
         assert_eq!(d.ticks(), 1_000);
 
-        let d: Duration<u64, 1, 10_000> = 1.millis().into();
+        let d: Duration<u64, 1, 10_000> = z + 1.millis();
         assert_eq!(d.ticks(), 10);
 
-        let d: Duration<u64, 1, 10_000> = 1.secs().into();
+        let d: Duration<u64, 1, 10_000> = z + 1.secs();
         assert_eq!(d.ticks(), 10_000);
 
-        let d: Duration<u64, 1, 10_000> = 1.minutes().into();
+        let d: Duration<u64, 1, 10_000> = z + 1.minutes();
         assert_eq!(d.ticks(), 600_000);
 
-        let d: Duration<u64, 1, 10_000> = 1.hours().into();
+        let d: Duration<u64, 1, 10_000> = z + 1.hours();
         assert_eq!(d.ticks(), 36_000_000);
     }
 

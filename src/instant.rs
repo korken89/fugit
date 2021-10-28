@@ -207,13 +207,13 @@ macro_rules! impl_instant_for_integer {
         // We have limited this to use same numerator and denominator in both left and right hand sides,
         // this allows for the extension traits to work. For usage with different fraction, use
         // `checked_sub_duration`.
-        impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<$i, NOM, DENOM>>
-            for Instant<$i, NOM, DENOM>
+        impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
+            ops::Sub<Duration<$i, R_NOM, R_DENOM>> for Instant<$i, L_NOM, L_DENOM>
         {
-            type Output = Instant<$i, NOM, DENOM>;
+            type Output = Instant<$i, L_NOM, L_DENOM>;
 
             #[inline]
-            fn sub(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
+            fn sub(self, other: Duration<$i, R_NOM, R_DENOM>) -> Self::Output {
                 if let Some(v) = self.checked_sub_duration(other) {
                     v
                 } else {
@@ -226,13 +226,13 @@ macro_rules! impl_instant_for_integer {
         // We have limited this to use same numerator and denominator in both left and right hand sides,
         // this allows for the extension traits to work. For usage with different fraction, use
         // `checked_add_duration`.
-        impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<$i, NOM, DENOM>>
-            for Instant<$i, NOM, DENOM>
+        impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
+            ops::Add<Duration<$i, R_NOM, R_DENOM>> for Instant<$i, L_NOM, L_DENOM>
         {
-            type Output = Instant<$i, NOM, DENOM>;
+            type Output = Instant<$i, L_NOM, L_DENOM>;
 
             #[inline]
-            fn add(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
+            fn add(self, other: Duration<$i, R_NOM, R_DENOM>) -> Self::Output {
                 if let Some(v) = self.checked_add_duration(other) {
                     v
                 } else {
@@ -295,14 +295,18 @@ impl_instant_for_integer!(u64);
 // We have limited this to use same numerator and denominator in both left and right hand sides,
 // this allows for the extension traits to work. For usage with different fraction, use
 // `checked_sub_duration`.
-impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<u32, NOM, DENOM>>
-    for Instant<u64, NOM, DENOM>
+impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
+    ops::Sub<Duration<u32, R_NOM, R_DENOM>> for Instant<u64, L_NOM, L_DENOM>
 {
-    type Output = Instant<u64, NOM, DENOM>;
+    type Output = Instant<u64, L_NOM, L_DENOM>;
 
     #[inline]
-    fn sub(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
-        self.sub(Duration::<u64, NOM, DENOM>::from_ticks(other.ticks() as u64))
+    fn sub(self, other: Duration<u32, R_NOM, R_DENOM>) -> Self::Output {
+        if let Some(v) = self.checked_sub_duration(other.into()) {
+            v
+        } else {
+            panic!("Sub failed! Overflow");
+        }
     }
 }
 
@@ -310,13 +314,29 @@ impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<u32, NOM, DENOM>>
 // We have limited this to use same numerator and denominator in both left and right hand sides,
 // this allows for the extension traits to work. For usage with different fraction, use
 // `checked_add_duration`.
-impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<u32, NOM, DENOM>>
-    for Instant<u64, NOM, DENOM>
+impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
+    ops::Add<Duration<u32, R_NOM, R_DENOM>> for Instant<u64, L_NOM, L_DENOM>
 {
-    type Output = Instant<u64, NOM, DENOM>;
+    type Output = Instant<u64, L_NOM, L_DENOM>;
 
     #[inline]
-    fn add(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
-        self.add(Duration::<u64, NOM, DENOM>::from_ticks(other.ticks() as u64))
+    fn add(self, other: Duration<u32, R_NOM, R_DENOM>) -> Self::Output {
+        if let Some(v) = self.checked_add_duration(other.into()) {
+            v
+        } else {
+            panic!("Add failed! Overflow");
+        }
     }
 }
+// impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
+//     ops::Add<Duration<u32, R_NOM, R_DENOM>> for Duration<u64, L_NOM, L_DENOM>
+// {
+//     type Output = Duration<u64, L_NOM, L_DENOM>;
+//
+//     #[inline]
+//     fn add(self, other: Duration<u32, R_NOM, R_DENOM>) -> Self::Output {
+//         self.add(Duration::<u64, L_NOM, L_DENOM>::from_ticks(
+//             other.ticks() as u64
+//         ))
+//     }
+// }
