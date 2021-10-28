@@ -1,4 +1,4 @@
-# const-embedded-time
+# `fugit`
 
 This library is a heavily inspired Rust port of `std::chrono`'s `Duration` from C++ which does all it can at compile time.
 

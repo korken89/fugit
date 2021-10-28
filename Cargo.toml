@@ -1,7 +1,14 @@
 [package]
-name = "const-embedded-time"
+name = "fugit"
 version = "0.1.0"
 edition = "2021"
+authors = ["Emil Fresk <emil.fresk@gmail.com>"]
+description = "Time library for embedded targets with ease-of-use and performance first."
+keywords = ["Time", "Duration", "Instant", "const"]
+categories = ["time", "embedded", "no-std"]
+readme = "README.md"
+repository = "https://github.com/korken89/fugit"
+license = "MIT OR Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

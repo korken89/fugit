@@ -6,7 +6,7 @@
 //! The library is aimed at ease-of-use and performance first.
 //!
 //! ```
-//! use const_embedded_time::*;
+//! use fugit::*;
 //!
 //! // Efficient short-hands (`.millis()`, ...)
 //! let d = Duration::<u32, 1, 1_000>::from_ticks(111);

@@ -18,7 +18,7 @@ macro_rules! impl_instant_for_integer {
             /// Create an `Instant` from a ticks value.
             ///
             /// ```
-            /// # use const_embedded_time::*;
+            /// # use fugit::*;
             #[doc = concat!("let _i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             /// ```
             #[inline]
@@ -32,7 +32,7 @@ macro_rules! impl_instant_for_integer {
             /// Extract the ticks from an `Instant`.
             ///
             /// ```
-            /// # use const_embedded_time::*;
+            /// # use fugit::*;
             #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(234);")]
             ///
             /// assert_eq!(i.ticks(), 234);
@@ -45,7 +45,7 @@ macro_rules! impl_instant_for_integer {
             /// Const comparison of `Instant`s.
             ///
             /// ```
-            /// # use const_embedded_time::*;
+            /// # use fugit::*;
             #[doc = concat!("let i1 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             #[doc = concat!("let i2 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
             ///
@@ -72,7 +72,7 @@ macro_rules! impl_instant_for_integer {
             /// Duration between `Instant`s.
             ///
             /// ```
-            /// # use const_embedded_time::*;
+            /// # use fugit::*;
             #[doc = concat!("let i1 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             #[doc = concat!("let i2 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
             ///
@@ -97,7 +97,7 @@ macro_rules! impl_instant_for_integer {
             /// Subtract a `Duration` from an `Instant` while checking for overflow.
             ///
             /// ```
-            /// # use const_embedded_time::*;
+            /// # use fugit::*;
             #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             ///
@@ -130,7 +130,7 @@ macro_rules! impl_instant_for_integer {
             /// Add a `Duration` to an `Instant` while checking for overflow.
             ///
             /// ```
-            /// # use const_embedded_time::*;
+            /// # use fugit::*;
             #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             ///

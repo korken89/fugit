@@ -18,7 +18,7 @@ macro_rules! impl_duration_for_integer {
             /// Create a `Duration` from a ticks value.
             ///
             /// ```
-            /// # use const_embedded_time::*;
+            /// # use fugit::*;
             #[doc = concat!("let _d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             /// ```
             #[inline]
@@ -32,7 +32,7 @@ macro_rules! impl_duration_for_integer {
             /// Extract the ticks from a `Duration`.
             ///
             /// ```
-            /// # use const_embedded_time::*;
+            /// # use fugit::*;
             #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(234);")]
             ///
             /// assert_eq!(d.ticks(), 234);
@@ -45,7 +45,7 @@ macro_rules! impl_duration_for_integer {
             /// Add two durations while checking for overflow.
             ///
             /// ```
-            /// # use const_embedded_time::*;
+            /// # use fugit::*;
             #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
             #[doc = concat!("let d3 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(", stringify!($i), "::MAX);")]
@@ -84,7 +84,7 @@ macro_rules! impl_duration_for_integer {
             /// Subtract two durations while checking for overflow.
             ///
             /// ```
-            /// # use const_embedded_time::*;
+            /// # use fugit::*;
             #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
             #[doc = concat!("let d3 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(", stringify!($i), "::MAX);")]
@@ -135,7 +135,7 @@ macro_rules! impl_duration_for_integer {
             /// Const equality check.
             ///
             /// ```
-            /// # use const_embedded_time::*;
+            /// # use fugit::*;
             #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_00>::from_ticks(1);")]
             #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             ///
@@ -183,7 +183,7 @@ macro_rules! impl_duration_for_integer {
             /// Const equality check.
             ///
             /// ```
-            /// # use const_embedded_time::*;
+            /// # use fugit::*;
             #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_00>::from_ticks(1);")]
             #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(10);")]
             ///
@@ -216,7 +216,7 @@ macro_rules! impl_duration_for_integer {
             /// Const try into, checking for overflow.
             ///
             /// ```
-            /// # use const_embedded_time::*;
+            /// # use fugit::*;
             #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_00>::from_ticks(1);")]
             #[doc = concat!("let d2: Option<Duration::<", stringify!($i), ", 1, 1_000>> = d1.const_try_into();")]
             ///
@@ -246,7 +246,7 @@ macro_rules! impl_duration_for_integer {
             /// Unfortunately not a `From` impl due to collision with the std lib.
             ///
             /// ```
-            /// # use const_embedded_time::*;
+            /// # use fugit::*;
             #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_00>::from_ticks(1);")]
             #[doc = concat!("let d2: Duration::<", stringify!($i), ", 1, 1_000> = d1.convert();")]
             ///
