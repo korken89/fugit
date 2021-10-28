@@ -132,7 +132,7 @@ macro_rules! impl_duration_for_integer {
                 }
             }
 
-            /// Const equality check.
+            /// Const partial comparison.
             ///
             /// ```
             /// # use fugit::*;
