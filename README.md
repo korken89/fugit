@@ -1,6 +1,8 @@
 # `fugit`
 
-This library is a heavily inspired Rust port of `std::chrono`'s `Duration` from C++ which does all it can at compile time.
+> `fugit` provides a comprehensive library of `Duration` and `Instant` for the handling of time in embedded systems, doing all it can at compile time.
+
+This library is a heavily inspired of `std::chrono`'s `Duration` from C++ which does all it can at compile time.
 
 ## Aims
 
