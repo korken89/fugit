@@ -554,7 +554,7 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
     }
 }
 
-/// Extension trait for simple short-hands
+/// Extension trait for simple short-hands for u32 Durations
 pub trait ExtU32 {
     /// Shorthand for creating a duration which represents microseconds.
     fn micros<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM>;
@@ -596,5 +596,51 @@ impl ExtU32 for u32 {
     #[inline]
     fn hours<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
         Duration::<u32, NOM, DENOM>::hours(self)
+    }
+}
+
+
+/// Extension trait for simple short-hands for u64 Durations
+pub trait ExtU64 {
+    /// Shorthand for creating a duration which represents microseconds.
+    fn micros<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM>;
+
+    /// Shorthand for creating a duration which represents milliseconds.
+    fn millis<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM>;
+
+    /// Shorthand for creating a duration which represents seconds.
+    fn secs<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM>;
+
+    /// Shorthand for creating a duration which represents minutes.
+    fn minutes<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM>;
+
+    /// Shorthand for creating a duration which represents hours.
+    fn hours<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM>;
+}
+
+impl ExtU64 for u64 {
+    #[inline]
+    fn micros<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
+        Duration::<u64, NOM, DENOM>::micros(self)
+    }
+
+    #[inline]
+    fn millis<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
+        Duration::<u64, NOM, DENOM>::millis(self)
+    }
+
+    #[inline]
+    fn secs<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
+        Duration::<u64, NOM, DENOM>::secs(self)
+    }
+
+    #[inline]
+    fn minutes<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
+        Duration::<u64, NOM, DENOM>::minutes(self)
+    }
+
+    #[inline]
+    fn hours<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
+        Duration::<u64, NOM, DENOM>::hours(self)
     }
 }

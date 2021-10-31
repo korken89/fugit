@@ -47,13 +47,12 @@ mod duration;
 mod helpers;
 mod instant;
 
-pub use duration::{Duration, ExtU32};
+pub use duration::{Duration, ExtU32, ExtU64};
 pub use instant::Instant;
 
 #[cfg(test)]
 mod test {
     use crate::Duration;
-    use crate::ExtU32;
     use crate::Instant;
 
     fn take_ms(d: Duration<u32, 1, 1_000>) -> Duration<u32, 1, 1_000> {
@@ -426,6 +425,8 @@ mod test {
 
     #[test]
     fn duration_duration_math_u32() {
+        use crate::ExtU32;
+
         // Same base
         let sum: Duration<u32, 1, 1_000> =
             Duration::<u32, 1, 1_000>::from_ticks(10) + Duration::<u32, 1, 1_000>::from_ticks(1);
@@ -451,6 +452,8 @@ mod test {
 
     #[test]
     fn duration_duration_math_u64() {
+        use crate::ExtU64;
+
         // Same base
         let sum: Duration<u64, 1, 1_000> =
             Duration::<u64, 1, 1_000>::from_ticks(10) + Duration::<u64, 1, 1_000>::from_ticks(1);
@@ -497,6 +500,8 @@ mod test {
 
     #[test]
     fn duration_shorthands_u32() {
+        use crate::ExtU32;
+
         let d: Duration<u32, 1, 10_000> = 100_000.micros();
         assert_eq!(d.ticks(), 1_000);
 
@@ -515,19 +520,21 @@ mod test {
 
     #[test]
     fn duration_shorthands_u64() {
-        let d: Duration<u64, 1, 10_000> = 100_000.micros().into();
+        use crate::ExtU64;
+
+        let d: Duration<u64, 1, 10_000> = 100_000.micros();
         assert_eq!(d.ticks(), 1_000);
 
-        let d: Duration<u64, 1, 10_000> = 1.millis().into();
+        let d: Duration<u64, 1, 10_000> = 1.millis();
         assert_eq!(d.ticks(), 10);
 
-        let d: Duration<u64, 1, 10_000> = 1.secs().into();
+        let d: Duration<u64, 1, 10_000> = 1.secs();
         assert_eq!(d.ticks(), 10_000);
 
-        let d: Duration<u64, 1, 10_000> = 1.minutes().into();
+        let d: Duration<u64, 1, 10_000> = 1.minutes();
         assert_eq!(d.ticks(), 600_000);
 
-        let d: Duration<u64, 1, 10_000> = 1.hours().into();
+        let d: Duration<u64, 1, 10_000> = 1.hours();
         assert_eq!(d.ticks(), 36_000_000);
     }
 
@@ -637,6 +644,8 @@ mod test {
 
     #[test]
     fn instant_duration_math_u32() {
+        use crate::ExtU32;
+
         // Instant - Instant, Same base
         let diff: Duration<u32, 1, 1_000> =
             Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(1);
@@ -671,6 +680,8 @@ mod test {
 
     #[test]
     fn instant_duration_math_u64() {
+        use crate::ExtU64;
+
         // Instant - Instant, Same base
         let diff: Duration<u64, 1, 1_000> =
             Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(1);
