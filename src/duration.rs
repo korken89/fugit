@@ -336,14 +336,15 @@ macro_rules! impl_duration_for_integer {
 
         impl<const NOM: u32, const DENOM: u32> Eq for Duration<$i, NOM, DENOM> {}
 
-        // Duration - Duration = Duration
-        impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
-            ops::Sub<Duration<$i, R_NOM, R_DENOM>> for Duration<$i, L_NOM, L_DENOM>
+        // Duration - Duration = Duration (only same base until const_generics_defaults is
+        // stabilized)
+        impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<$i, NOM, DENOM>>
+            for Duration<$i, NOM, DENOM>
         {
-            type Output = Duration<$i, L_NOM, L_DENOM>;
+            type Output = Duration<$i, NOM, DENOM>;
 
             #[inline]
-            fn sub(self, other: Duration<$i, R_NOM, R_DENOM>) -> Self::Output {
+            fn sub(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
                 if let Some(v) = self.checked_sub(other) {
                     v
                 } else {
@@ -352,14 +353,15 @@ macro_rules! impl_duration_for_integer {
             }
         }
 
-        // Duration + Duration = Duration
-        impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
-            ops::Add<Duration<$i, R_NOM, R_DENOM>> for Duration<$i, L_NOM, L_DENOM>
+        // Duration + Duration = Duration (only same base until const_generics_defaults is
+        // stabilized)
+        impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<$i, NOM, DENOM>>
+            for Duration<$i, NOM, DENOM>
         {
-            type Output = Duration<$i, L_NOM, L_DENOM>;
+            type Output = Duration<$i, NOM, DENOM>;
 
             #[inline]
-            fn add(self, other: Duration<$i, R_NOM, R_DENOM>) -> Self::Output {
+            fn add(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
                 if let Some(v) = self.checked_add(other) {
                     v
                 } else {
@@ -474,17 +476,18 @@ impl<const NOM: u32, const DENOM: u32> convert::TryFrom<Duration<u64, NOM, DENOM
     }
 }
 
-// Duration - Duration = Duration (to make shorthands work)
-impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
-    ops::Sub<Duration<u32, R_NOM, R_DENOM>> for Duration<u64, L_NOM, L_DENOM>
+// Duration - Duration = Duration (to make shorthands work, until const_generics_defaults is
+// stabilized)
+impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<u32, NOM, DENOM>>
+    for Duration<u64, NOM, DENOM>
 {
-    type Output = Duration<u64, L_NOM, L_DENOM>;
+    type Output = Duration<u64, NOM, DENOM>;
 
     #[inline]
-    fn sub(self, other: Duration<u32, R_NOM, R_DENOM>) -> Self::Output {
-        if let Some(v) = self.checked_sub(Duration::<u64, R_NOM, R_DENOM>::from_ticks(
-            other.ticks() as u64,
-        )) {
+    fn sub(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
+        if let Some(v) =
+            self.checked_sub(Duration::<u64, NOM, DENOM>::from_ticks(other.ticks() as u64))
+        {
             v
         } else {
             panic!("Sub failed!");
@@ -492,17 +495,18 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
     }
 }
 
-// Duration + Duration = Duration (to make shorthands work)
-impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
-    ops::Add<Duration<u32, R_NOM, R_DENOM>> for Duration<u64, L_NOM, L_DENOM>
+// Duration + Duration = Duration (to make shorthands work, until const_generics_defaults is
+// stabilized)
+impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<u32, NOM, DENOM>>
+    for Duration<u64, NOM, DENOM>
 {
-    type Output = Duration<u64, L_NOM, L_DENOM>;
+    type Output = Duration<u64, NOM, DENOM>;
 
     #[inline]
-    fn add(self, other: Duration<u32, R_NOM, R_DENOM>) -> Self::Output {
-        if let Some(v) = self.checked_add(Duration::<u64, R_NOM, R_DENOM>::from_ticks(
-            other.ticks() as u64,
-        )) {
+    fn add(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
+        if let Some(v) =
+            self.checked_add(Duration::<u64, NOM, DENOM>::from_ticks(other.ticks() as u64))
+        {
             v
         } else {
             panic!("Add failed!");
@@ -553,44 +557,44 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
 /// Extension trait for simple short-hands
 pub trait ExtU32 {
     /// Shorthand for creating a duration which represents microseconds.
-    fn micros(self) -> Duration<u32, 1, 1_000_000>;
+    fn micros<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM>;
 
     /// Shorthand for creating a duration which represents milliseconds.
-    fn millis(self) -> Duration<u32, 1, 1_000>;
+    fn millis<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM>;
 
     /// Shorthand for creating a duration which represents seconds.
-    fn secs(self) -> Duration<u32, 1, 1>;
+    fn secs<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM>;
 
     /// Shorthand for creating a duration which represents minutes.
-    fn minutes(self) -> Duration<u32, 60, 1>;
+    fn minutes<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM>;
 
     /// Shorthand for creating a duration which represents hours.
-    fn hours(self) -> Duration<u32, 3_600, 1>;
+    fn hours<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM>;
 }
 
 impl ExtU32 for u32 {
     #[inline]
-    fn micros(self) -> Duration<u32, 1, 1_000_000> {
-        Duration::<u32, 1, 1_000_000>::micros(self)
+    fn micros<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
+        Duration::<u32, NOM, DENOM>::micros(self)
     }
 
     #[inline]
-    fn millis(self) -> Duration<u32, 1, 1_000> {
-        Duration::<u32, 1, 1_000>::millis(self)
+    fn millis<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
+        Duration::<u32, NOM, DENOM>::millis(self)
     }
 
     #[inline]
-    fn secs(self) -> Duration<u32, 1, 1> {
-        Duration::<u32, 1, 1>::secs(self)
+    fn secs<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
+        Duration::<u32, NOM, DENOM>::secs(self)
     }
 
     #[inline]
-    fn minutes(self) -> Duration<u32, 60, 1> {
-        Duration::<u32, 60, 1>::minutes(self)
+    fn minutes<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
+        Duration::<u32, NOM, DENOM>::minutes(self)
     }
 
     #[inline]
-    fn hours(self) -> Duration<u32, 3_600, 1> {
-        Duration::<u32, 3_600, 1>::hours(self)
+    fn hours<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
+        Duration::<u32, NOM, DENOM>::hours(self)
     }
 }
