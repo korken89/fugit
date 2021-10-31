@@ -69,6 +69,20 @@ macro_rules! impl_instant_for_integer {
                 }
             }
 
+            /// Duration between since the start of the `Instant`. This assumes an instant which
+            /// won't wrap within the execution of the program.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(11);")]
+            ///
+            /// assert_eq!(i.duration_since_epoch().ticks(), 11);
+            /// ```
+            #[inline]
+            pub const fn duration_since_epoch(self) -> Duration<$i, NOM, DENOM> {
+                Duration::<$i, NOM, DENOM>::from_ticks(self.ticks())
+            }
+
             /// Duration between `Instant`s.
             ///
             /// ```
