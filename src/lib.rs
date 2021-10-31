@@ -40,6 +40,7 @@
 //! ```
 
 #![cfg_attr(not(test), no_std)]
+#![deny(missing_docs)]
 
 pub mod aliases;
 mod duration;

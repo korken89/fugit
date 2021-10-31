@@ -552,10 +552,19 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
 
 /// Extension trait for simple short-hands
 pub trait ExtU32 {
+    /// Shorthand for creating a duration which represents microseconds.
     fn micros(self) -> Duration<u32, 1, 1_000_000>;
+
+    /// Shorthand for creating a duration which represents milliseconds.
     fn millis(self) -> Duration<u32, 1, 1_000>;
+
+    /// Shorthand for creating a duration which represents seconds.
     fn secs(self) -> Duration<u32, 1, 1>;
+
+    /// Shorthand for creating a duration which represents minutes.
     fn minutes(self) -> Duration<u32, 60, 1>;
+
+    /// Shorthand for creating a duration which represents hours.
     fn hours(self) -> Duration<u32, 3_600, 1>;
 }
 
