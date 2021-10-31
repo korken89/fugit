@@ -44,11 +44,12 @@
 #![cfg_attr(not(test), no_std)]
 #![deny(missing_docs)]
 
-pub mod aliases;
+mod aliases;
 mod duration;
 mod helpers;
 mod instant;
 
+pub use aliases::*;
 pub use duration::{Duration, ExtU32, ExtU64};
 pub use instant::Instant;
 

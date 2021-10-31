@@ -1,6 +1,6 @@
 [package]
 name = "fugit"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 authors = ["Emil Fresk <emil.fresk@gmail.com>"]
 description = "Time library for embedded targets with ease-of-use and performance first."

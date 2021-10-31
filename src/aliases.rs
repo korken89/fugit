@@ -48,6 +48,15 @@ pub type HoursDurationU32 = Duration<u32, 3_600, 1>;
 /// Alias for hours duration (`u64` backing storage)
 pub type HoursDurationU64 = Duration<u64, 3_600, 1>;
 
+/// Alias for durations that come from timers with a specific frequency
+pub type TimerDuration<T, const FREQ_HZ: u32> = Duration<T, 1, FREQ_HZ>;
+
+/// Alias for durations that come from timers with a specific frequency (`u32` backing storage)
+pub type TimerDurationU32<const FREQ_HZ: u32> = Duration<u32, 1, FREQ_HZ>;
+
+/// Alias for durations that come from timers with a specific frequency (`u64` backing storage)
+pub type TimerDurationU64<const FREQ_HZ: u32> = Duration<u64, 1, FREQ_HZ>;
+
 // -------------------------------
 
 /// Alias for instants that come from timers with a specific frequency
