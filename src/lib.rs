@@ -6,7 +6,7 @@
 //! The library is aimed at ease-of-use and performance first.
 //!
 //! ```
-//! use fugit::*;
+//! use fugit::{Duration, ExtU32};
 //!
 //! // Efficient short-hands (`.millis()`, ...)
 //! let d = Duration::<u32, 1, 1_000>::from_ticks(111);
@@ -19,23 +19,25 @@
 //!
 //! // Best effort for fixed types
 //! fn bar(d1: Duration<u32, 1, 1_000>, d2: Duration<u32, 1, 1_000_000>) {
-//!     let sum = d1 + d2;
+//!     let sum = d1 + d2.convert();
 //!     //        ^^^^^^^ Run time move of base, will use a `mul` and `div` instruction (Cortex-M3+) to
-//!     //                perform the move of base
+//!     //                perform the move of base.
+//!     //                The `.convert()` explicitly signals the move of base.
 //!
 //!     let ops = d1 > d2;
 //!     //        ^^^^^^^ Run time comparison of different base, will use 2 `mul` instructions
-//!     //                (Cortex-M3+) to perform the comparison
+//!     //                (Cortex-M3+) to perform the comparison.
 //! }
 //!
 //! fn baz(d1: Duration<u64, 1, 1_000>, d2: Duration<u64, 1, 1_000_000>) {
-//!     let sum = d1 + d2;
+//!     let sum = d1 + d2.convert();
 //!     //        ^^^^^^^ Run time move of base, will use a `mul` insruction and `div`
-//!     //                soft-impl (Cortex-M3+) to perform the move of base
+//!     //                soft-impl (Cortex-M3+) to perform the move of base.
+//!     //                The `.convert()` explicitly signals the move of base.
 //!
 //!     let ops = d1 > d2;
 //!     //        ^^^^^^^ Run time comparison of different base, will use 4 `mul` instructions
-//!     //                (Cortex-M3+) to perform the comparison
+//!     //                (Cortex-M3+) to perform the comparison.
 //! }
 //! ```
 

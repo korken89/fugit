@@ -599,7 +599,6 @@ impl ExtU32 for u32 {
     }
 }
 
-
 /// Extension trait for simple short-hands for u64 Durations
 pub trait ExtU64 {
     /// Shorthand for creating a duration which represents microseconds.
