@@ -1,6 +1,6 @@
 [package]
 name = "fugit"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["Emil Fresk <emil.fresk@gmail.com>"]
 description = "Time library for embedded targets with ease-of-use and performance first."
@@ -17,3 +17,6 @@ license = "MIT OR Apache-2.0"
 [dependencies.defmt]
 version = "0.2.3"
 optional = true
+
+[package.metadata.docs.rs]
+all-features = true

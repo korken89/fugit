@@ -1,6 +1,7 @@
 //! Type aliases for common uses
 
 use crate::duration::Duration;
+use crate::instant::Instant;
 
 /// Alias for microsecond duration
 pub type MicrosDuration<T> = Duration<T, 1, 1_000_000>;
@@ -46,3 +47,14 @@ pub type HoursDurationU32 = Duration<u32, 3_600, 1>;
 
 /// Alias for hours duration (`u64` backing storage)
 pub type HoursDurationU64 = Duration<u64, 3_600, 1>;
+
+// -------------------------------
+
+/// Alias for instants that come from timers with a specific frequency
+pub type TimerInstant<T, const FREQ_HZ: u32> = Instant<T, 1, FREQ_HZ>;
+
+/// Alias for instants that come from timers with a specific frequency (`u32` backing storage)
+pub type TimerInstantU32<const FREQ_HZ: u32> = Instant<u32, 1, FREQ_HZ>;
+
+/// Alias for instants that come from timers with a specific frequency (`u64` backing storage)
+pub type TimerInstantU64<const FREQ_HZ: u32> = Instant<u64, 1, FREQ_HZ>;
