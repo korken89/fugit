@@ -31,13 +31,13 @@ pub type SecsDurationU32 = Duration<u32, 1, 1>;
 pub type SecsDurationU64 = Duration<u64, 1, 1>;
 
 /// Alias for minutes duration
-pub type MinsDuration<T> = Duration<T, 60, 1>;
+pub type MinutesDuration<T> = Duration<T, 60, 1>;
 
 /// Alias for minutes duration (`u32` backing storage)
-pub type MinsDurationU32 = Duration<u32, 60, 1>;
+pub type MinutesDurationU32 = Duration<u32, 60, 1>;
 
 /// Alias for minutes duration (`u64` backing storage)
-pub type MinsDurationU64 = Duration<u64, 60, 1>;
+pub type MinutesDurationU64 = Duration<u64, 60, 1>;
 
 /// Alias for hours duration
 pub type HoursDuration<T> = Duration<T, 3_600, 1>;
