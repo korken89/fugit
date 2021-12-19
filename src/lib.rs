@@ -451,6 +451,10 @@ mod test {
         // Short hand vs u32 (should not need `.into()`)
         let sum = Duration::<u32, 1, 10_000>::from_ticks(10) + 1.millis();
         assert_eq!(sum, Duration::<u32, 1, 10_000>::from_ticks(20));
+
+        // Fixed in v0.3.2
+        let d: Duration<u32, 1, 1_000> = Duration::<u32, 1, 32_768>::from_ticks(42949672).convert();
+        assert_eq!(d.ticks(), 1_310_719);
     }
 
     #[test]

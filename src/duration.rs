@@ -228,13 +228,16 @@ macro_rules! impl_duration_for_integer {
                 if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
                     Some(Duration::<$i, O_NOM, O_DENOM>::from_ticks(self.ticks))
                 } else {
-                    if let Some(lh) = self
-                        .ticks
-                        .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i)
+                    if let Some(lh) = (self.ticks as u64)
+                        .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as u64)
                     {
-                        let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN as $i;
+                        let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN as u64;
 
-                        Some(Duration::<$i, O_NOM, O_DENOM>::from_ticks(ticks))
+                        if ticks <= <$i>::MAX as u64 {
+                            Some(Duration::<$i, O_NOM, O_DENOM>::from_ticks(ticks as $i))
+                        } else {
+                            None
+                        }
                     } else {
                         None
                     }
@@ -259,7 +262,7 @@ macro_rules! impl_duration_for_integer {
                 if let Some(v) = self.const_try_into() {
                     v
                 } else {
-                    panic!("Into failed!");
+                    panic!("Convert failed!");
                 }
             }
 
