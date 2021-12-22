@@ -173,6 +173,59 @@ macro_rules! impl_instant_for_integer {
                     }
                 }
             }
+
+            /// Try to convert to an [`Instant`] with a different fraction.
+            ///
+            /// Should optimize down to one multiply and one divide.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(40);")]
+            /// let d = i.try_into::<1, 250>().unwrap();
+            /// assert_eq!(d.ticks(), 10);
+            ///
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(", stringify!($i), "::MAX - 10);")]
+            /// let d = i.try_into::<7, 2_000>();
+            /// assert_eq!(d, None);
+            /// ```
+            pub const fn try_into<const O_NOM: u32, const O_DENOM: u32>(
+                self,
+            ) -> Option<Instant<$i, O_NOM, O_DENOM>> {
+                if let Some(ticks) = self
+                    .ticks
+                    .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i)
+                {
+                    Some(Instant::<$i, O_NOM, O_DENOM>::from_ticks(
+                        ticks / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN as $i,
+                    ))
+                } else {
+                    None
+                }
+            }
+
+            /// Infallibly convert to an [`Instant`] with a different fraction.
+            ///
+            /// If the user provides incompatible fractions (i.e., to do the conversion we must
+            /// multiply by something other than one), we will fail to compile:
+            /// ```compile_fail
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(4_294_967_290);")]
+            /// let d = i.into::<7, 1_000>();
+            /// ```
+            pub fn into<const O_NOM: u32, const O_DENOM: u32>(
+                self,
+            ) -> Instant<$i, O_NOM, O_DENOM> {
+                // assert at compile time that `RD_TIMES_LN` is one so that our conversion is lossless
+                let _ = Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN - 1;
+                let _ = 1 - Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN;
+
+                if let Some(result) = self.try_into() {
+                    result
+                } else {
+                    // SAFETY: guaranteed at compile time for `RD_TIMES_LN` to be one, and thus
+                    // for the conversion to be lossless
+                    unsafe { core::hint::unreachable_unchecked() }
+                }
+            }
         }
 
         impl<const NOM: u32, const DENOM: u32> PartialOrd for Instant<$i, NOM, DENOM> {

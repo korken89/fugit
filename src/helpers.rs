@@ -1,4 +1,4 @@
-/// Needed due to not being allowed to call const-fn in `PartialEq` fo some reasion
+/// Needed due to not being allowed to call const-fn in `PartialEq` fo some reason
 /// get the error:
 ///
 /// ```console
@@ -20,7 +20,7 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
 {
     /// Helper constants generated at compile time
     pub const DIVISOR: u64 =
-        gcd_binary_u64(L_DENOM as u64 * R_NOM as u64, R_DENOM as u64 * L_NOM as u64);
+        gcd::binary_u64(L_DENOM as u64 * R_NOM as u64, R_DENOM as u64 * L_NOM as u64);
 
     /// Helper constants generated at compile time
     pub const RD_TIMES_LN: u32 = ((R_DENOM as u64 * L_NOM as u64) / Self::DIVISOR) as u32;
@@ -30,40 +30,6 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
 
     /// Helper constants generated at compile time
     pub const SAME_BASE: bool = Self::LD_TIMES_RN == Self::RD_TIMES_LN;
-}
-
-/// Greatest common denominator (GCD)
-pub const fn gcd_binary_u64(mut u: u64, mut v: u64) -> u64 {
-    if u == 0 {
-        return v;
-    }
-
-    if v == 0 {
-        return u;
-    }
-
-    let shift = (u | v).trailing_zeros();
-    u >>= shift;
-    v >>= shift;
-    u >>= u.trailing_zeros();
-
-    loop {
-        v >>= v.trailing_zeros();
-
-        if u > v {
-            let t = u;
-            u = v;
-            v = t;
-        }
-
-        v -= u; // here v >= u
-
-        if v == 0 {
-            break;
-        }
-    }
-
-    u << shift
 }
 
 #[allow(dead_code)]

@@ -720,4 +720,18 @@ mod test {
         let diff: Instant<u64, 1, 10_000> = Instant::<u64, 1, 10_000>::from_ticks(10) - 1.millis();
         assert_eq!(diff, Instant::<u64, 1, 10_000>::from_ticks(0));
     }
+
+    #[test]
+    fn instant_try_into() {
+        let i = Instant::<u32, 1, 1_000>::from_ticks(40);
+        let d = i.try_into::<1, 250>().unwrap();
+        assert_eq!(d.ticks(), 10);
+    }
+
+    #[test]
+    fn instant_into() {
+        let i = Instant::<u32, 1, 1_000>::from_ticks(40);
+        let d = i.into::<1, 250>();
+        assert_eq!(d.ticks(), 10);
+    }
 }
