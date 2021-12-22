@@ -205,11 +205,11 @@ macro_rules! impl_instant_for_integer {
 
             /// Infallibly convert to an [`Instant`] with a different fraction.
             ///
-            /// If the user provides incompatible fractions (i.e., to do the conversion we must
-            /// multiply by something other than one), we will fail to compile:
+            /// If the user provides incompatible fractions (i.e., to do the conversion we must multiply by something
+            /// other than one), we will fail to compile, even if the conversion wouldn't have overflown:
             /// ```compile_fail
-            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(4_294_967_290);")]
-            /// let d = i.into::<7, 1_000>();
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(42);")]
+            /// let d = i.into::<7, 2_000>();
             /// ```
             pub fn into<const O_NOM: u32, const O_DENOM: u32>(
                 self,
