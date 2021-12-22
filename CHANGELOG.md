@@ -9,9 +9,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- `Instant::into` and `Instant::try_into` to convert between `Instant`s of different fractions (#13)
+
 ### Fixed
 
 ### Changed
+
+- Underlying method of calculating the GCD of fractions at compile time changed to `gcd` crate (#13)
 
 ## [v0.3.2]
 
