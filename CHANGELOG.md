@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Underlying const gcd implementation switched to the `gcd` crate.
+
 ## [v0.3.2]
 
 ### Fixed
