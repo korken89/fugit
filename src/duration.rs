@@ -250,13 +250,19 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_00>::from_ticks(1);")]
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 100>::from_ticks(1);")]
             #[doc = concat!("let d2: Duration::<", stringify!($i), ", 1, 1_000> = d1.convert();")]
             ///
             /// assert_eq!(d2.ticks(), 10);
             /// ```
-            // Sooooon const with const panic
-            pub fn convert<const O_NOM: u32, const O_DENOM: u32>(
+            /// Can be used in const contexts. Compilation will fail if the conversion causes overflow
+            /// ```compile_fail
+            /// # use fugit::*;
+            #[doc = concat!("const TICKS: ", stringify!($i), "= ", stringify!($i), "::MAX - 10;")]
+            #[doc = concat!("const D1: Duration::<", stringify!($i), ", 1, 100> = Duration::<", stringify!($i), ", 1, 100>::from_ticks(TICKS);")]
+            /// // Fails conversion due to tick overflow
+            #[doc = concat!("const D2: Duration::<", stringify!($i), ", 1, 200> = D1.convert();")]
+            pub const fn convert<const O_NOM: u32, const O_DENOM: u32>(
                 self,
             ) -> Duration<$i, O_NOM, O_DENOM> {
                 if let Some(v) = self.const_try_into() {
