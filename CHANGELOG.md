@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 - Underlying const gcd implementation switched to the `gcd` crate.
+- `Duration::convert` now `const`.
 
 ## [v0.3.2]
 
