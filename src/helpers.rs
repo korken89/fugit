@@ -45,23 +45,23 @@ pub struct Assert<const L: u32, const R: u32>;
 #[allow(dead_code)]
 impl<const L: u32, const R: u32> Assert<L, R> {
     /// Const assert hack
-    pub const GREATER_EQ: usize = L as usize - R as usize;
+    pub const GREATER_EQ: () = assert!(L >= R);
 
     /// Const assert hack
-    pub const LESS_EQ: usize = R as usize - L as usize;
+    pub const LESS_EQ: () = assert!(L <= R);
 
     /// Const assert hack
-    pub const NOT_EQ: isize = 0 / (R as isize - L as isize);
+    pub const NOT_EQ: () = assert!(L != R);
 
     /// Const assert hack
-    pub const EQ: usize = (R as usize - L as usize) + (L as usize - R as usize);
+    pub const EQ: () = assert!(L == R);
 
     /// Const assert hack
-    pub const GREATER: usize = L as usize - R as usize - 1;
+    pub const GREATER: () = assert!(L > R);
 
     /// Const assert hack
-    pub const LESS: usize = R as usize - L as usize - 1;
+    pub const LESS: () = assert!(L < R);
 
     /// Const assert hack
-    pub const POWER_OF_TWO: usize = 0 - (L as usize & (L as usize - 1));
+    pub const POWER_OF_TWO: () = assert!(L.is_power_of_two());
 }
