@@ -1,4 +1,5 @@
 use crate::helpers::{self, Helpers};
+use crate::Rate;
 use core::cmp::Ordering;
 use core::convert;
 use core::ops;
@@ -241,6 +242,39 @@ macro_rules! impl_duration_for_integer {
                     } else {
                         None
                     }
+                }
+            }
+
+            /// Const try into rate, checking for divide-by-zero.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
+            #[doc = concat!("let r1: Option<Rate::<", stringify!($i), ", 1, 1>> = d1.try_into_rate();")]
+            ///
+            /// assert_eq!(r1.unwrap().raw(), 500);
+            /// ```
+            pub const fn try_into_rate<const O_NOM: u32, const O_DENOM: u32>(
+                self,
+            ) -> Option<Rate<$i, O_NOM, O_DENOM>> {
+                if self.ticks > 0 {
+                    Some(Rate::<$i, O_NOM, O_DENOM>::from_raw(
+                        Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RATE_TO_DURATION_NUMERATOR as $i
+                        / self.ticks
+                    ))
+                } else {
+                    None
+                }
+            }
+
+            /// Convert from duration to rate.
+            pub const fn into_rate<const O_NOM: u32, const O_DENOM: u32>(
+                self,
+            ) -> Rate<$i, O_NOM, O_DENOM> {
+                if let Some(v) = self.try_into_rate() {
+                    v
+                } else {
+                    panic!("Into rate failed, divide-by-zero!");
                 }
             }
 

@@ -6,7 +6,7 @@
 //! The library is aimed at ease-of-use and performance first.
 //!
 //! ```
-//! use fugit::{Duration, ExtU32};
+//! use fugit::{Duration, DurationExtU32};
 //!
 //! // Efficient short-hands (`.millis()`, ...)
 //! let d = Duration::<u32, 1, 1_000>::from_ticks(111);
@@ -48,15 +48,24 @@ mod aliases;
 mod duration;
 mod helpers;
 mod instant;
+mod rate;
 
 pub use aliases::*;
-pub use duration::{Duration, ExtU32, ExtU64};
+pub use duration::{Duration, ExtU32 as DurationExtU32, ExtU64 as DurationExtU64};
 pub use instant::Instant;
+pub use rate::{ExtU32 as RateExtU32, ExtU64 as RateExtU64, Rate};
 
 #[cfg(test)]
 mod test {
     use crate::Duration;
     use crate::Instant;
+    use crate::Rate;
+
+    ////////////////////////////////////////////////////////////////////////////////
+    //
+    // Duration tests
+    //
+    ////////////////////////////////////////////////////////////////////////////////
 
     fn take_ms(d: Duration<u32, 1, 1_000>) -> Duration<u32, 1, 1_000> {
         d
@@ -428,7 +437,7 @@ mod test {
 
     #[test]
     fn duration_duration_math_u32() {
-        use crate::ExtU32;
+        use crate::DurationExtU32;
 
         // Same base
         let sum: Duration<u32, 1, 1_000> =
@@ -494,7 +503,7 @@ mod test {
 
     #[test]
     fn duration_duration_math_u64() {
-        use crate::ExtU64;
+        use crate::DurationExtU64;
 
         // Same base
         let sum: Duration<u64, 1, 1_000> =
@@ -593,7 +602,7 @@ mod test {
 
     #[test]
     fn duration_shorthands_u32() {
-        use crate::ExtU32;
+        use crate::DurationExtU32;
 
         let d: Duration<u32, 1, 10_000> = 100_000_000.nanos();
         assert_eq!(d.ticks(), 1_000);
@@ -642,7 +651,7 @@ mod test {
 
     #[test]
     fn duration_shorthands_u64() {
-        use crate::ExtU64;
+        use crate::DurationExtU64;
 
         let d: Duration<u64, 1, 10_000> = 100_000_000.nanos();
         assert_eq!(d.ticks(), 1_000);
@@ -688,6 +697,12 @@ mod test {
         let d = Duration::<u64, 1, 10_000>::from_ticks(180_000_000);
         assert_eq!(d.to_hours(), 5);
     }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    //
+    // Instant tests
+    //
+    ////////////////////////////////////////////////////////////////////////////////
 
     #[test]
     fn instant_compare_u32() {
@@ -795,7 +810,7 @@ mod test {
 
     #[test]
     fn instant_duration_math_u32() {
-        use crate::ExtU32;
+        use crate::DurationExtU32;
 
         // Instant - Instant, Same base
         let diff: Duration<u32, 1, 1_000> =
@@ -847,7 +862,7 @@ mod test {
 
     #[test]
     fn instant_duration_math_u64() {
-        use crate::ExtU64;
+        use crate::DurationExtU64;
 
         // Instant - Instant, Same base
         let diff: Duration<u64, 1, 1_000> =
@@ -932,5 +947,229 @@ mod test {
         let mut diff = Instant::<u64, 1, 10_000>::from_ticks(10);
         diff -= Duration::<u32, 1, 1_000>::from_ticks(1).convert();
         assert_eq!(diff, Instant::<u64, 1, 10_000>::from_ticks(0));
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    //
+    // Rate tests
+    //
+    ////////////////////////////////////////////////////////////////////////////////
+
+    fn take_khz(r: Rate<u32, 1_000, 1>) -> Rate<u32, 1_000, 1> {
+        r
+    }
+
+    #[test]
+    fn rate_functions() {
+        assert_eq!(
+            take_khz(Rate::<u32, 10_000, 1>::from_raw(1).convert()),
+            Rate::<u32, 1_000, 1>::from_raw(10)
+        );
+    }
+
+    #[test]
+    fn rate_compare_u32() {
+        // Same fraction
+        assert!(Rate::<u32, 1_000, 1>::from_raw(2) > Rate::<u32, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(2) >= Rate::<u32, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(1) >= Rate::<u32, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(1) < Rate::<u32, 1_000, 1>::from_raw(2));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(1) <= Rate::<u32, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(1) <= Rate::<u32, 1_000, 1>::from_raw(2));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(1) == Rate::<u32, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(1) != Rate::<u32, 1_000, 1>::from_raw(2));
+
+        // Different fraction
+        assert!(Rate::<u32, 1_000, 1>::from_raw(11) > Rate::<u32, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(11) >= Rate::<u32, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(10) >= Rate::<u32, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(11) < Rate::<u32, 10_000, 1>::from_raw(2));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(1) <= Rate::<u32, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(10) <= Rate::<u32, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(10) == Rate::<u32, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(9) != Rate::<u32, 10_000, 1>::from_raw(2));
+    }
+
+    #[test]
+    fn rate_compare_u64() {
+        // Same fraction
+        assert!(Rate::<u64, 1_000, 1>::from_raw(2) > Rate::<u64, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(2) >= Rate::<u64, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(1) >= Rate::<u64, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(1) < Rate::<u64, 1_000, 1>::from_raw(2));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(1) <= Rate::<u64, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(1) <= Rate::<u64, 1_000, 1>::from_raw(2));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(1) == Rate::<u64, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(1) != Rate::<u64, 1_000, 1>::from_raw(2));
+
+        // Different fraction
+        assert!(Rate::<u64, 1_000, 1>::from_raw(11) > Rate::<u64, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(11) >= Rate::<u64, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(10) >= Rate::<u64, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(11) < Rate::<u64, 10_000, 1>::from_raw(2));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(1) <= Rate::<u64, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(10) <= Rate::<u64, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(10) == Rate::<u64, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(9) != Rate::<u64, 10_000, 1>::from_raw(2));
+    }
+
+    #[test]
+    fn rate_compare_u64_u32() {
+        // Same fraction
+        assert!(Rate::<u64, 1_000, 1>::from_raw(2) > Rate::<u32, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(2) >= Rate::<u32, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(1) >= Rate::<u32, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(1) < Rate::<u32, 1_000, 1>::from_raw(2));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(1) <= Rate::<u32, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(1) <= Rate::<u32, 1_000, 1>::from_raw(2));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(1) == Rate::<u32, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(1) != Rate::<u32, 1_000, 1>::from_raw(2));
+
+        // Different fraction
+        assert!(Rate::<u64, 1_000, 1>::from_raw(11) > Rate::<u32, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(11) >= Rate::<u32, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(10) >= Rate::<u32, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(11) < Rate::<u32, 10_000, 1>::from_raw(2));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(1) <= Rate::<u32, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(10) <= Rate::<u32, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(10) == Rate::<u32, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u64, 1_000, 1>::from_raw(9) != Rate::<u32, 10_000, 1>::from_raw(2));
+    }
+
+    #[test]
+    fn rate_compare_u32_u64() {
+        // Same fraction
+        assert!(Rate::<u32, 1_000, 1>::from_raw(2) > Rate::<u64, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(2) >= Rate::<u64, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(1) >= Rate::<u64, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(1) < Rate::<u64, 1_000, 1>::from_raw(2));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(1) <= Rate::<u64, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(1) <= Rate::<u64, 1_000, 1>::from_raw(2));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(1) == Rate::<u64, 1_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(1) != Rate::<u64, 1_000, 1>::from_raw(2));
+
+        // Different fraction
+        assert!(Rate::<u32, 1_000, 1>::from_raw(11) > Rate::<u64, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(11) >= Rate::<u64, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(10) >= Rate::<u64, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(11) < Rate::<u64, 10_000, 1>::from_raw(2));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(1) <= Rate::<u64, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(10) <= Rate::<u64, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(10) == Rate::<u64, 10_000, 1>::from_raw(1));
+        assert!(Rate::<u32, 1_000, 1>::from_raw(9) != Rate::<u64, 10_000, 1>::from_raw(2));
+    }
+
+    #[test]
+    fn rate_rate_math_u32() {
+        use crate::RateExtU32;
+
+        // Same base
+        let sum: Rate<u32, 1_000, 1> =
+            Rate::<u32, 1_000, 1>::from_raw(10) + Rate::<u32, 1_000, 1>::from_raw(1);
+        assert_eq!(sum, Rate::<u32, 1_000, 1>::from_raw(11));
+
+        let diff: Rate<u32, 1_000, 1> =
+            Rate::<u32, 1_000, 1>::from_raw(10) - Rate::<u32, 1_000, 1>::from_raw(1);
+        assert_eq!(diff, Rate::<u32, 1_000, 1>::from_raw(9));
+
+        // Different base
+        let sum: Rate<u32, 10_000, 1> =
+            Rate::<u32, 10_000, 1>::from_raw(10) + Rate::<u32, 1_000, 1>::from_raw(10).convert();
+        assert_eq!(sum, Rate::<u32, 10_000, 1>::from_raw(11));
+
+        let diff: Rate<u32, 10_000, 1> =
+            Rate::<u32, 10_000, 1>::from_raw(10) - Rate::<u32, 1_000, 1>::from_raw(10).convert();
+        assert_eq!(diff, Rate::<u32, 10_000, 1>::from_raw(9));
+
+        // Short hand vs u32 (should not need `.into()`)
+        let sum = Rate::<u32, 1_000, 1>::from_raw(1) + 1.MHz();
+        assert_eq!(sum, Rate::<u32, 1_000, 1>::from_raw(1001));
+    }
+
+    #[test]
+    fn rate_rate_math_u64() {
+        use crate::RateExtU64;
+
+        // Same base
+        let sum: Rate<u64, 1_000, 1> =
+            Rate::<u64, 1_000, 1>::from_raw(10) + Rate::<u64, 1_000, 1>::from_raw(1);
+        assert_eq!(sum, Rate::<u64, 1_000, 1>::from_raw(11));
+
+        let diff: Rate<u64, 1_000, 1> =
+            Rate::<u64, 1_000, 1>::from_raw(10) - Rate::<u64, 1_000, 1>::from_raw(1);
+        assert_eq!(diff, Rate::<u64, 1_000, 1>::from_raw(9));
+
+        // Different base
+        let sum: Rate<u64, 10_000, 1> =
+            Rate::<u64, 10_000, 1>::from_raw(10) + Rate::<u64, 1_000, 1>::from_raw(10).convert();
+        assert_eq!(sum, Rate::<u64, 10_000, 1>::from_raw(11));
+
+        let diff: Rate<u64, 10_000, 1> =
+            Rate::<u64, 10_000, 1>::from_raw(10) - Rate::<u64, 1_000, 1>::from_raw(10).convert();
+        assert_eq!(diff, Rate::<u64, 10_000, 1>::from_raw(9));
+
+        // Short hand vs u64 (should not need `.into()`)
+        let sum = Rate::<u64, 1_000, 1>::from_raw(1) + 1.MHz();
+        assert_eq!(sum, Rate::<u64, 1_000, 1>::from_raw(1001));
+    }
+
+    #[test]
+    fn rate_rate_math_u64_u32() {
+        // Same base
+        let sum: Rate<u64, 1_000, 1> =
+            Rate::<u64, 1_000, 1>::from_raw(10) + Rate::<u32, 1_000, 1>::from_raw(1);
+        assert_eq!(sum, Rate::<u64, 1_000, 1>::from_raw(11));
+
+        let diff: Rate<u64, 1_000, 1> =
+            Rate::<u64, 1_000, 1>::from_raw(10) - Rate::<u32, 1_000, 1>::from_raw(1);
+        assert_eq!(diff, Rate::<u64, 1_000, 1>::from_raw(9));
+
+        // Different base
+        let sum: Rate<u64, 10_000, 1> =
+            Rate::<u64, 10_000, 1>::from_raw(10) + Rate::<u32, 1_000, 1>::from_raw(10).convert();
+        assert_eq!(sum, Rate::<u64, 10_000, 1>::from_raw(11));
+
+        let diff: Rate<u64, 10_000, 1> =
+            Rate::<u64, 10_000, 1>::from_raw(10) - Rate::<u32, 1_000, 1>::from_raw(10).convert();
+        assert_eq!(diff, Rate::<u64, 10_000, 1>::from_raw(9));
+    }
+
+    #[test]
+    fn rate_shorthands_u32() {
+        use crate::RateExtU32;
+
+        let r: Rate<u32, 1, 1> = 1.Hz();
+        assert_eq!(r.raw(), 1);
+
+        let r: Rate<u32, 1, 1> = 1.kHz();
+        assert_eq!(r.raw(), 1_000);
+
+        let r: Rate<u32, 1, 1> = 1.MHz();
+        assert_eq!(r.raw(), 1_000_000);
+    }
+
+    #[test]
+    fn rate_shorthands_u64() {
+        use crate::RateExtU64;
+
+        let r: Rate<u64, 1, 1> = 1.Hz();
+        assert_eq!(r.raw(), 1);
+
+        let r: Rate<u64, 1, 1> = 1.kHz();
+        assert_eq!(r.raw(), 1_000);
+
+        let r: Rate<u64, 1, 1> = 1.MHz();
+        assert_eq!(r.raw(), 1_000_000);
+    }
+
+    #[test]
+    fn rate_duration_conversion() {
+        let r = Rate::<u32, 1_000, 1>::from_raw(1);
+        let d: Duration<u32, 1, 1_000_000> = r.into_duration();
+        assert_eq!(d.ticks(), 1_000);
+
+        let r = Rate::<u64, 1_000, 1>::from_raw(1);
+        let d: Duration<u64, 1, 1_000_000> = r.into_duration();
+        assert_eq!(d.ticks(), 1_000);
     }
 }
