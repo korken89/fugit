@@ -435,8 +435,16 @@ mod test {
             Duration::<u32, 1, 1_000>::from_ticks(10) + Duration::<u32, 1, 1_000>::from_ticks(1);
         assert_eq!(sum, Duration::<u32, 1, 1_000>::from_ticks(11));
 
+        let mut sum = Duration::<u32, 1, 1_000>::from_ticks(10);
+        sum += Duration::<u32, 1, 1_000>::from_ticks(1);
+        assert_eq!(sum, Duration::<u32, 1, 1_000>::from_ticks(11));
+
         let diff: Duration<u32, 1, 1_000> =
             Duration::<u32, 1, 1_000>::from_ticks(10) - Duration::<u32, 1, 1_000>::from_ticks(1);
+        assert_eq!(diff, Duration::<u32, 1, 1_000>::from_ticks(9));
+
+        let mut diff = Duration::<u32, 1, 1_000>::from_ticks(10);
+        diff -= Duration::<u32, 1, 1_000>::from_ticks(1);
         assert_eq!(diff, Duration::<u32, 1, 1_000>::from_ticks(9));
 
         // Different base
@@ -444,17 +452,44 @@ mod test {
             + Duration::<u32, 1, 1_000>::from_ticks(1).convert();
         assert_eq!(sum, Duration::<u32, 1, 1_000>::from_ticks(2));
 
+        let mut sum = Duration::<u32, 1, 1_000>::from_ticks(1);
+        sum += Duration::<u32, 1, 10_000>::from_ticks(10).convert();
+        assert_eq!(sum, Duration::<u32, 1, 1_000>::from_ticks(2));
+
         let diff: Duration<u32, 1, 10_000> = Duration::<u32, 1, 10_000>::from_ticks(10)
             - Duration::<u32, 1, 1_000>::from_ticks(1).convert();
         assert_eq!(diff, Duration::<u32, 1, 10_000>::from_ticks(0));
+
+        let mut diff = Duration::<u32, 1, 1_000>::from_ticks(1);
+        diff -= Duration::<u32, 1, 10_000>::from_ticks(10).convert();
+        assert_eq!(diff, Duration::<u32, 1, 1_000>::from_ticks(0));
 
         // Short hand vs u32 (should not need `.into()`)
         let sum = Duration::<u32, 1, 10_000>::from_ticks(10) + 1.millis();
         assert_eq!(sum, Duration::<u32, 1, 10_000>::from_ticks(20));
 
+        let mut sum = Duration::<u32, 1, 10_000>::from_ticks(10);
+        sum += 1.millis();
+        assert_eq!(sum, Duration::<u32, 1, 10_000>::from_ticks(20));
+
         // Fixed in v0.3.2
         let d: Duration<u32, 1, 1_000> = Duration::<u32, 1, 32_768>::from_ticks(42949672).convert();
         assert_eq!(d.ticks(), 1_310_719);
+
+        // Division and multiplication by integers
+        let mul: Duration<u32, 1, 1_000> = Duration::<u32, 1, 1_000>::from_ticks(10) * 2;
+        assert_eq!(mul, Duration::<u32, 1, 1_000>::from_ticks(20));
+
+        let mut mul = Duration::<u32, 1, 1_000>::from_ticks(10);
+        mul *= 2;
+        assert_eq!(mul, Duration::<u32, 1, 1_000>::from_ticks(20));
+
+        let div: Duration<u32, 1, 1_000> = Duration::<u32, 1, 1_000>::from_ticks(10) / 2;
+        assert_eq!(div, Duration::<u32, 1, 1_000>::from_ticks(5));
+
+        let mut div = Duration::<u32, 1, 1_000>::from_ticks(10);
+        div /= 2;
+        assert_eq!(div, Duration::<u32, 1, 1_000>::from_ticks(5));
     }
 
     #[test]
@@ -466,8 +501,16 @@ mod test {
             Duration::<u64, 1, 1_000>::from_ticks(10) + Duration::<u64, 1, 1_000>::from_ticks(1);
         assert_eq!(sum, Duration::<u64, 1, 1_000>::from_ticks(11));
 
+        let mut sum = Duration::<u64, 1, 1_000>::from_ticks(10);
+        sum += Duration::<u64, 1, 1_000>::from_ticks(1);
+        assert_eq!(sum, Duration::<u64, 1, 1_000>::from_ticks(11));
+
         let diff: Duration<u64, 1, 1_000> =
             Duration::<u64, 1, 1_000>::from_ticks(10) - Duration::<u64, 1, 1_000>::from_ticks(1);
+        assert_eq!(diff, Duration::<u64, 1, 1_000>::from_ticks(9));
+
+        let mut diff = Duration::<u64, 1, 1_000>::from_ticks(10);
+        diff -= Duration::<u64, 1, 1_000>::from_ticks(1);
         assert_eq!(diff, Duration::<u64, 1, 1_000>::from_ticks(9));
 
         // Different base
@@ -475,13 +518,40 @@ mod test {
             + Duration::<u64, 1, 1_000>::from_ticks(1).convert();
         assert_eq!(sum, Duration::<u64, 1, 1_000>::from_ticks(2));
 
+        let mut sum = Duration::<u64, 1, 1_000>::from_ticks(1);
+        sum += Duration::<u64, 1, 10_000>::from_ticks(10).convert();
+        assert_eq!(sum, Duration::<u64, 1, 1_000>::from_ticks(2));
+
         let diff: Duration<u64, 1, 10_000> = Duration::<u64, 1, 10_000>::from_ticks(10)
             - Duration::<u64, 1, 1_000>::from_ticks(1).convert();
+        assert_eq!(diff, Duration::<u64, 1, 1_000>::from_ticks(0));
+
+        let mut diff = Duration::<u64, 1, 1_000>::from_ticks(1);
+        diff -= Duration::<u64, 1, 10_000>::from_ticks(10).convert();
         assert_eq!(diff, Duration::<u64, 1, 1_000>::from_ticks(0));
 
         // Short hand vs u64 (should not need `.into()`)
         let sum = Duration::<u64, 1, 10_000>::from_ticks(10) + 1.millis();
         assert_eq!(sum, Duration::<u64, 1, 10_000>::from_ticks(20));
+
+        let mut sum = Duration::<u64, 1, 10_000>::from_ticks(10);
+        sum += 1.millis();
+        assert_eq!(sum, Duration::<u64, 1, 10_000>::from_ticks(20));
+
+        // Division and multiplication by integers
+        let mul: Duration<u64, 1, 1_000> = Duration::<u64, 1, 1_000>::from_ticks(10) * 2;
+        assert_eq!(mul, Duration::<u64, 1, 1_000>::from_ticks(20));
+
+        let mut mul = Duration::<u64, 1, 1_000>::from_ticks(10);
+        mul *= 2;
+        assert_eq!(mul, Duration::<u64, 1, 1_000>::from_ticks(20));
+
+        let div: Duration<u64, 1, 1_000> = Duration::<u64, 1, 1_000>::from_ticks(10) / 2;
+        assert_eq!(div, Duration::<u64, 1, 1_000>::from_ticks(5));
+
+        let mut div = Duration::<u64, 1, 1_000>::from_ticks(10);
+        div /= 2;
+        assert_eq!(div, Duration::<u64, 1, 1_000>::from_ticks(5));
     }
 
     #[test]
@@ -491,8 +561,16 @@ mod test {
             Duration::<u64, 1, 1_000>::from_ticks(10) + Duration::<u32, 1, 1_000>::from_ticks(1);
         assert_eq!(sum, Duration::<u64, 1, 1_000>::from_ticks(11));
 
+        let mut sum = Duration::<u64, 1, 1_000>::from_ticks(10);
+        sum += Duration::<u32, 1, 1_000>::from_ticks(1);
+        assert_eq!(sum, Duration::<u64, 1, 1_000>::from_ticks(11));
+
         let diff: Duration<u64, 1, 1_000> =
             Duration::<u64, 1, 1_000>::from_ticks(10) - Duration::<u32, 1, 1_000>::from_ticks(1);
+        assert_eq!(diff, Duration::<u64, 1, 1_000>::from_ticks(9));
+
+        let mut diff = Duration::<u64, 1, 1_000>::from_ticks(10);
+        diff -= Duration::<u32, 1, 1_000>::from_ticks(1);
         assert_eq!(diff, Duration::<u64, 1, 1_000>::from_ticks(9));
 
         // Different base
@@ -500,8 +578,16 @@ mod test {
             + Duration::<u32, 1, 1_000>::from_ticks(1).convert();
         assert_eq!(sum, Duration::<u64, 1, 1_000>::from_ticks(2));
 
+        let mut sum = Duration::<u64, 1, 1_000>::from_ticks(1);
+        sum += Duration::<u32, 1, 10_000>::from_ticks(10).convert();
+        assert_eq!(sum, Duration::<u64, 1, 1_000>::from_ticks(2));
+
         let diff: Duration<u64, 1, 10_000> = Duration::<u64, 1, 10_000>::from_ticks(10)
             - Duration::<u32, 1, 1_000>::from_ticks(1).convert();
+        assert_eq!(diff, Duration::<u64, 1, 1_000>::from_ticks(0));
+
+        let mut diff = Duration::<u64, 1, 1_000>::from_ticks(1);
+        diff -= Duration::<u32, 1, 10_000>::from_ticks(10).convert();
         assert_eq!(diff, Duration::<u64, 1, 1_000>::from_ticks(0));
     }
 
@@ -658,22 +744,38 @@ mod test {
             Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(1);
         assert_eq!(diff, Duration::<u32, 1, 1_000>::from_ticks(9));
 
-        // Instant + Duration, Same base
+        // Instant +- Duration, Same base
         let sum: Instant<u32, 1, 1_000> =
             Instant::<u32, 1, 1_000>::from_ticks(10) + Duration::<u32, 1, 1_000>::from_ticks(1);
+        assert_eq!(sum, Instant::<u32, 1, 1_000>::from_ticks(11));
+
+        let mut sum = Instant::<u32, 1, 1_000>::from_ticks(10);
+        sum += Duration::<u32, 1, 1_000>::from_ticks(1);
         assert_eq!(sum, Instant::<u32, 1, 1_000>::from_ticks(11));
 
         let diff: Instant<u32, 1, 1_000> =
             Instant::<u32, 1, 1_000>::from_ticks(10) - Duration::<u32, 1, 1_000>::from_ticks(1);
         assert_eq!(diff, Instant::<u32, 1, 1_000>::from_ticks(9));
 
-        // Instant - Duration, Different base
+        let mut diff = Instant::<u32, 1, 1_000>::from_ticks(10);
+        diff -= Duration::<u32, 1, 1_000>::from_ticks(1);
+        assert_eq!(diff, Instant::<u32, 1, 1_000>::from_ticks(9));
+
+        // Instant +- Duration, Different base
         let sum: Instant<u32, 1, 10_000> = Instant::<u32, 1, 10_000>::from_ticks(10)
             + Duration::<u32, 1, 1_000>::from_ticks(1).convert();
         assert_eq!(sum, Instant::<u32, 1, 10_000>::from_ticks(20));
 
+        let mut sum = Instant::<u32, 1, 10_000>::from_ticks(10);
+        sum += Duration::<u32, 1, 1_000>::from_ticks(1).convert();
+        assert_eq!(sum, Instant::<u32, 1, 10_000>::from_ticks(20));
+
         let diff: Instant<u32, 1, 10_000> = Instant::<u32, 1, 10_000>::from_ticks(10)
             - Duration::<u32, 1, 1_000>::from_ticks(1).convert();
+        assert_eq!(diff, Instant::<u32, 1, 10_000>::from_ticks(0));
+
+        let mut diff = Instant::<u32, 1, 10_000>::from_ticks(10);
+        diff -= Duration::<u32, 1, 1_000>::from_ticks(1).convert();
         assert_eq!(diff, Instant::<u32, 1, 10_000>::from_ticks(0));
 
         // Instant + Extension trait
@@ -694,22 +796,38 @@ mod test {
             Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(1);
         assert_eq!(diff, Duration::<u64, 1, 1_000>::from_ticks(9));
 
-        // Instant + Duration, Same base
+        // Instant +- Duration, Same base
         let sum: Instant<u64, 1, 1_000> =
             Instant::<u64, 1, 1_000>::from_ticks(10) + Duration::<u64, 1, 1_000>::from_ticks(1);
+        assert_eq!(sum, Instant::<u64, 1, 1_000>::from_ticks(11));
+
+        let mut sum = Instant::<u64, 1, 1_000>::from_ticks(10);
+        sum += Duration::<u64, 1, 1_000>::from_ticks(1);
         assert_eq!(sum, Instant::<u64, 1, 1_000>::from_ticks(11));
 
         let diff: Instant<u64, 1, 1_000> =
             Instant::<u64, 1, 1_000>::from_ticks(10) - Duration::<u64, 1, 1_000>::from_ticks(1);
         assert_eq!(diff, Instant::<u64, 1, 1_000>::from_ticks(9));
 
-        // Instant - Duration, Different base
+        let mut diff = Instant::<u64, 1, 1_000>::from_ticks(10);
+        diff -= Duration::<u64, 1, 1_000>::from_ticks(1);
+        assert_eq!(diff, Instant::<u64, 1, 1_000>::from_ticks(9));
+
+        // Instant +- Duration, Different base
         let sum: Instant<u64, 1, 10_000> = Instant::<u64, 1, 10_000>::from_ticks(10)
             + Duration::<u64, 1, 1_000>::from_ticks(1).convert();
         assert_eq!(sum, Instant::<u64, 1, 10_000>::from_ticks(20));
 
+        let mut sum = Instant::<u64, 1, 10_000>::from_ticks(10);
+        sum += Duration::<u64, 1, 1_000>::from_ticks(1).convert();
+        assert_eq!(sum, Instant::<u64, 1, 10_000>::from_ticks(20));
+
         let diff: Instant<u64, 1, 10_000> = Instant::<u64, 1, 10_000>::from_ticks(10)
             - Duration::<u64, 1, 1_000>::from_ticks(1).convert();
+        assert_eq!(diff, Instant::<u64, 1, 10_000>::from_ticks(0));
+
+        let mut diff = Instant::<u64, 1, 10_000>::from_ticks(10);
+        diff -= Duration::<u64, 1, 1_000>::from_ticks(1).convert();
         assert_eq!(diff, Instant::<u64, 1, 10_000>::from_ticks(0));
 
         // Instant + Extension trait
@@ -718,6 +836,43 @@ mod test {
 
         // Instant - Extension trait
         let diff: Instant<u64, 1, 10_000> = Instant::<u64, 1, 10_000>::from_ticks(10) - 1.millis();
+        assert_eq!(diff, Instant::<u64, 1, 10_000>::from_ticks(0));
+    }
+
+    #[test]
+    fn instant_duration_math_u64_u32() {
+        // Instant +- Duration, Same base
+        let sum: Instant<u64, 1, 1_000> =
+            Instant::<u64, 1, 1_000>::from_ticks(10) + Duration::<u32, 1, 1_000>::from_ticks(1);
+        assert_eq!(sum, Instant::<u64, 1, 1_000>::from_ticks(11));
+
+        let mut sum = Instant::<u64, 1, 1_000>::from_ticks(10);
+        sum += Duration::<u32, 1, 1_000>::from_ticks(1);
+        assert_eq!(sum, Instant::<u64, 1, 1_000>::from_ticks(11));
+
+        let diff: Instant<u64, 1, 1_000> =
+            Instant::<u64, 1, 1_000>::from_ticks(10) - Duration::<u32, 1, 1_000>::from_ticks(1);
+        assert_eq!(diff, Instant::<u64, 1, 1_000>::from_ticks(9));
+
+        let mut diff = Instant::<u64, 1, 1_000>::from_ticks(10);
+        diff -= Duration::<u32, 1, 1_000>::from_ticks(1);
+        assert_eq!(diff, Instant::<u64, 1, 1_000>::from_ticks(9));
+
+        // Instant +- Duration, Different base
+        let sum: Instant<u64, 1, 10_000> = Instant::<u64, 1, 10_000>::from_ticks(10)
+            + Duration::<u32, 1, 1_000>::from_ticks(1).convert();
+        assert_eq!(sum, Instant::<u64, 1, 10_000>::from_ticks(20));
+
+        let mut sum = Instant::<u64, 1, 10_000>::from_ticks(10);
+        sum += Duration::<u32, 1, 1_000>::from_ticks(1).convert();
+        assert_eq!(sum, Instant::<u64, 1, 10_000>::from_ticks(20));
+
+        let diff: Instant<u64, 1, 10_000> = Instant::<u64, 1, 10_000>::from_ticks(10)
+            - Duration::<u32, 1, 1_000>::from_ticks(1).convert();
+        assert_eq!(diff, Instant::<u64, 1, 10_000>::from_ticks(0));
+
+        let mut diff = Instant::<u64, 1, 10_000>::from_ticks(10);
+        diff -= Duration::<u32, 1, 1_000>::from_ticks(1).convert();
         assert_eq!(diff, Instant::<u64, 1, 10_000>::from_ticks(0));
     }
 }
