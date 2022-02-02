@@ -371,6 +371,16 @@ macro_rules! impl_duration_for_integer {
             }
         }
 
+        // Duration -= Duration
+        impl<const NOM: u32, const DENOM: u32> ops::SubAssign<Duration<$i, NOM, DENOM>>
+            for Duration<$i, NOM, DENOM>
+        {
+            #[inline]
+            fn sub_assign(&mut self, other: Self) {
+                *self = *self - other;
+            }
+        }
+
         // Duration + Duration = Duration (only same base until const_generics_defaults is
         // stabilized)
         impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<$i, NOM, DENOM>>
@@ -385,6 +395,16 @@ macro_rules! impl_duration_for_integer {
                 } else {
                     panic!("Add failed!");
                 }
+            }
+        }
+
+        // Duration += Duration
+        impl<const NOM: u32, const DENOM: u32> ops::AddAssign<Duration<$i, NOM, DENOM>>
+            for Duration<$i, NOM, DENOM>
+        {
+            #[inline]
+            fn add_assign(&mut self, other: Self) {
+                *self = *self + other;
             }
         }
 
@@ -410,6 +430,16 @@ macro_rules! impl_duration_for_integer {
             }
         }
 
+        // Duration *= integer
+        impl<const NOM: u32, const DENOM: u32> ops::MulAssign<u32>
+            for Duration<$i, NOM, DENOM>
+        {
+            #[inline]
+            fn mul_assign(&mut self, other: u32) {
+                *self = *self * other;
+            }
+        }
+
         // Duration / integer = Duration
         impl<const NOM: u32, const DENOM: u32> ops::Div<u32> for Duration<$i, NOM, DENOM> {
             type Output = Duration<$i, NOM, DENOM>;
@@ -418,6 +448,16 @@ macro_rules! impl_duration_for_integer {
             fn div(mut self, other: u32) -> Self::Output {
                 self.ticks /= other as $i;
                 self
+            }
+        }
+
+        // Duration /= integer
+        impl<const NOM: u32, const DENOM: u32> ops::DivAssign<u32>
+            for Duration<$i, NOM, DENOM>
+        {
+            #[inline]
+            fn div_assign(&mut self, other: u32) {
+                *self = *self / other;
             }
         }
 
@@ -513,6 +553,16 @@ impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<u32, NOM, DENOM>>
     }
 }
 
+// Duration -= Duration (to make shorthands work, until const_generics_defaults is stabilized)
+impl<const NOM: u32, const DENOM: u32> ops::SubAssign<Duration<u32, NOM, DENOM>>
+    for Duration<u64, NOM, DENOM>
+{
+    #[inline]
+    fn sub_assign(&mut self, other: Duration<u32, NOM, DENOM>) {
+        *self = *self - other;
+    }
+}
+
 // Duration + Duration = Duration (to make shorthands work, until const_generics_defaults is
 // stabilized)
 impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<u32, NOM, DENOM>>
@@ -529,6 +579,16 @@ impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<u32, NOM, DENOM>>
         } else {
             panic!("Add failed!");
         }
+    }
+}
+
+// Duration += Duration (to make shorthands work, until const_generics_defaults is stabilized)
+impl<const NOM: u32, const DENOM: u32> ops::AddAssign<Duration<u32, NOM, DENOM>>
+    for Duration<u64, NOM, DENOM>
+{
+    #[inline]
+    fn add_assign(&mut self, other: Duration<u32, NOM, DENOM>) {
+        *self = *self + other;
     }
 }
 

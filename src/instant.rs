@@ -236,6 +236,19 @@ macro_rules! impl_instant_for_integer {
             }
         }
 
+        // Instant -= Duration
+        // We have limited this to use same numerator and denominator in both left and right hand sides,
+        // this allows for the extension traits to work. For usage with different fraction, use
+        // `checked_sub_duration`.
+        impl<const NOM: u32, const DENOM: u32> ops::SubAssign<Duration<$i, NOM, DENOM>>
+            for Instant<$i, NOM, DENOM>
+        {
+            #[inline]
+            fn sub_assign(&mut self, other: Duration<$i, NOM, DENOM>) {
+                *self = *self - other;
+            }
+        }
+
         // Instant + Duration = Instant
         // We have limited this to use same numerator and denominator in both left and right hand sides,
         // this allows for the extension traits to work. For usage with different fraction, use
@@ -252,6 +265,19 @@ macro_rules! impl_instant_for_integer {
                 } else {
                     panic!("Add failed! Overflow");
                 }
+            }
+        }
+
+        // Instant += Duration
+        // We have limited this to use same numerator and denominator in both left and right hand sides,
+        // this allows for the extension traits to work. For usage with different fraction, use
+        // `checked_add_duration`.
+        impl<const NOM: u32, const DENOM: u32> ops::AddAssign<Duration<$i, NOM, DENOM>>
+            for Instant<$i, NOM, DENOM>
+        {
+            #[inline]
+            fn add_assign(&mut self, other: Duration<$i, NOM, DENOM>) {
+                *self = *self + other;
             }
         }
 
@@ -324,6 +350,19 @@ impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<u32, NOM, DENOM>>
     }
 }
 
+// Instant -= Duration
+// We have limited this to use same numerator and denominator in both left and right hand sides,
+// this allows for the extension traits to work. For usage with different fraction, use
+// `checked_sub_duration`.
+impl<const NOM: u32, const DENOM: u32> ops::SubAssign<Duration<u32, NOM, DENOM>>
+    for Instant<u64, NOM, DENOM>
+{
+    #[inline]
+    fn sub_assign(&mut self, other: Duration<u32, NOM, DENOM>) {
+        *self = *self - other;
+    }
+}
+
 // Instant + Duration = Instant
 // We have limited this to use same numerator and denominator in both left and right hand sides,
 // this allows for the extension traits to work. For usage with different fraction, use
@@ -342,6 +381,20 @@ impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<u32, NOM, DENOM>>
         }
     }
 }
+
+// Instant += Duration
+// We have limited this to use same numerator and denominator in both left and right hand sides,
+// this allows for the extension traits to work. For usage with different fraction, use
+// `checked_add_duration`.
+impl<const NOM: u32, const DENOM: u32> ops::AddAssign<Duration<u32, NOM, DENOM>>
+    for Instant<u64, NOM, DENOM>
+{
+    #[inline]
+    fn add_assign(&mut self, other: Duration<u32, NOM, DENOM>) {
+        *self = *self + other;
+    }
+}
+
 // impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
 //     ops::Add<Duration<u32, R_NOM, R_DENOM>> for Duration<u64, L_NOM, L_DENOM>
 // {
