@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Add `nanos()` methods and `NanosDuration` aliases alongside other units.
+
 ### Fixed
 
 ### Changed

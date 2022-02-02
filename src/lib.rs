@@ -509,6 +509,9 @@ mod test {
     fn duration_shorthands_u32() {
         use crate::ExtU32;
 
+        let d: Duration<u32, 1, 10_000> = 100_000_000.nanos();
+        assert_eq!(d.ticks(), 1_000);
+
         let d: Duration<u32, 1, 10_000> = 100_000.micros();
         assert_eq!(d.ticks(), 1_000);
 
@@ -528,6 +531,9 @@ mod test {
     #[test]
     fn duration_shorthands_u64() {
         use crate::ExtU64;
+
+        let d: Duration<u64, 1, 10_000> = 100_000_000.nanos();
+        assert_eq!(d.ticks(), 1_000);
 
         let d: Duration<u64, 1, 10_000> = 100_000.micros();
         assert_eq!(d.ticks(), 1_000);

@@ -272,6 +272,15 @@ macro_rules! impl_duration_for_integer {
                 }
             }
 
+            /// Shorthand for creating a duration which represents nanoseconds.
+            #[inline]
+            pub const fn nanos(val: $i) -> Duration<$i, NOM, DENOM> {
+                Duration::<$i, NOM, DENOM>::from_ticks(
+                    (Helpers::<1, 1_000_000_000, NOM, DENOM>::RD_TIMES_LN as $i * val)
+                        / Helpers::<1, 1_000_000_000, NOM, DENOM>::LD_TIMES_RN as $i,
+                )
+            }
+
             /// Shorthand for creating a duration which represents microseconds.
             #[inline]
             pub const fn micros(val: $i) -> Duration<$i, NOM, DENOM> {
@@ -565,6 +574,9 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
 
 /// Extension trait for simple short-hands for u32 Durations
 pub trait ExtU32 {
+    /// Shorthand for creating a duration which represents nanoseconds.
+    fn nanos<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM>;
+
     /// Shorthand for creating a duration which represents microseconds.
     fn micros<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM>;
 
@@ -582,6 +594,11 @@ pub trait ExtU32 {
 }
 
 impl ExtU32 for u32 {
+    #[inline]
+    fn nanos<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
+        Duration::<u32, NOM, DENOM>::nanos(self)
+    }
+
     #[inline]
     fn micros<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
         Duration::<u32, NOM, DENOM>::micros(self)
@@ -610,6 +627,9 @@ impl ExtU32 for u32 {
 
 /// Extension trait for simple short-hands for u64 Durations
 pub trait ExtU64 {
+    /// Shorthand for creating a duration which represents nanoseconds.
+    fn nanos<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM>;
+
     /// Shorthand for creating a duration which represents microseconds.
     fn micros<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM>;
 
@@ -627,6 +647,11 @@ pub trait ExtU64 {
 }
 
 impl ExtU64 for u64 {
+    #[inline]
+    fn nanos<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
+        Duration::<u64, NOM, DENOM>::nanos(self)
+    }
+
     #[inline]
     fn micros<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
         Duration::<u64, NOM, DENOM>::micros(self)
