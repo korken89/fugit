@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Add `nanos()` methods and `NanosDuration` aliases alongside other units.
 - Implement AddAssign and SubAssign for Instant and Duration, and
   MulAssign and DivAssign for Duration.
 

@@ -3,6 +3,15 @@
 use crate::duration::Duration;
 use crate::instant::Instant;
 
+/// Alias for nanosecond duration
+pub type NanosDuration<T> = Duration<T, 1, 1_000_000_000>;
+
+/// Alias for nanosecond duration (`u32` backing storage)
+pub type NanosDurationU32 = Duration<u32, 1, 1_000_000_000>;
+
+/// Alias for nanosecond duration (`u64` backing storage)
+pub type NanosDurationU64 = Duration<u64, 1, 1_000_000_000>;
+
 /// Alias for microsecond duration
 pub type MicrosDuration<T> = Duration<T, 1, 1_000_000>;
 
