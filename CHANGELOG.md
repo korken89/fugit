@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Implement AddAssign and SubAssign for Instant and Duration, and
+  MulAssign and DivAssign for Duration.
+
 ### Fixed
 
 ### Changed
