@@ -612,6 +612,32 @@ mod test {
 
         let d: Duration<u32, 1, 10_000> = 1.hours();
         assert_eq!(d.ticks(), 36_000_000);
+
+        let d = Duration::<u32, 1, 1>::from_ticks(2);
+        assert_eq!(d.to_secs(), 2);
+        assert_eq!(d.to_nanos(), 2_000_000_000);
+
+        let d = Duration::<u32, 1, 1_000_000_000>::from_ticks(2_000_000_000);
+        assert_eq!(d.to_secs(), 2);
+        assert_eq!(d.to_nanos(), 2_000_000_000);
+
+        let d = Duration::<u32, 1, 10_000>::from_ticks(100);
+        assert_eq!(d.to_nanos(), 10_000_000);
+
+        let d = Duration::<u32, 1, 10_000>::from_ticks(100);
+        assert_eq!(d.to_micros(), 10_000);
+
+        let d = Duration::<u32, 1, 10_000>::from_ticks(100);
+        assert_eq!(d.to_millis(), 10);
+
+        let d = Duration::<u32, 1, 10_000>::from_ticks(100_000);
+        assert_eq!(d.to_secs(), 10);
+
+        let d = Duration::<u32, 1, 10_000>::from_ticks(1_800_000);
+        assert_eq!(d.to_minutes(), 3);
+
+        let d = Duration::<u32, 1, 10_000>::from_ticks(180_000_000);
+        assert_eq!(d.to_hours(), 5);
     }
 
     #[test]
@@ -635,6 +661,32 @@ mod test {
 
         let d: Duration<u64, 1, 10_000> = 1.hours();
         assert_eq!(d.ticks(), 36_000_000);
+
+        let d = Duration::<u32, 1, 1>::from_ticks(2);
+        assert_eq!(d.to_secs(), 2);
+        assert_eq!(d.to_nanos(), 2_000_000_000);
+
+        let d = Duration::<u32, 1, 1_000_000_000>::from_ticks(2_000_000_000);
+        assert_eq!(d.to_secs(), 2);
+        assert_eq!(d.to_nanos(), 2_000_000_000);
+
+        let d = Duration::<u64, 1, 10_000>::from_ticks(100);
+        assert_eq!(d.to_nanos(), 10_000_000);
+
+        let d = Duration::<u64, 1, 10_000>::from_ticks(100);
+        assert_eq!(d.to_micros(), 10_000);
+
+        let d = Duration::<u64, 1, 10_000>::from_ticks(100);
+        assert_eq!(d.to_millis(), 10);
+
+        let d = Duration::<u64, 1, 10_000>::from_ticks(100_000);
+        assert_eq!(d.to_secs(), 10);
+
+        let d = Duration::<u64, 1, 10_000>::from_ticks(1_800_000);
+        assert_eq!(d.to_minutes(), 3);
+
+        let d = Duration::<u64, 1, 10_000>::from_ticks(180_000_000);
+        assert_eq!(d.to_hours(), 5);
     }
 
     #[test]

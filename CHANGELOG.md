@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add `nanos()` methods and `NanosDuration` aliases alongside other units.
 - Implement AddAssign and SubAssign for Instant and Duration, and
   MulAssign and DivAssign for Duration.
+- Add `to_nanos()`, `to_micros()`, `to_millis()`, `to_secs()`, `to_minutes()`,
+  and `to_hours()` methods to `Duration<u32, NOM, DENOM>` and
+  `Duration<u64, NOM, DENOM>` types to easily convert to integer time units.
 
 ### Fixed
 
