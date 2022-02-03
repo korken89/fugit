@@ -272,6 +272,48 @@ macro_rules! impl_duration_for_integer {
                 }
             }
 
+            /// Convert the Duration to an integer number of nanoseconds.
+            #[inline]
+            pub const fn to_nanos(&self) -> $i {
+                (Helpers::<1, 1_000_000_000, NOM, DENOM>::LD_TIMES_RN as $i * self.ticks)
+                    / Helpers::<1, 1_000_000_000, NOM, DENOM>::RD_TIMES_LN as $i
+            }
+
+            /// Convert the Duration to an integer number of microseconds.
+            #[inline]
+            pub const fn to_micros(&self) -> $i {
+                (Helpers::<1, 1_000_000, NOM, DENOM>::LD_TIMES_RN as $i * self.ticks)
+                    / Helpers::<1, 1_000_000, NOM, DENOM>::RD_TIMES_LN as $i
+            }
+
+            /// Convert the Duration to an integer number of milliseconds.
+            #[inline]
+            pub const fn to_millis(&self) -> $i {
+                (Helpers::<1, 1_000, NOM, DENOM>::LD_TIMES_RN as $i * self.ticks)
+                    / Helpers::<1, 1_000, NOM, DENOM>::RD_TIMES_LN as $i
+            }
+
+            /// Convert the Duration to an integer number of seconds.
+            #[inline]
+            pub const fn to_secs(&self) -> $i {
+                (Helpers::<1, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.ticks)
+                    / Helpers::<1, 1, NOM, DENOM>::RD_TIMES_LN as $i
+            }
+
+            /// Convert the Duration to an integer number of minutes.
+            #[inline]
+            pub const fn to_minutes(&self) -> $i {
+                (Helpers::<60, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.ticks)
+                    / Helpers::<60, 1, NOM, DENOM>::RD_TIMES_LN as $i
+            }
+
+            /// Convert the Duration to an integer number of hours.
+            #[inline]
+            pub const fn to_hours(&self) -> $i {
+                (Helpers::<3_600, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.ticks)
+                    / Helpers::<3_600, 1, NOM, DENOM>::RD_TIMES_LN as $i
+            }
+
             /// Shorthand for creating a duration which represents nanoseconds.
             #[inline]
             pub const fn nanos(val: $i) -> Duration<$i, NOM, DENOM> {
