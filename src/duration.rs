@@ -537,6 +537,19 @@ macro_rules! impl_duration_for_integer {
             }
         }
 
+        // Duration / Duration = integer
+        impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32> ops::Div<Duration<$i, R_NOM, R_DENOM>>
+            for Duration<$i, L_NOM, L_DENOM>
+        {
+            type Output = $i;
+
+            #[inline]
+            fn div(self, other: Duration<$i, R_NOM, R_DENOM>) -> Self::Output {
+                let conv: Duration<$i, R_NOM, R_DENOM> = self.convert();
+                conv.ticks / other.ticks
+            }
+        }
+
         #[cfg(feature = "defmt")]
         impl<const NOM: u32, const DENOM: u32> defmt::Format for Duration<$i, NOM, DENOM>
         {
