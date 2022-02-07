@@ -499,6 +499,21 @@ mod test {
         let mut div = Duration::<u32, 1, 1_000>::from_ticks(10);
         div /= 2;
         assert_eq!(div, Duration::<u32, 1, 1_000>::from_ticks(5));
+
+        assert_eq!(
+            Duration::<u32, 1, 100>::from_ticks(5) / Duration::<u32, 1, 1_000>::from_ticks(2),
+            25
+        );
+
+        assert_eq!(
+            Duration::<u32, 1, 1_000>::from_ticks(2) / Duration::<u32, 1, 100>::from_ticks(5),
+            0
+        );
+
+        assert_eq!(
+            Duration::<u32, 1, 1_000>::from_ticks(500) / Duration::<u32, 1, 100>::from_ticks(5),
+            10
+        );
     }
 
     #[test]
@@ -561,6 +576,21 @@ mod test {
         let mut div = Duration::<u64, 1, 1_000>::from_ticks(10);
         div /= 2;
         assert_eq!(div, Duration::<u64, 1, 1_000>::from_ticks(5));
+
+        assert_eq!(
+            Duration::<u64, 1, 1_00>::from_ticks(5) / Duration::<u64, 1, 1_000>::from_ticks(2),
+            25
+        );
+
+        assert_eq!(
+            Duration::<u64, 1, 1_000>::from_ticks(2) / Duration::<u64, 1, 1_00>::from_ticks(5),
+            0
+        );
+
+        assert_eq!(
+            Duration::<u64, 1, 1_000>::from_ticks(500) / Duration::<u64, 1, 1_00>::from_ticks(5),
+            10
+        );
     }
 
     #[test]
@@ -1084,6 +1114,21 @@ mod test {
         // Short hand vs u32 (should not need `.into()`)
         let sum = Rate::<u32, 1_000, 1>::from_raw(1) + 1.MHz();
         assert_eq!(sum, Rate::<u32, 1_000, 1>::from_raw(1001));
+
+        assert_eq!(
+            Rate::<u32, 1_000, 1>::from_raw(5) / Rate::<u32, 100, 1>::from_raw(2),
+            25
+        );
+
+        assert_eq!(
+            Rate::<u32, 100, 1>::from_raw(2) / Rate::<u32, 1_000, 1>::from_raw(5),
+            0
+        );
+
+        assert_eq!(
+            Rate::<u32, 100, 1>::from_raw(500) / Rate::<u32, 1_000, 1>::from_raw(5),
+            10
+        );
     }
 
     #[test]
@@ -1111,6 +1156,21 @@ mod test {
         // Short hand vs u64 (should not need `.into()`)
         let sum = Rate::<u64, 1_000, 1>::from_raw(1) + 1.MHz();
         assert_eq!(sum, Rate::<u64, 1_000, 1>::from_raw(1001));
+
+        assert_eq!(
+            Rate::<u64, 1_000, 1>::from_raw(5) / Rate::<u64, 100, 1>::from_raw(2),
+            25
+        );
+
+        assert_eq!(
+            Rate::<u64, 100, 1>::from_raw(2) / Rate::<u64, 1_000, 1>::from_raw(5),
+            0
+        );
+
+        assert_eq!(
+            Rate::<u64, 100, 1>::from_raw(500) / Rate::<u64, 1_000, 1>::from_raw(5),
+            10
+        );
     }
 
     #[test]

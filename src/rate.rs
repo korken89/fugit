@@ -466,6 +466,19 @@ macro_rules! impl_rate_for_integer {
             }
         }
 
+        // Rate / Rate = integer
+        impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32> ops::Div<Rate<$i, R_NOM, R_DENOM>>
+            for Rate<$i, L_NOM, L_DENOM>
+        {
+            type Output = $i;
+
+            #[inline]
+            fn div(self, other: Rate<$i, R_NOM, R_DENOM>) -> Self::Output {
+                let conv: Rate<$i, R_NOM, R_DENOM> = self.convert();
+                conv.raw / other.raw
+            }
+        }
+
         // Rate /= integer
         impl<const NOM: u32, const DENOM: u32> ops::DivAssign<u32>
             for Rate<$i, NOM, DENOM>
