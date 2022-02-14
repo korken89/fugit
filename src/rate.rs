@@ -291,34 +291,28 @@ macro_rules! impl_rate_for_integer {
                 }
             }
 
-            /// Convert the Rate to Hz.
+            /// Convert the Rate to an interger number of Hz.
             #[inline]
             #[allow(non_snake_case)]
-            pub const fn to_Hz(&self) -> Rate<$i, NOM, DENOM> {
-                Rate::<$i, NOM, DENOM>::from_raw(
+            pub const fn to_Hz(&self) -> $i {
                     (Helpers::<1, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.raw)
-                        / Helpers::<1, 1, NOM, DENOM>::RD_TIMES_LN as $i,
-                )
+                        / Helpers::<1, 1, NOM, DENOM>::RD_TIMES_LN as $i
             }
 
-            /// Convert the Rate to kHz.
+            /// Convert the Rate to an interger number of kHz.
             #[inline]
             #[allow(non_snake_case)]
-            pub const fn to_kHz(&self) -> Rate<$i, NOM, DENOM> {
-                Rate::<$i, NOM, DENOM>::from_raw(
+            pub const fn to_kHz(&self) -> $i {
                     (Helpers::<1_000, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.raw)
-                        / Helpers::<1_000, 1, NOM, DENOM>::RD_TIMES_LN as $i,
-                )
+                        / Helpers::<1_000, 1, NOM, DENOM>::RD_TIMES_LN as $i
             }
 
-            /// Convert the Rate to MHz.
+            /// Convert the Rate to an interger number of MHz.
             #[inline]
             #[allow(non_snake_case)]
-            pub const fn to_MHz(&self) -> Rate<$i, NOM, DENOM> {
-                Rate::<$i, NOM, DENOM>::from_raw(
+            pub const fn to_MHz(&self) -> $i {
                     (Helpers::<1_000_000, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.raw)
-                        / Helpers::<1_000_000, 1, NOM, DENOM>::RD_TIMES_LN as $i,
-                )
+                        / Helpers::<1_000_000, 1, NOM, DENOM>::RD_TIMES_LN as $i
             }
 
             /// Shorthand for creating a rate which represents hertz.
