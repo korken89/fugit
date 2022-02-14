@@ -6,7 +6,7 @@
 //! The library is aimed at ease-of-use and performance first.
 //!
 //! ```
-//! use fugit::{Duration, DurationExtU32};
+//! use fugit::{Duration, ExtU32};
 //!
 //! // Efficient short-hands (`.millis()`, ...)
 //! let d = Duration::<u32, 1, 1_000>::from_ticks(111);
@@ -51,7 +51,7 @@ mod instant;
 mod rate;
 
 pub use aliases::*;
-pub use duration::{Duration, ExtU32 as DurationExtU32, ExtU64 as DurationExtU64};
+pub use duration::{Duration, ExtU32, ExtU64};
 pub use instant::Instant;
 pub use rate::{ExtU32 as RateExtU32, ExtU64 as RateExtU64, Rate};
 
@@ -437,7 +437,7 @@ mod test {
 
     #[test]
     fn duration_duration_math_u32() {
-        use crate::DurationExtU32;
+        use crate::ExtU32;
 
         // Same base
         let sum: Duration<u32, 1, 1_000> =
@@ -518,7 +518,7 @@ mod test {
 
     #[test]
     fn duration_duration_math_u64() {
-        use crate::DurationExtU64;
+        use crate::ExtU64;
 
         // Same base
         let sum: Duration<u64, 1, 1_000> =
@@ -632,7 +632,7 @@ mod test {
 
     #[test]
     fn duration_shorthands_u32() {
-        use crate::DurationExtU32;
+        use crate::ExtU32;
 
         let d: Duration<u32, 1, 10_000> = 100_000_000.nanos();
         assert_eq!(d.ticks(), 1_000);
@@ -681,7 +681,7 @@ mod test {
 
     #[test]
     fn duration_shorthands_u64() {
-        use crate::DurationExtU64;
+        use crate::ExtU64;
 
         let d: Duration<u64, 1, 10_000> = 100_000_000.nanos();
         assert_eq!(d.ticks(), 1_000);
@@ -840,7 +840,7 @@ mod test {
 
     #[test]
     fn instant_duration_math_u32() {
-        use crate::DurationExtU32;
+        use crate::ExtU32;
 
         // Instant - Instant, Same base
         let diff: Duration<u32, 1, 1_000> =
@@ -892,7 +892,7 @@ mod test {
 
     #[test]
     fn instant_duration_math_u64() {
-        use crate::DurationExtU64;
+        use crate::ExtU64;
 
         // Instant - Instant, Same base
         let diff: Duration<u64, 1, 1_000> =
