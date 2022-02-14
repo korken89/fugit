@@ -1,7 +1,8 @@
 //! Type aliases for common uses
 
-use crate::duration::Duration;
-use crate::instant::Instant;
+use crate::Duration;
+use crate::Instant;
+use crate::Rate;
 
 /// Alias for nanosecond duration
 pub type NanosDuration<T> = Duration<T, 1, 1_000_000_000>;
@@ -76,3 +77,41 @@ pub type TimerInstantU32<const FREQ_HZ: u32> = Instant<u32, 1, FREQ_HZ>;
 
 /// Alias for instants that come from timers with a specific frequency (`u64` backing storage)
 pub type TimerInstantU64<const FREQ_HZ: u32> = Instant<u64, 1, FREQ_HZ>;
+
+// -------------------------------
+
+/// Alias for hertz rate
+pub type Hertz<T> = Rate<T, 1, 1>;
+
+/// Alias for hertz rate (`u32` backing storage)
+pub type HertzU32 = Rate<u32, 1, 1>;
+
+/// Alias for hertz rate (`u64` backing storage)
+pub type HertzU64 = Rate<u64, 1, 1>;
+
+/// Alias for kilohertz rate
+pub type Kilohertz<T> = Rate<T, 1_000, 1>;
+
+/// Alias for kilohertz rate (`u32` backing storage)
+pub type KilohertzU32 = Rate<u32, 1_000, 1>;
+
+/// Alias for kilohertz rate (`u64` backing storage)
+pub type KilohertzU64 = Rate<u64, 1_000, 1>;
+
+/// Alias for megahertz rate
+pub type Megahertz<T> = Rate<T, 1_000_000, 1>;
+
+/// Alias for megahertz rate (`u32` backing storage)
+pub type MegahertzU32 = Rate<u32, 1_000_000, 1>;
+
+/// Alias for megahertz rate (`u64` backing storage)
+pub type MegahertzU64 = Rate<u64, 1_000_000, 1>;
+
+/// Alias for rate that come from timers with a specific frequency
+pub type TimerRate<T, const FREQ_HZ: u32> = Rate<T, FREQ_HZ, 1>;
+
+/// Alias for rate that come from timers with a specific frequency (`u32` backing storage)
+pub type TimerRateU32<const FREQ_HZ: u32> = Duration<u32, FREQ_HZ, 1>;
+
+/// Alias for rate that come from timers with a specific frequency (`u64` backing storage)
+pub type TimerRateU64<const FREQ_HZ: u32> = Duration<u64, FREQ_HZ, 1>;
