@@ -111,7 +111,7 @@ pub type MegahertzU64 = Rate<u64, 1_000_000, 1>;
 pub type TimerRate<T, const FREQ_HZ: u32> = Rate<T, FREQ_HZ, 1>;
 
 /// Alias for rate that come from timers with a specific frequency (`u32` backing storage)
-pub type TimerRateU32<const FREQ_HZ: u32> = Duration<u32, FREQ_HZ, 1>;
+pub type TimerRateU32<const FREQ_HZ: u32> = Rate<u32, FREQ_HZ, 1>;
 
 /// Alias for rate that come from timers with a specific frequency (`u64` backing storage)
-pub type TimerRateU64<const FREQ_HZ: u32> = Duration<u64, FREQ_HZ, 1>;
+pub type TimerRateU64<const FREQ_HZ: u32> = Rate<u64, FREQ_HZ, 1>;
