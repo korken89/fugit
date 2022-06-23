@@ -71,6 +71,18 @@ mod test {
     //
     ////////////////////////////////////////////////////////////////////////////////
 
+    #[test]
+    fn large_duration_converstion() {
+        use crate::ExtU64;
+
+        let sum = Duration::<u64, 1, 80_000_000>::from_ticks(0) + 15.minutes();
+
+        assert_eq!(
+            sum,
+            Duration::<u64, 1, 80_000_000>::from_ticks(80_000_000 * 60 * 15)
+        );
+    }
+
     fn take_ms(d: Duration<u32, 1, 1_000>) -> Duration<u32, 1, 1_000> {
         d
     }

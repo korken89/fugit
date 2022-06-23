@@ -11,9 +11,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
-- Fixed `TimerRateU32` and `TimerRateU64` to use `Rate` instead of `Duration`
-
 ### Changed
+
+## [v0.3.6] 
+
+### Fixed
+
+- Fixed error in conversion between large durations.
+- Fixed `TimerRateU32` and `TimerRateU64` to use `Rate` instead of `Duration`
 
 ## [v0.3.5] 
 

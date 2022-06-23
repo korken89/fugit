@@ -215,9 +215,9 @@ macro_rules! impl_rate_for_integer {
                     Some(Rate::<$i, O_NOM, O_DENOM>::from_raw(self.raw))
                 } else {
                     if let Some(lh) = (self.raw as u64)
-                        .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as u64)
+                        .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN)
                     {
-                        let raw = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN as u64;
+                        let raw = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN;
 
                         if raw <= <$i>::MAX as u64 {
                             Some(Rate::<$i, O_NOM, O_DENOM>::from_raw(raw as $i))
@@ -263,13 +263,16 @@ macro_rules! impl_rate_for_integer {
             ///
             /// assert_eq!(r2.raw(), 10);
             /// ```
+            ///
             /// Can be used in const contexts. Compilation will fail if the conversion causes overflow
+            ///
             /// ```compile_fail
             /// # use fugit::*;
-            #[doc = concat!("const raw: ", stringify!($i), "= ", stringify!($i), "::MAX - 10;")]
-            #[doc = concat!("const r1: Rate::<", stringify!($i), ", 1, 100> = Rate::<", stringify!($i), ", 1, 100>::from_raw(raw);")]
+            #[doc = concat!("const RAW: ", stringify!($i), "= ", stringify!($i), "::MAX - 10;")]
+            #[doc = concat!("const R1: Rate::<", stringify!($i), ", 1, 100> = Rate::<", stringify!($i), ", 1, 100>::from_raw(RAW);")]
             /// // Fails conversion due to overflow
-            #[doc = concat!("const r2: Rate::<", stringify!($i), ", 1, 200> = r1.convert();")]
+            #[doc = concat!("const R2: Rate::<", stringify!($i), ", 1, 200> = R1.convert();")]
+            /// ```
             pub const fn convert<const O_NOM: u32, const O_DENOM: u32>(
                 self,
             ) -> Rate<$i, O_NOM, O_DENOM> {
