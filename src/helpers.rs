@@ -27,19 +27,19 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
         gcd::binary_u64(L_NOM as u64 * R_NOM as u64, R_DENOM as u64 * L_DENOM as u64);
 
     /// Helper constants generated at compile time for Durations
-    pub const RD_TIMES_LN: u32 = ((R_DENOM as u64 * L_NOM as u64) / Self::DIVISOR) as u32;
+    pub const RD_TIMES_LN: u64 = (R_DENOM as u64 * L_NOM as u64) / Self::DIVISOR;
 
     /// Helper constants generated at compile time
-    pub const LD_TIMES_RN: u32 = ((L_DENOM as u64 * R_NOM as u64) / Self::DIVISOR) as u32;
+    pub const LD_TIMES_RN: u64 = (L_DENOM as u64 * R_NOM as u64) / Self::DIVISOR;
 
     /// Helper constants generated at compile time for Rates
-    pub const LN_TIMES_RN: u32 = ((L_NOM as u64 * R_NOM as u64) / Self::DIVISOR_2) as u32;
+    pub const LN_TIMES_RN: u64 = (L_NOM as u64 * R_NOM as u64) / Self::DIVISOR_2;
 
     /// Helper constants generated at compile time for Rates
-    pub const RD_TIMES_LD: u32 = ((R_DENOM as u64 * L_DENOM as u64) / Self::DIVISOR_2) as u32;
+    pub const RD_TIMES_LD: u64 = (R_DENOM as u64 * L_DENOM as u64) / Self::DIVISOR_2;
 
     /// Helper constants generated at compile time for Rates
-    pub const RATE_TO_DURATION_NUMERATOR: u32 = Self::RD_TIMES_LD / Self::LN_TIMES_RN;
+    pub const RATE_TO_DURATION_NUMERATOR: u64 = Self::RD_TIMES_LD / Self::LN_TIMES_RN;
 
     /// Helper constants generated at compile time
     pub const SAME_BASE: bool = Self::LD_TIMES_RN == Self::RD_TIMES_LN;
