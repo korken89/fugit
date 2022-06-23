@@ -60,6 +60,10 @@ mod test {
     use crate::Duration;
     use crate::Instant;
     use crate::Rate;
+    use crate::{
+        Hertz, HertzU32, HertzU64, Kilohertz, KilohertzU32, KilohertzU64, Megahertz, MegahertzU32,
+        MegahertzU64, TimerRate, TimerRateU32, TimerRateU64,
+    };
 
     ////////////////////////////////////////////////////////////////////////////////
     //
@@ -1231,5 +1235,44 @@ mod test {
         let r = Rate::<u64, 1_000, 1>::from_raw(1);
         let d: Duration<u64, 1, 1_000_000> = r.into_duration();
         assert_eq!(d.ticks(), 1_000);
+    }
+
+    #[test]
+    fn rate_alias() {
+        assert_eq!(
+            TimerRate::<u32, 1>::from_raw(1),
+            TimerRateU32::<1>::from_raw(1)
+        );
+        assert_eq!(
+            TimerRate::<u64, 1>::from_raw(1),
+            TimerRateU64::<1>::from_raw(1)
+        );
+        assert_eq!(Hertz::<u32>::from_raw(1), TimerRateU32::<1>::from_raw(1));
+        assert_eq!(HertzU32::from_raw(1), TimerRateU32::<1>::from_raw(1));
+        assert_eq!(HertzU64::from_raw(1), TimerRateU64::<1>::from_raw(1));
+        assert_eq!(
+            Kilohertz::<u32>::from_raw(1),
+            TimerRateU32::<1_000>::from_raw(1)
+        );
+        assert_eq!(
+            KilohertzU32::from_raw(1),
+            TimerRateU32::<1_000>::from_raw(1)
+        );
+        assert_eq!(
+            KilohertzU64::from_raw(1),
+            TimerRateU64::<1_000>::from_raw(1)
+        );
+        assert_eq!(
+            Megahertz::<u32>::from_raw(1),
+            TimerRateU32::<1_000_000>::from_raw(1)
+        );
+        assert_eq!(
+            MegahertzU32::from_raw(1),
+            TimerRateU32::<1_000_000>::from_raw(1)
+        );
+        assert_eq!(
+            MegahertzU64::from_raw(1),
+            TimerRateU64::<1_000_000>::from_raw(1)
+        );
     }
 }

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+### Fixed
+
+- Fixed `TimerRateU32` and `TimerRateU64` to use `Rate` instead of `Duration`
+
+### Changed
+
 ## [v0.3.5] 
 
 ### Added
