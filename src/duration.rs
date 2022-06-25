@@ -43,6 +43,21 @@ macro_rules! impl_duration_for_integer {
                 self.ticks
             }
 
+            /// Returns true if this `Duration` spans no time
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let zero = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(0);")]
+            #[doc = concat!("let one = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            ///
+            /// assert_eq!(zero.is_zero(), true);
+            /// assert_eq!(one.is_zero(), false);
+            /// ```
+            #[inline]
+            pub const fn is_zero(&self) -> bool {
+                self.ticks == 0
+            }
+
             /// Add two durations while checking for overflow.
             ///
             /// ```

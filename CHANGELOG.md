@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Add `is_zero()` methods to `Duration<u32, NOM, DENOM>` and
+  `Duration<u64, NOM, DENOM>` types to compare with zero without type convertion
+
 ### Fixed
 
 ### Changed
