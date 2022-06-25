@@ -744,6 +744,18 @@ mod test {
         assert_eq!(d.to_hours(), 5);
     }
 
+    #[test]
+    fn duration_is_zero() {
+        let d = Duration::<u64, 1, 1_000>::from_ticks(0);
+        assert_eq!(d.is_zero(), true);
+        let d = Duration::<u64, 1, 1_000>::from_ticks(1);
+        assert_eq!(d.is_zero(), false);
+        let d = Duration::<u32, 1, 1_000>::from_ticks(0);
+        assert_eq!(d.is_zero(), true);
+        let d = Duration::<u32, 1, 1_000>::from_ticks(1);
+        assert_eq!(d.is_zero(), false);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
     //
     // Instant tests
