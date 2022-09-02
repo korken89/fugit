@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Updated documentation of const_cmp
+
 ## [v0.3.6] 
 
 ### Fixed

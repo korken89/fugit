@@ -51,6 +51,18 @@ macro_rules! impl_instant_for_integer {
             ///
             /// assert_eq!(i1.const_cmp(i2), core::cmp::Ordering::Less);
             /// ```
+            ///
+            /// This function takes into account that ticks might wrap around. If the absolute
+            /// values of `self` and `other` differ by more than half the possible range, it is
+            /// assumed that an overflow occured and the result is reversed:
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let i1 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(", stringify!($i),"::MAX);")]
+            #[doc = concat!("let i2 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            ///
+            /// assert_eq!(i1.const_cmp(i2), core::cmp::Ordering::Less);
+            /// ```
             #[inline]
             pub const fn const_cmp(self, other: Self) -> Ordering {
                 if self.ticks == other.ticks {
@@ -176,6 +188,14 @@ macro_rules! impl_instant_for_integer {
         }
 
         impl<const NOM: u32, const DENOM: u32> PartialOrd for Instant<$i, NOM, DENOM> {
+            /// This implementation deviates from the definition of
+            /// [PartialOrd::partial_cmp](core::cmp::PartialOrd::partial_cmp):
+            ///
+            /// It takes into account that ticks might wrap around. If the absolute
+            /// values of `self` and `other` differ by more than half the possible range, it is
+            /// assumed that an overflow occured and the result is reversed.
+            ///
+            /// That breaks the transitivity invariant: a < b and b < c no longer implies a < c.
             #[inline]
             fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
                 Some(self.const_cmp(*other))
@@ -183,6 +203,14 @@ macro_rules! impl_instant_for_integer {
         }
 
         impl<const NOM: u32, const DENOM: u32> Ord for Instant<$i, NOM, DENOM> {
+            /// This implementation deviates from the definition of
+            /// [Ord::cmp](core::cmp::Ord::cmp):
+            ///
+            /// It takes into account that ticks might wrap around. If the absolute
+            /// values of `self` and `other` differ by more than half the possible range, it is
+            /// assumed that an overflow occured and the result is reversed.
+            ///
+            /// That breaks the transitivity invariant: a < b and b < c no longer implies a < c.
             #[inline]
             fn cmp(&self, other: &Self) -> Ordering {
                 self.const_cmp(*other)
