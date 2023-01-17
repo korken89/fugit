@@ -229,6 +229,37 @@ macro_rules! impl_duration_for_integer {
                 }
             }
 
+            /// Const try from, checking for overflow.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_00>::from_ticks(1);")]
+            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::const_try_from(d1);")]
+            ///
+            /// assert_eq!(d2.unwrap().ticks(), 10);
+            /// ```
+            pub const fn const_try_from<const I_NOM: u32, const I_DENOM: u32>(
+                duration: Duration<$i, I_NOM, I_DENOM>,
+            ) -> Option<Self> {
+                if Helpers::<I_NOM, I_DENOM, NOM, DENOM>::SAME_BASE {
+                    Some(Self::from_ticks(duration.ticks))
+                } else {
+                    if let Some(lh) = (duration.ticks as u64)
+                        .checked_mul(Helpers::<I_NOM, I_DENOM, NOM, DENOM>::RD_TIMES_LN as u64)
+                    {
+                        let ticks = lh / Helpers::<I_NOM, I_DENOM, NOM, DENOM>::LD_TIMES_RN as u64;
+
+                        if ticks <= <$i>::MAX as u64 {
+                            Some(Self::from_ticks(ticks as $i))
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                }
+            }
+
             /// Const try into, checking for overflow.
             ///
             /// ```
@@ -238,26 +269,11 @@ macro_rules! impl_duration_for_integer {
             ///
             /// assert_eq!(d2.unwrap().ticks(), 10);
             /// ```
+            #[inline]
             pub const fn const_try_into<const O_NOM: u32, const O_DENOM: u32>(
                 self,
             ) -> Option<Duration<$i, O_NOM, O_DENOM>> {
-                if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
-                    Some(Duration::<$i, O_NOM, O_DENOM>::from_ticks(self.ticks))
-                } else {
-                    if let Some(lh) = (self.ticks as u64)
-                        .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as u64)
-                    {
-                        let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN as u64;
-
-                        if ticks <= <$i>::MAX as u64 {
-                            Some(Duration::<$i, O_NOM, O_DENOM>::from_ticks(ticks as $i))
-                        } else {
-                            None
-                        }
-                    } else {
-                        None
-                    }
-                }
+                Duration::<$i, O_NOM, O_DENOM>::const_try_from(self)
             }
 
             /// Const try into rate, checking for divide-by-zero.
@@ -396,8 +412,8 @@ macro_rules! impl_duration_for_integer {
 
             /// Shorthand for creating a duration which represents nanoseconds.
             #[inline]
-            pub const fn nanos(val: $i) -> Duration<$i, NOM, DENOM> {
-                Duration::<$i, NOM, DENOM>::from_ticks(
+            pub const fn nanos(val: $i) -> Self {
+                Self::from_ticks(
                     (Helpers::<1, 1_000_000_000, NOM, DENOM>::RD_TIMES_LN as $i * val)
                         / Helpers::<1, 1_000_000_000, NOM, DENOM>::LD_TIMES_RN as $i,
                 )
@@ -405,8 +421,8 @@ macro_rules! impl_duration_for_integer {
 
             /// Shorthand for creating a duration which represents microseconds.
             #[inline]
-            pub const fn micros(val: $i) -> Duration<$i, NOM, DENOM> {
-                Duration::<$i, NOM, DENOM>::from_ticks(
+            pub const fn micros(val: $i) -> Self {
+                Self::from_ticks(
                     (Helpers::<1, 1_000_000, NOM, DENOM>::RD_TIMES_LN as $i * val)
                         / Helpers::<1, 1_000_000, NOM, DENOM>::LD_TIMES_RN as $i,
                 )
@@ -414,8 +430,8 @@ macro_rules! impl_duration_for_integer {
 
             /// Shorthand for creating a duration which represents milliseconds.
             #[inline]
-            pub const fn millis(val: $i) -> Duration<$i, NOM, DENOM> {
-                Duration::<$i, NOM, DENOM>::from_ticks(
+            pub const fn millis(val: $i) -> Self {
+                Self::from_ticks(
                     (Helpers::<1, 1_000, NOM, DENOM>::RD_TIMES_LN as $i * val)
                         / Helpers::<1, 1_000, NOM, DENOM>::LD_TIMES_RN as $i,
                 )
@@ -423,8 +439,8 @@ macro_rules! impl_duration_for_integer {
 
             /// Shorthand for creating a duration which represents seconds.
             #[inline]
-            pub const fn secs(val: $i) -> Duration<$i, NOM, DENOM> {
-                Duration::<$i, NOM, DENOM>::from_ticks(
+            pub const fn secs(val: $i) -> Self {
+                Self::from_ticks(
                     (Helpers::<1, 1, NOM, DENOM>::RD_TIMES_LN as $i * val)
                         / Helpers::<1, 1, NOM, DENOM>::LD_TIMES_RN as $i,
                 )
@@ -432,8 +448,8 @@ macro_rules! impl_duration_for_integer {
 
             /// Shorthand for creating a duration which represents minutes.
             #[inline]
-            pub const fn minutes(val: $i) -> Duration<$i, NOM, DENOM> {
-                Duration::<$i, NOM, DENOM>::from_ticks(
+            pub const fn minutes(val: $i) -> Self {
+                Self::from_ticks(
                     (Helpers::<60, 1, NOM, DENOM>::RD_TIMES_LN as $i * val)
                         / Helpers::<60, 1, NOM, DENOM>::LD_TIMES_RN as $i,
                 )
@@ -441,8 +457,8 @@ macro_rules! impl_duration_for_integer {
 
             /// Shorthand for creating a duration which represents hours.
             #[inline]
-            pub const fn hours(val: $i) -> Duration<$i, NOM, DENOM> {
-                Duration::<$i, NOM, DENOM>::from_ticks(
+            pub const fn hours(val: $i) -> Self {
+                Self::from_ticks(
                     (Helpers::<3_600, 1, NOM, DENOM>::RD_TIMES_LN as $i * val)
                         / Helpers::<3_600, 1, NOM, DENOM>::LD_TIMES_RN as $i,
                 )

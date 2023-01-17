@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- `from_rate`, `from_duration` in addition to `into_duration`, `into_rate`
+- `from_rate`, `from_duration` in addition to `into_duration`, `into_rate`;
+- `const_try_from` in addition to `const_try_into`
 - Add `is_zero()` methods to `Duration<u32, NOM, DENOM>` and
   `Duration<u64, NOM, DENOM>` types to compare with zero without type convertion
 

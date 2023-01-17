@@ -199,6 +199,37 @@ macro_rules! impl_rate_for_integer {
                 }
             }
 
+            /// Const try from, checking for overflow.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let r1 = Rate::<", stringify!($i), ", 1, 1_00>::from_raw(1);")]
+            #[doc = concat!("let r2 = Rate::<", stringify!($i), ", 1, 1_000>::const_try_from(r1);")]
+            ///
+            /// assert_eq!(r2.unwrap().raw(), 10);
+            /// ```
+            pub const fn const_try_from<const I_NOM: u32, const I_DENOM: u32>(
+                rate: Rate<$i, I_NOM, I_DENOM>,
+            ) -> Option<Self> {
+                if Helpers::<I_NOM, I_DENOM, NOM, DENOM>::SAME_BASE {
+                    Some(Self::from_raw(rate.raw))
+                } else {
+                    if let Some(lh) = (rate.raw as u64)
+                        .checked_mul(Helpers::<I_NOM, I_DENOM, NOM, DENOM>::RD_TIMES_LN)
+                    {
+                        let raw = lh / Helpers::<I_NOM, I_DENOM, NOM, DENOM>::LD_TIMES_RN;
+
+                        if raw <= <$i>::MAX as u64 {
+                            Some(Self::from_raw(raw as $i))
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                }
+            }
+
             /// Const try into, checking for overflow.
             ///
             /// ```
@@ -208,26 +239,11 @@ macro_rules! impl_rate_for_integer {
             ///
             /// assert_eq!(r2.unwrap().raw(), 10);
             /// ```
+            #[inline]
             pub const fn const_try_into<const O_NOM: u32, const O_DENOM: u32>(
                 self,
             ) -> Option<Rate<$i, O_NOM, O_DENOM>> {
-                if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
-                    Some(Rate::<$i, O_NOM, O_DENOM>::from_raw(self.raw))
-                } else {
-                    if let Some(lh) = (self.raw as u64)
-                        .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN)
-                    {
-                        let raw = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN;
-
-                        if raw <= <$i>::MAX as u64 {
-                            Some(Rate::<$i, O_NOM, O_DENOM>::from_raw(raw as $i))
-                        } else {
-                            None
-                        }
-                    } else {
-                        None
-                    }
-                }
+                Rate::<$i, O_NOM, O_DENOM>::const_try_from(self)
             }
 
             /// Const try into duration, checking for divide-by-zero.
@@ -349,8 +365,8 @@ macro_rules! impl_rate_for_integer {
             /// Shorthand for creating a rate which represents hertz.
             #[inline]
             #[allow(non_snake_case)]
-            pub const fn Hz(val: $i) -> Rate<$i, NOM, DENOM> {
-                Rate::<$i, NOM, DENOM>::from_raw(
+            pub const fn Hz(val: $i) -> Self {
+                Self::from_raw(
                     (Helpers::<1, 1, NOM, DENOM>::RD_TIMES_LN as $i * val)
                         / Helpers::<1, 1, NOM, DENOM>::LD_TIMES_RN as $i,
                 )
@@ -359,8 +375,8 @@ macro_rules! impl_rate_for_integer {
             /// Shorthand for creating a rate which represents kilohertz.
             #[inline]
             #[allow(non_snake_case)]
-            pub const fn kHz(val: $i) -> Rate<$i, NOM, DENOM> {
-                Rate::<$i, NOM, DENOM>::from_raw(
+            pub const fn kHz(val: $i) -> Self {
+                Self::from_raw(
                     (Helpers::<1_000, 1, NOM, DENOM>::RD_TIMES_LN as $i * val)
                         / Helpers::<1_000, 1, NOM, DENOM>::LD_TIMES_RN as $i,
                 )
@@ -369,8 +385,8 @@ macro_rules! impl_rate_for_integer {
             /// Shorthand for creating a rate which represents megahertz.
             #[inline]
             #[allow(non_snake_case)]
-            pub const fn MHz(val: $i) -> Rate<$i, NOM, DENOM> {
-                Rate::<$i, NOM, DENOM>::from_raw(
+            pub const fn MHz(val: $i) -> Self {
+                Self::from_raw(
                     (Helpers::<1_000_000, 1, NOM, DENOM>::RD_TIMES_LN as $i * val)
                         / Helpers::<1_000_000, 1, NOM, DENOM>::LD_TIMES_RN as $i,
                 )
