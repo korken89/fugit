@@ -1255,10 +1255,14 @@ mod test {
         let r = Rate::<u32, 1_000, 1>::from_raw(1);
         let d: Duration<u32, 1, 1_000_000> = r.into_duration();
         assert_eq!(d.ticks(), 1_000);
+        let d2 = Duration::<u32, 1, 1_000_000>::from_rate(r);
+        assert_eq!(d2.ticks(), 1_000);
 
         let r = Rate::<u64, 1_000, 1>::from_raw(1);
         let d: Duration<u64, 1, 1_000_000> = r.into_duration();
         assert_eq!(d.ticks(), 1_000);
+        let d2 = Duration::<u64, 1, 1_000_000>::from_rate(r);
+        assert_eq!(d2.ticks(), 1_000);
     }
 
     #[test]

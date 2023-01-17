@@ -10,7 +10,7 @@ use core::ops;
 /// raw contained within the rate: `rate in Hz = NOM / DENOM * raw`
 #[derive(Clone, Copy, Debug)]
 pub struct Rate<T, const NOM: u32, const DENOM: u32> {
-    raw: T,
+    pub(crate) raw: T,
 }
 
 macro_rules! impl_rate_for_integer {
@@ -242,13 +242,52 @@ macro_rules! impl_rate_for_integer {
             pub const fn try_into_duration<const O_NOM: u32, const O_DENOM: u32>(
                 self,
             ) -> Option<Duration<$i, O_NOM, O_DENOM>> {
-                if self.raw > 0 {
-                    Some(Duration::<$i, O_NOM, O_DENOM>::from_ticks(
-                        Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RATE_TO_DURATION_NUMERATOR as $i
-                        / self.raw
+                Duration::<$i, O_NOM, O_DENOM>::try_from_rate(self)
+            }
+
+            /// Convert from rate to duration.
+            pub const fn into_duration<const O_NOM: u32, const O_DENOM: u32>(
+                self,
+            ) -> Duration<$i, O_NOM, O_DENOM> {
+                if let Some(v) = self.try_into_duration() {
+                    v
+                } else {
+                    panic!("Into duration failed, divide-by-zero!");
+                }
+            }
+
+            /// Const try from duration, checking for divide-by-zero.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
+            #[doc = concat!("let r1 = Rate::<", stringify!($i), ", 1, 1>::try_from_duration(d1);")]
+            ///
+            /// assert_eq!(r1.unwrap().raw(), 500);
+            /// ```
+            #[inline]
+            pub const fn try_from_duration<const I_NOM: u32, const I_DENOM: u32>(
+                duration: Duration<$i, I_NOM, I_DENOM>,
+            ) -> Option<Self> {
+                if duration.ticks > 0 {
+                    Some(Self::from_raw(
+                        Helpers::<I_NOM, I_DENOM, NOM, DENOM>::RATE_TO_DURATION_NUMERATOR as $i
+                        / duration.ticks
                     ))
                 } else {
                     None
+                }
+            }
+
+            /// Convert from duration to rate.
+            #[inline]
+            pub const fn from_duration<const I_NOM: u32, const I_DENOM: u32>(
+                duration: Duration<$i, I_NOM, I_DENOM>,
+            ) -> Self {
+                if let Some(v) = Self::try_from_duration(duration) {
+                    v
+                } else {
+                    panic!("From duration failed, divide-by-zero!");
                 }
             }
 
@@ -280,17 +319,6 @@ macro_rules! impl_rate_for_integer {
                     v
                 } else {
                     panic!("Convert failed!");
-                }
-            }
-
-            /// Convert from rate to duration.
-            pub const fn into_duration<const O_NOM: u32, const O_DENOM: u32>(
-                self,
-            ) -> Duration<$i, O_NOM, O_DENOM> {
-                if let Some(v) = self.try_into_duration() {
-                    v
-                } else {
-                    panic!("Into duration failed, divide-by-zero!");
                 }
             }
 
