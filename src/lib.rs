@@ -668,6 +668,12 @@ mod test {
         let d: Duration<u32, 1, 10_000> = 1.hours();
         assert_eq!(d.ticks(), 36_000_000);
 
+        let d = Duration::<u32, 1, 10_000>::millis(10);
+        assert_eq!(d.ticks(), 100);
+
+        let d = Duration::<u32, 1, 10_000>::Hz(200);
+        assert_eq!(d.ticks(), 50);
+
         let d = Duration::<u32, 1, 1>::from_ticks(2);
         assert_eq!(d.to_secs(), 2);
         assert_eq!(d.to_nanos(), 2_000_000_000);
@@ -716,6 +722,12 @@ mod test {
 
         let d: Duration<u64, 1, 10_000> = 1.hours();
         assert_eq!(d.ticks(), 36_000_000);
+
+        let d = Duration::<u64, 1, 10_000>::millis(10);
+        assert_eq!(d.ticks(), 100);
+
+        let d = Duration::<u64, 1, 10_000>::Hz(200);
+        assert_eq!(d.ticks(), 50);
 
         let d = Duration::<u32, 1, 1>::from_ticks(2);
         assert_eq!(d.to_secs(), 2);
@@ -1234,6 +1246,12 @@ mod test {
 
         let r: Rate<u32, 1, 1> = 1.MHz();
         assert_eq!(r.raw(), 1_000_000);
+
+        let r = Rate::<u32, 1, 1>::kHz(20);
+        assert_eq!(r.raw(), 20_000);
+
+        let r = Rate::<u32, 1, 1>::micros(50);
+        assert_eq!(r.raw(), 20_000);
     }
 
     #[test]
@@ -1248,6 +1266,12 @@ mod test {
 
         let r: Rate<u64, 1, 1> = 1.MHz();
         assert_eq!(r.raw(), 1_000_000);
+
+        let r = Rate::<u64, 1, 1>::kHz(20);
+        assert_eq!(r.raw(), 20_000);
+
+        let r = Rate::<u64, 1, 1>::micros(50);
+        assert_eq!(r.raw(), 20_000);
     }
 
     #[test]

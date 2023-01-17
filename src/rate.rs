@@ -391,6 +391,24 @@ macro_rules! impl_rate_for_integer {
                         / Helpers::<1_000_000, 1, NOM, DENOM>::LD_TIMES_RN as $i,
                 )
             }
+
+            /// Shorthand for creating a rate which represents nanoseconds.
+            #[inline]
+            pub const fn nanos(val: $i) -> Self {
+                Self::from_duration(crate::Duration::<$i, 1, 1_000_000_000>::from_ticks(val))
+            }
+
+            /// Shorthand for creating a rate which represents microseconds.
+            #[inline]
+            pub const fn micros(val: $i) -> Self {
+                Self::from_duration(crate::Duration::<$i, 1, 1_000_000>::from_ticks(val))
+            }
+
+            /// Shorthand for creating a rate which represents milliseconds.
+            #[inline]
+            pub const fn millis(val: $i) -> Self {
+                Self::from_duration(crate::Duration::<$i, 1, 1_000>::from_ticks(val))
+            }
         }
 
         impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>

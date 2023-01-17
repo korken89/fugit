@@ -463,6 +463,27 @@ macro_rules! impl_duration_for_integer {
                         / Helpers::<3_600, 1, NOM, DENOM>::LD_TIMES_RN as $i,
                 )
             }
+
+            /// Shorthand for creating a duration which represents hertz.
+            #[inline]
+            #[allow(non_snake_case)]
+            pub const fn Hz(val: $i) -> Self {
+                Self::from_rate(crate::Hertz::<$i>::from_raw(val))
+            }
+
+            /// Shorthand for creating a duration which represents kilohertz.
+            #[inline]
+            #[allow(non_snake_case)]
+            pub const fn kHz(val: $i) -> Self {
+                Self::from_rate(crate::Kilohertz::<$i>::from_raw(val))
+            }
+
+            /// Shorthand for creating a duration which represents megahertz.
+            #[inline]
+            #[allow(non_snake_case)]
+            pub const fn MHz(val: $i) -> Self {
+                Self::from_rate(crate::Megahertz::<$i>::from_raw(val))
+            }
         }
 
         impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
