@@ -10,7 +10,7 @@ use core::ops;
 /// raw contained within the rate: `rate in Hz = NOM / DENOM * raw`
 #[derive(Clone, Copy, Debug)]
 pub struct Rate<T, const NOM: u32, const DENOM: u32> {
-    raw: T,
+    pub(crate) raw: T,
 }
 
 macro_rules! impl_rate_for_integer {
@@ -199,6 +199,37 @@ macro_rules! impl_rate_for_integer {
                 }
             }
 
+            /// Const try from, checking for overflow.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let r1 = Rate::<", stringify!($i), ", 1, 1_00>::from_raw(1);")]
+            #[doc = concat!("let r2 = Rate::<", stringify!($i), ", 1, 1_000>::const_try_from(r1);")]
+            ///
+            /// assert_eq!(r2.unwrap().raw(), 10);
+            /// ```
+            pub const fn const_try_from<const I_NOM: u32, const I_DENOM: u32>(
+                rate: Rate<$i, I_NOM, I_DENOM>,
+            ) -> Option<Self> {
+                if Helpers::<I_NOM, I_DENOM, NOM, DENOM>::SAME_BASE {
+                    Some(Self::from_raw(rate.raw))
+                } else {
+                    if let Some(lh) = (rate.raw as u64)
+                        .checked_mul(Helpers::<I_NOM, I_DENOM, NOM, DENOM>::RD_TIMES_LN)
+                    {
+                        let raw = lh / Helpers::<I_NOM, I_DENOM, NOM, DENOM>::LD_TIMES_RN;
+
+                        if raw <= <$i>::MAX as u64 {
+                            Some(Self::from_raw(raw as $i))
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                }
+            }
+
             /// Const try into, checking for overflow.
             ///
             /// ```
@@ -208,26 +239,11 @@ macro_rules! impl_rate_for_integer {
             ///
             /// assert_eq!(r2.unwrap().raw(), 10);
             /// ```
+            #[inline]
             pub const fn const_try_into<const O_NOM: u32, const O_DENOM: u32>(
                 self,
             ) -> Option<Rate<$i, O_NOM, O_DENOM>> {
-                if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
-                    Some(Rate::<$i, O_NOM, O_DENOM>::from_raw(self.raw))
-                } else {
-                    if let Some(lh) = (self.raw as u64)
-                        .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN)
-                    {
-                        let raw = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN;
-
-                        if raw <= <$i>::MAX as u64 {
-                            Some(Rate::<$i, O_NOM, O_DENOM>::from_raw(raw as $i))
-                        } else {
-                            None
-                        }
-                    } else {
-                        None
-                    }
-                }
+                Rate::<$i, O_NOM, O_DENOM>::const_try_from(self)
             }
 
             /// Const try into duration, checking for divide-by-zero.
@@ -242,13 +258,52 @@ macro_rules! impl_rate_for_integer {
             pub const fn try_into_duration<const O_NOM: u32, const O_DENOM: u32>(
                 self,
             ) -> Option<Duration<$i, O_NOM, O_DENOM>> {
-                if self.raw > 0 {
-                    Some(Duration::<$i, O_NOM, O_DENOM>::from_ticks(
-                        Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RATE_TO_DURATION_NUMERATOR as $i
-                        / self.raw
+                Duration::<$i, O_NOM, O_DENOM>::try_from_rate(self)
+            }
+
+            /// Convert from rate to duration.
+            pub const fn into_duration<const O_NOM: u32, const O_DENOM: u32>(
+                self,
+            ) -> Duration<$i, O_NOM, O_DENOM> {
+                if let Some(v) = self.try_into_duration() {
+                    v
+                } else {
+                    panic!("Into duration failed, divide-by-zero!");
+                }
+            }
+
+            /// Const try from duration, checking for divide-by-zero.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
+            #[doc = concat!("let r1 = Rate::<", stringify!($i), ", 1, 1>::try_from_duration(d1);")]
+            ///
+            /// assert_eq!(r1.unwrap().raw(), 500);
+            /// ```
+            #[inline]
+            pub const fn try_from_duration<const I_NOM: u32, const I_DENOM: u32>(
+                duration: Duration<$i, I_NOM, I_DENOM>,
+            ) -> Option<Self> {
+                if duration.ticks > 0 {
+                    Some(Self::from_raw(
+                        Helpers::<I_NOM, I_DENOM, NOM, DENOM>::RATE_TO_DURATION_NUMERATOR as $i
+                        / duration.ticks
                     ))
                 } else {
                     None
+                }
+            }
+
+            /// Convert from duration to rate.
+            #[inline]
+            pub const fn from_duration<const I_NOM: u32, const I_DENOM: u32>(
+                duration: Duration<$i, I_NOM, I_DENOM>,
+            ) -> Self {
+                if let Some(v) = Self::try_from_duration(duration) {
+                    v
+                } else {
+                    panic!("From duration failed, divide-by-zero!");
                 }
             }
 
@@ -283,17 +338,6 @@ macro_rules! impl_rate_for_integer {
                 }
             }
 
-            /// Convert from rate to duration.
-            pub const fn into_duration<const O_NOM: u32, const O_DENOM: u32>(
-                self,
-            ) -> Duration<$i, O_NOM, O_DENOM> {
-                if let Some(v) = self.try_into_duration() {
-                    v
-                } else {
-                    panic!("Into duration failed, divide-by-zero!");
-                }
-            }
-
             /// Convert the Rate to an interger number of Hz.
             #[inline]
             #[allow(non_snake_case)]
@@ -321,8 +365,8 @@ macro_rules! impl_rate_for_integer {
             /// Shorthand for creating a rate which represents hertz.
             #[inline]
             #[allow(non_snake_case)]
-            pub const fn Hz(val: $i) -> Rate<$i, NOM, DENOM> {
-                Rate::<$i, NOM, DENOM>::from_raw(
+            pub const fn Hz(val: $i) -> Self {
+                Self::from_raw(
                     (Helpers::<1, 1, NOM, DENOM>::RD_TIMES_LN as $i * val)
                         / Helpers::<1, 1, NOM, DENOM>::LD_TIMES_RN as $i,
                 )
@@ -331,8 +375,8 @@ macro_rules! impl_rate_for_integer {
             /// Shorthand for creating a rate which represents kilohertz.
             #[inline]
             #[allow(non_snake_case)]
-            pub const fn kHz(val: $i) -> Rate<$i, NOM, DENOM> {
-                Rate::<$i, NOM, DENOM>::from_raw(
+            pub const fn kHz(val: $i) -> Self {
+                Self::from_raw(
                     (Helpers::<1_000, 1, NOM, DENOM>::RD_TIMES_LN as $i * val)
                         / Helpers::<1_000, 1, NOM, DENOM>::LD_TIMES_RN as $i,
                 )
@@ -341,11 +385,29 @@ macro_rules! impl_rate_for_integer {
             /// Shorthand for creating a rate which represents megahertz.
             #[inline]
             #[allow(non_snake_case)]
-            pub const fn MHz(val: $i) -> Rate<$i, NOM, DENOM> {
-                Rate::<$i, NOM, DENOM>::from_raw(
+            pub const fn MHz(val: $i) -> Self {
+                Self::from_raw(
                     (Helpers::<1_000_000, 1, NOM, DENOM>::RD_TIMES_LN as $i * val)
                         / Helpers::<1_000_000, 1, NOM, DENOM>::LD_TIMES_RN as $i,
                 )
+            }
+
+            /// Shorthand for creating a rate which represents nanoseconds.
+            #[inline]
+            pub const fn nanos(val: $i) -> Self {
+                Self::from_duration(crate::Duration::<$i, 1, 1_000_000_000>::from_ticks(val))
+            }
+
+            /// Shorthand for creating a rate which represents microseconds.
+            #[inline]
+            pub const fn micros(val: $i) -> Self {
+                Self::from_duration(crate::Duration::<$i, 1, 1_000_000>::from_ticks(val))
+            }
+
+            /// Shorthand for creating a rate which represents milliseconds.
+            #[inline]
+            pub const fn millis(val: $i) -> Self {
+                Self::from_duration(crate::Duration::<$i, 1, 1_000>::from_ticks(val))
             }
         }
 
