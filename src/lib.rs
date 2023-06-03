@@ -51,7 +51,7 @@ mod instant;
 mod rate;
 
 pub use aliases::*;
-pub use duration::{Duration, ExtU32, ExtU64};
+pub use duration::{Duration, ExtU32, ExtU32Ceil, ExtU64, ExtU64Ceil};
 pub use instant::Instant;
 pub use rate::{ExtU32 as RateExtU32, ExtU64 as RateExtU64, Rate};
 
@@ -648,10 +648,19 @@ mod test {
 
     #[test]
     fn duration_shorthands_u32() {
-        use crate::ExtU32;
+        use crate::{ExtU32, ExtU32Ceil};
 
         let d: Duration<u32, 1, 10_000> = 100_000_000.nanos();
         assert_eq!(d.ticks(), 1_000);
+
+        let d: Duration<u32, 1, 1_000_000> = 40_000.nanos_at_least();
+        assert_eq!(d.ticks(), 40);
+
+        let d: Duration<u32, 1, 1_000_000> = 40_075.nanos_at_least();
+        assert_eq!(d.ticks(), 41);
+
+        let d: Duration<u32, 1, 1_000> = 4001.micros_at_least();
+        assert_eq!(d.ticks(), 5);
 
         let d: Duration<u32, 1, 10_000> = 100_000.micros();
         assert_eq!(d.ticks(), 1_000);
@@ -703,10 +712,19 @@ mod test {
 
     #[test]
     fn duration_shorthands_u64() {
-        use crate::ExtU64;
+        use crate::{ExtU64, ExtU64Ceil};
 
         let d: Duration<u64, 1, 10_000> = 100_000_000.nanos();
         assert_eq!(d.ticks(), 1_000);
+
+        let d: Duration<u64, 1, 1_000_000> = 40_000.nanos_at_least();
+        assert_eq!(d.ticks(), 40);
+
+        let d: Duration<u64, 1, 1_000_000> = 40_075.nanos_at_least();
+        assert_eq!(d.ticks(), 41);
+
+        let d: Duration<u64, 1, 1_000> = 4001.micros_at_least();
+        assert_eq!(d.ticks(), 5);
 
         let d: Duration<u64, 1, 10_000> = 100_000.micros();
         assert_eq!(d.ticks(), 1_000);

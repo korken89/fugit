@@ -13,6 +13,38 @@ pub struct Duration<T, const NOM: u32, const DENOM: u32> {
     pub(crate) ticks: T,
 }
 
+macro_rules! shorthand {
+    ($i:ty, $nom:literal, $denum:literal, $unit:ident, $to_unit:ident, $unital:ident, $unitstr:literal) => {
+        #[doc = concat!("Convert the Duration to an integer number of ", $unitstr, ".")]
+        #[inline]
+        pub const fn $to_unit(&self) -> $i {
+            (Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i * self.ticks)
+                / Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i
+        }
+
+        #[doc = concat!("Shorthand for creating a duration which represents ", $unitstr, ".")]
+        #[inline]
+        pub const fn $unit(val: $i) -> Self {
+            Self::from_ticks(
+                (Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i * val)
+                    / Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i
+            )
+        }
+
+        #[doc = concat!("Shorthand for creating a duration which represents ", $unitstr, " (ceil rounded).")]
+        #[inline]
+        pub const fn $unital(val: $i) -> Self {
+            let mul = Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i * val;
+            let ld_times_rn = Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i;
+            Self::from_ticks(if mul % ld_times_rn == 0 {
+                mul / ld_times_rn
+            } else {
+                mul / ld_times_rn + 1
+            })
+        }
+    };
+}
+
 macro_rules! impl_duration_for_integer {
     ($i:ty) => {
         impl<const NOM: u32, const DENOM: u32> Duration<$i, NOM, DENOM> {
@@ -368,101 +400,12 @@ macro_rules! impl_duration_for_integer {
                 }
             }
 
-            /// Convert the Duration to an integer number of nanoseconds.
-            #[inline]
-            pub const fn to_nanos(&self) -> $i {
-                (Helpers::<1, 1_000_000_000, NOM, DENOM>::LD_TIMES_RN as $i * self.ticks)
-                    / Helpers::<1, 1_000_000_000, NOM, DENOM>::RD_TIMES_LN as $i
-            }
-
-            /// Convert the Duration to an integer number of microseconds.
-            #[inline]
-            pub const fn to_micros(&self) -> $i {
-                (Helpers::<1, 1_000_000, NOM, DENOM>::LD_TIMES_RN as $i * self.ticks)
-                    / Helpers::<1, 1_000_000, NOM, DENOM>::RD_TIMES_LN as $i
-            }
-
-            /// Convert the Duration to an integer number of milliseconds.
-            #[inline]
-            pub const fn to_millis(&self) -> $i {
-                (Helpers::<1, 1_000, NOM, DENOM>::LD_TIMES_RN as $i * self.ticks)
-                    / Helpers::<1, 1_000, NOM, DENOM>::RD_TIMES_LN as $i
-            }
-
-            /// Convert the Duration to an integer number of seconds.
-            #[inline]
-            pub const fn to_secs(&self) -> $i {
-                (Helpers::<1, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.ticks)
-                    / Helpers::<1, 1, NOM, DENOM>::RD_TIMES_LN as $i
-            }
-
-            /// Convert the Duration to an integer number of minutes.
-            #[inline]
-            pub const fn to_minutes(&self) -> $i {
-                (Helpers::<60, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.ticks)
-                    / Helpers::<60, 1, NOM, DENOM>::RD_TIMES_LN as $i
-            }
-
-            /// Convert the Duration to an integer number of hours.
-            #[inline]
-            pub const fn to_hours(&self) -> $i {
-                (Helpers::<3_600, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.ticks)
-                    / Helpers::<3_600, 1, NOM, DENOM>::RD_TIMES_LN as $i
-            }
-
-            /// Shorthand for creating a duration which represents nanoseconds.
-            #[inline]
-            pub const fn nanos(val: $i) -> Self {
-                Self::from_ticks(
-                    (Helpers::<1, 1_000_000_000, NOM, DENOM>::RD_TIMES_LN as $i * val)
-                        / Helpers::<1, 1_000_000_000, NOM, DENOM>::LD_TIMES_RN as $i,
-                )
-            }
-
-            /// Shorthand for creating a duration which represents microseconds.
-            #[inline]
-            pub const fn micros(val: $i) -> Self {
-                Self::from_ticks(
-                    (Helpers::<1, 1_000_000, NOM, DENOM>::RD_TIMES_LN as $i * val)
-                        / Helpers::<1, 1_000_000, NOM, DENOM>::LD_TIMES_RN as $i,
-                )
-            }
-
-            /// Shorthand for creating a duration which represents milliseconds.
-            #[inline]
-            pub const fn millis(val: $i) -> Self {
-                Self::from_ticks(
-                    (Helpers::<1, 1_000, NOM, DENOM>::RD_TIMES_LN as $i * val)
-                        / Helpers::<1, 1_000, NOM, DENOM>::LD_TIMES_RN as $i,
-                )
-            }
-
-            /// Shorthand for creating a duration which represents seconds.
-            #[inline]
-            pub const fn secs(val: $i) -> Self {
-                Self::from_ticks(
-                    (Helpers::<1, 1, NOM, DENOM>::RD_TIMES_LN as $i * val)
-                        / Helpers::<1, 1, NOM, DENOM>::LD_TIMES_RN as $i,
-                )
-            }
-
-            /// Shorthand for creating a duration which represents minutes.
-            #[inline]
-            pub const fn minutes(val: $i) -> Self {
-                Self::from_ticks(
-                    (Helpers::<60, 1, NOM, DENOM>::RD_TIMES_LN as $i * val)
-                        / Helpers::<60, 1, NOM, DENOM>::LD_TIMES_RN as $i,
-                )
-            }
-
-            /// Shorthand for creating a duration which represents hours.
-            #[inline]
-            pub const fn hours(val: $i) -> Self {
-                Self::from_ticks(
-                    (Helpers::<3_600, 1, NOM, DENOM>::RD_TIMES_LN as $i * val)
-                        / Helpers::<3_600, 1, NOM, DENOM>::LD_TIMES_RN as $i,
-                )
-            }
+            shorthand!($i, 1, 1_000_000_000, nanos, to_nanos, nanos_at_least, "nanoseconds");
+            shorthand!($i, 1, 1_000_000, micros, to_micros, micros_at_least, "microseconds");
+            shorthand!($i, 1, 1_000, millis, to_millis, millis_at_least, "milliseconds");
+            shorthand!($i, 1, 1, secs, to_secs, secs_at_least, "seconds");
+            shorthand!($i, 60, 1, minutes, to_minutes, minutes_at_least, "minutes");
+            shorthand!($i, 3600, 1, hours, to_hours, hours_at_least, "hours");
 
             /// Shorthand for creating a duration which represents hertz.
             #[inline]
@@ -857,6 +800,59 @@ impl ExtU32 for u32 {
     }
 }
 
+/// Extension trait for simple short-hands for u32 Durations (ceil rounded)
+pub trait ExtU32Ceil {
+    /// Shorthand for creating a duration which represents nanoseconds.
+    fn nanos_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM>;
+
+    /// Shorthand for creating a duration which represents microseconds.
+    fn micros_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM>;
+
+    /// Shorthand for creating a duration which represents milliseconds.
+    fn millis_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM>;
+
+    /// Shorthand for creating a duration which represents seconds.
+    fn secs_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM>;
+
+    /// Shorthand for creating a duration which represents minutes.
+    fn minutes_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM>;
+
+    /// Shorthand for creating a duration which represents hours.
+    fn hours_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM>;
+}
+
+impl ExtU32Ceil for u32 {
+    #[inline]
+    fn nanos_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
+        Duration::<u32, NOM, DENOM>::nanos_at_least(self)
+    }
+
+    #[inline]
+    fn micros_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
+        Duration::<u32, NOM, DENOM>::micros_at_least(self)
+    }
+
+    #[inline]
+    fn millis_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
+        Duration::<u32, NOM, DENOM>::millis_at_least(self)
+    }
+
+    #[inline]
+    fn secs_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
+        Duration::<u32, NOM, DENOM>::secs_at_least(self)
+    }
+
+    #[inline]
+    fn minutes_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
+        Duration::<u32, NOM, DENOM>::minutes_at_least(self)
+    }
+
+    #[inline]
+    fn hours_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
+        Duration::<u32, NOM, DENOM>::hours_at_least(self)
+    }
+}
+
 /// Extension trait for simple short-hands for u64 Durations
 pub trait ExtU64 {
     /// Shorthand for creating a duration which represents nanoseconds.
@@ -907,5 +903,58 @@ impl ExtU64 for u64 {
     #[inline]
     fn hours<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
         Duration::<u64, NOM, DENOM>::hours(self)
+    }
+}
+
+/// Extension trait for simple short-hands for u64 Durations (ceil rounded)
+pub trait ExtU64Ceil {
+    /// Shorthand for creating a duration which represents nanoseconds.
+    fn nanos_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM>;
+
+    /// Shorthand for creating a duration which represents microseconds.
+    fn micros_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM>;
+
+    /// Shorthand for creating a duration which represents milliseconds.
+    fn millis_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM>;
+
+    /// Shorthand for creating a duration which represents seconds.
+    fn secs_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM>;
+
+    /// Shorthand for creating a duration which represents minutes.
+    fn minutes_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM>;
+
+    /// Shorthand for creating a duration which represents hours.
+    fn hours_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM>;
+}
+
+impl ExtU64Ceil for u64 {
+    #[inline]
+    fn nanos_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
+        Duration::<u64, NOM, DENOM>::nanos_at_least(self)
+    }
+
+    #[inline]
+    fn micros_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
+        Duration::<u64, NOM, DENOM>::micros_at_least(self)
+    }
+
+    #[inline]
+    fn millis_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
+        Duration::<u64, NOM, DENOM>::millis_at_least(self)
+    }
+
+    #[inline]
+    fn secs_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
+        Duration::<u64, NOM, DENOM>::secs_at_least(self)
+    }
+
+    #[inline]
+    fn minutes_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
+        Duration::<u64, NOM, DENOM>::minutes_at_least(self)
+    }
+
+    #[inline]
+    fn hours_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
+        Duration::<u64, NOM, DENOM>::hours_at_least(self)
     }
 }
