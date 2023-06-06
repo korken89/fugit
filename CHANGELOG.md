@@ -9,27 +9,34 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## [v0.3.7]
+
+### Added
+
 - `Hz`, `kHz`, `MHz` shorthands for `Duration` and `nanos`, `micros`, `millis` for `Rate`
 - `from_rate`, `from_duration` in addition to `into_duration`, `into_rate`;
 - `const_try_from` in addition to `const_try_into`
 - `<unit>_at_least` for ceil-rounded `Duration` convert
-- Add `is_zero()` methods to `Duration<u32, NOM, DENOM>` and
-  `Duration<u64, NOM, DENOM>` types to compare with zero without type convertion
+- Add `is_zero()` methods to `Duration<u32, NOM, DENOM>` and `Duration<u64, NOM, DENOM>` types to compare with zero without type conversion
 
 ### Fixed
 
 ### Changed
 
-- Updated documentation of const_cmp
+- Updated documentation of `const_cmp`
 
-## [v0.3.6] 
+## [v0.3.6]
 
 ### Fixed
 
 - Fixed error in conversion between large durations.
 - Fixed `TimerRateU32` and `TimerRateU64` to use `Rate` instead of `Duration`
 
-## [v0.3.5] 
+## [v0.3.5]
 
 ### Added
 
@@ -79,7 +86,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Now supports a `defmt` version span (0.2 and 0.3 is supported)
 
-[Unreleased]: https://github.com/korken89/fugit/compare/v0.3.5...HEAD
+[Unreleased]: https://github.com/korken89/fugit/compare/v0.3.7...HEAD
+[v0.3.7]: https://github.com/korken89/fugit/compare/v0.3.6...v0.3.7
+[v0.3.6]: https://github.com/korken89/fugit/compare/v0.3.5...v0.3.6
 [v0.3.5]: https://github.com/korken89/fugit/compare/v0.3.4...v0.3.5
 [v0.3.4]: https://github.com/korken89/fugit/compare/v0.3.3...v0.3.4
 [v0.3.3]: https://github.com/korken89/fugit/compare/v0.3.2...v0.3.3
