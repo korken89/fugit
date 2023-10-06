@@ -521,6 +521,24 @@ macro_rules! impl_duration_for_integer {
             }
         }
 
+        impl<const NOMR: u32, const DENOMR: u32, const NOMD: u32, const DENOMD: u32> ops::Mul<Rate<$i, NOMR, DENOMR>> for Duration<$i, NOMD, DENOMD> {
+            type Output = $i;
+
+            #[inline]
+            fn mul(self, other: Rate<$i, NOMR, DENOMR>) -> Self::Output {
+                ((NOMR * NOMD * self.ticks as u32 * other.raw as u32) / (DENOMR * DENOMD)) as $i
+            }
+        }
+
+        impl<const NOMR: u32, const DENOMR: u32, const NOMD: u32, const DENOMD: u32> ops::Mul<Duration<$i, NOMD, DENOMD>> for Rate<$i, NOMR, DENOMR> {
+            type Output = $i;
+
+            #[inline]
+            fn mul(self, other: Duration<$i, NOMD, DENOMD>) -> Self::Output {
+                ((NOMR * NOMD * other.ticks as u32 * self.raw as u32) / (DENOMR * DENOMD)) as $i
+            }
+        }
+
         // Duration * integer = Duration
         impl<const NOM: u32, const DENOM: u32> ops::Mul<u32> for Duration<$i, NOM, DENOM> {
             type Output = Duration<$i, NOM, DENOM>;
