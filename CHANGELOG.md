@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+* Use `div_ceil` for `at_least`. Set `rust-version` to `1.73`
+
 ## [v0.3.7]
 
 ### Added

@@ -36,11 +36,7 @@ macro_rules! shorthand {
         pub const fn $unital(val: $i) -> Self {
             let mul = Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i * val;
             let ld_times_rn = Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i;
-            Self::from_ticks(if mul % ld_times_rn == 0 {
-                mul / ld_times_rn
-            } else {
-                mul / ld_times_rn + 1
-            })
+            Self::from_ticks(mul.div_ceil(ld_times_rn))
         }
     };
 }

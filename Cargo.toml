@@ -9,6 +9,7 @@ categories = ["date-and-time", "embedded", "no-std"]
 readme = "README.md"
 repository = "https://github.com/korken89/fugit"
 license = "MIT OR Apache-2.0"
+rust-version = "1.73.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
