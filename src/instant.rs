@@ -1,5 +1,6 @@
+use super::Fraction;
 use crate::duration::Duration;
-use crate::helpers::{self, Helpers};
+use crate::helpers::Helpers;
 use core::cmp::Ordering;
 use core::ops;
 
@@ -8,23 +9,23 @@ use core::ops;
 /// The generic `T` can either be `u32` or `u64`, and the const generics represent the ratio of the
 /// ticks contained within the instant: `instant in seconds = NOM / DENOM * ticks`
 #[derive(Clone, Copy, Debug)]
-pub struct Instant<T, const NOM: u32, const DENOM: u32> {
+pub struct Instant<T, const F: Fraction> {
     ticks: T,
 }
 
 macro_rules! impl_instant_for_integer {
     ($i:ty) => {
-        impl<const NOM: u32, const DENOM: u32> Instant<$i, NOM, DENOM> {
+        impl<const F: Fraction> Instant<$i, F> {
             /// Create an `Instant` from a ticks value.
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let _i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let _i = Instant::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(1);")]
             /// ```
             #[inline]
             pub const fn from_ticks(ticks: $i) -> Self {
-                helpers::greater_than_0::<NOM>();
-                helpers::greater_than_0::<DENOM>();
+                assert!(F.num > 0);
+                assert!(F.denom > 0);
 
                 Instant { ticks }
             }
@@ -33,7 +34,7 @@ macro_rules! impl_instant_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(234);")]
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(234);")]
             ///
             /// assert_eq!(i.ticks(), 234);
             /// ```
@@ -46,8 +47,8 @@ macro_rules! impl_instant_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let i1 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
-            #[doc = concat!("let i2 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
+            #[doc = concat!("let i1 = Instant::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(1);")]
+            #[doc = concat!("let i2 = Instant::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(2);")]
             ///
             /// assert_eq!(i1.const_cmp(i2), core::cmp::Ordering::Less);
             /// ```
@@ -58,8 +59,8 @@ macro_rules! impl_instant_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let i1 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(", stringify!($i),"::MAX);")]
-            #[doc = concat!("let i2 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let i1 = Instant::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(", stringify!($i),"::MAX);")]
+            #[doc = concat!("let i2 = Instant::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(1);")]
             ///
             /// assert_eq!(i1.const_cmp(i2), core::cmp::Ordering::Less);
             /// ```
@@ -86,21 +87,21 @@ macro_rules! impl_instant_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(11);")]
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(11);")]
             ///
             /// assert_eq!(i.duration_since_epoch().ticks(), 11);
             /// ```
             #[inline]
-            pub const fn duration_since_epoch(self) -> Duration<$i, NOM, DENOM> {
-                Duration::<$i, NOM, DENOM>::from_ticks(self.ticks())
+            pub const fn duration_since_epoch(self) -> Duration<$i, F> {
+                Duration::<$i, F>::from_ticks(self.ticks())
             }
 
             /// Duration between `Instant`s.
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let i1 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
-            #[doc = concat!("let i2 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
+            #[doc = concat!("let i1 = Instant::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(1);")]
+            #[doc = concat!("let i2 = Instant::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(2);")]
             ///
             /// assert_eq!(i1.checked_duration_since(i2), None);
             /// assert_eq!(i2.checked_duration_since(i1).unwrap().ticks(), 1);
@@ -109,10 +110,10 @@ macro_rules! impl_instant_for_integer {
             pub const fn checked_duration_since(
                 self,
                 other: Self,
-            ) -> Option<Duration<$i, NOM, DENOM>> {
+            ) -> Option<Duration<$i, F>> {
                 match self.const_cmp(other) {
                     Ordering::Greater | Ordering::Equal => {
-                        Some(Duration::<$i, NOM, DENOM>::from_ticks(
+                        Some(Duration::<$i, F>::from_ticks(
                             self.ticks.wrapping_sub(other.ticks),
                         ))
                     }
@@ -124,27 +125,27 @@ macro_rules! impl_instant_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
-            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(1);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(1);")]
             ///
             /// assert_eq!(i.checked_sub_duration(d).unwrap().ticks(), 0);
             /// ```
-            pub const fn checked_sub_duration<const O_NOM: u32, const O_DENOM: u32>(
+            pub const fn checked_sub_duration<const O: Fraction>(
                 self,
-                other: Duration<$i, O_NOM, O_DENOM>,
+                other: Duration<$i, O>,
             ) -> Option<Self> {
-                if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
-                    Some(Instant::<$i, NOM, DENOM>::from_ticks(
+                if Helpers::<F, O>::SAME_BASE {
+                    Some(Self::from_ticks(
                         self.ticks.wrapping_sub(other.ticks()),
                     ))
                 } else {
                     if let Some(lh) = other
                         .ticks()
-                        .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN as $i)
+                        .checked_mul(Helpers::<F, O>::LD_TIMES_RN as $i)
                     {
-                        let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i;
+                        let ticks = lh / Helpers::<F, O>::RD_TIMES_LN as $i;
 
-                        Some(Instant::<$i, NOM, DENOM>::from_ticks(
+                        Some(Self::from_ticks(
                             self.ticks.wrapping_sub(ticks),
                         ))
                     } else {
@@ -157,27 +158,27 @@ macro_rules! impl_instant_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
-            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(1);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(1);")]
             ///
             /// assert_eq!(i.checked_add_duration(d).unwrap().ticks(), 2);
             /// ```
-            pub const fn checked_add_duration<const O_NOM: u32, const O_DENOM: u32>(
+            pub const fn checked_add_duration<const O: Fraction>(
                 self,
-                other: Duration<$i, O_NOM, O_DENOM>,
+                other: Duration<$i, O>,
             ) -> Option<Self> {
-                if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
-                    Some(Instant::<$i, NOM, DENOM>::from_ticks(
+                if Helpers::<F, O>::SAME_BASE {
+                    Some(Self::from_ticks(
                         self.ticks.wrapping_add(other.ticks()),
                     ))
                 } else {
                     if let Some(lh) = other
                         .ticks()
-                        .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN as $i)
+                        .checked_mul(Helpers::<F, O>::LD_TIMES_RN as $i)
                     {
-                        let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i;
+                        let ticks = lh / Helpers::<F, O>::RD_TIMES_LN as $i;
 
-                        Some(Instant::<$i, NOM, DENOM>::from_ticks(
+                        Some(Self::from_ticks(
                             self.ticks.wrapping_add(ticks),
                         ))
                     } else {
@@ -187,7 +188,7 @@ macro_rules! impl_instant_for_integer {
             }
         }
 
-        impl<const NOM: u32, const DENOM: u32> PartialOrd for Instant<$i, NOM, DENOM> {
+        impl<const F: Fraction> PartialOrd for Instant<$i, F> {
             /// This implementation deviates from the definition of
             /// [PartialOrd::partial_cmp](core::cmp::PartialOrd::partial_cmp):
             ///
@@ -202,7 +203,7 @@ macro_rules! impl_instant_for_integer {
             }
         }
 
-        impl<const NOM: u32, const DENOM: u32> Ord for Instant<$i, NOM, DENOM> {
+        impl<const F: Fraction> Ord for Instant<$i, F> {
             /// This implementation deviates from the definition of
             /// [Ord::cmp](core::cmp::Ord::cmp):
             ///
@@ -217,23 +218,23 @@ macro_rules! impl_instant_for_integer {
             }
         }
 
-        impl<const NOM: u32, const DENOM: u32> PartialEq for Instant<$i, NOM, DENOM> {
+        impl<const F: Fraction> PartialEq for Instant<$i, F> {
             #[inline]
             fn eq(&self, other: &Self) -> bool {
                 self.ticks.eq(&other.ticks)
             }
         }
 
-        impl<const NOM: u32, const DENOM: u32> Eq for Instant<$i, NOM, DENOM> {}
+        impl<const F: Fraction> Eq for Instant<$i, F> {}
 
         // Instant - Instant = Duration
         // We have limited this to use same numerator and denominator in both left and right hand sides,
         // this allows for the extension traits to work. For usage with different fraction, use
         // `checked_duration_since`.
-        impl<const NOM: u32, const DENOM: u32> ops::Sub<Instant<$i, NOM, DENOM>>
-            for Instant<$i, NOM, DENOM>
+        impl<const F: Fraction> ops::Sub<Instant<$i, F>>
+            for Instant<$i, F>
         {
-            type Output = Duration<$i, NOM, DENOM>;
+            type Output = Duration<$i, F>;
 
             #[inline]
             fn sub(self, other: Self) -> Self::Output {
@@ -249,13 +250,13 @@ macro_rules! impl_instant_for_integer {
         // We have limited this to use same numerator and denominator in both left and right hand sides,
         // this allows for the extension traits to work. For usage with different fraction, use
         // `checked_sub_duration`.
-        impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<$i, NOM, DENOM>>
-            for Instant<$i, NOM, DENOM>
+        impl<const F: Fraction> ops::Sub<Duration<$i, F>>
+            for Instant<$i, F>
         {
-            type Output = Instant<$i, NOM, DENOM>;
+            type Output = Self;
 
             #[inline]
-            fn sub(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
+            fn sub(self, other: Duration<$i, F>) -> Self::Output {
                 if let Some(v) = self.checked_sub_duration(other) {
                     v
                 } else {
@@ -268,11 +269,11 @@ macro_rules! impl_instant_for_integer {
         // We have limited this to use same numerator and denominator in both left and right hand sides,
         // this allows for the extension traits to work. For usage with different fraction, use
         // `checked_sub_duration`.
-        impl<const NOM: u32, const DENOM: u32> ops::SubAssign<Duration<$i, NOM, DENOM>>
-            for Instant<$i, NOM, DENOM>
+        impl<const F: Fraction> ops::SubAssign<Duration<$i, F>>
+            for Instant<$i, F>
         {
             #[inline]
-            fn sub_assign(&mut self, other: Duration<$i, NOM, DENOM>) {
+            fn sub_assign(&mut self, other: Duration<$i, F>) {
                 *self = *self - other;
             }
         }
@@ -281,13 +282,13 @@ macro_rules! impl_instant_for_integer {
         // We have limited this to use same numerator and denominator in both left and right hand sides,
         // this allows for the extension traits to work. For usage with different fraction, use
         // `checked_add_duration`.
-        impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<$i, NOM, DENOM>>
-            for Instant<$i, NOM, DENOM>
+        impl<const F: Fraction> ops::Add<Duration<$i, F>>
+            for Instant<$i, F>
         {
-            type Output = Instant<$i, NOM, DENOM>;
+            type Output = Self;
 
             #[inline]
-            fn add(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
+            fn add(self, other: Duration<$i, F>) -> Self::Output {
                 if let Some(v) = self.checked_add_duration(other) {
                     v
                 } else {
@@ -300,52 +301,52 @@ macro_rules! impl_instant_for_integer {
         // We have limited this to use same numerator and denominator in both left and right hand sides,
         // this allows for the extension traits to work. For usage with different fraction, use
         // `checked_add_duration`.
-        impl<const NOM: u32, const DENOM: u32> ops::AddAssign<Duration<$i, NOM, DENOM>>
-            for Instant<$i, NOM, DENOM>
+        impl<const F: Fraction> ops::AddAssign<Duration<$i, F>>
+            for Instant<$i, F>
         {
             #[inline]
-            fn add_assign(&mut self, other: Duration<$i, NOM, DENOM>) {
+            fn add_assign(&mut self, other: Duration<$i, F>) {
                 *self = *self + other;
             }
         }
 
         #[cfg(feature = "defmt")]
-        impl<const NOM: u32, const DENOM: u32> defmt::Format for Instant<$i, NOM, DENOM> {
+        impl<const F: Fraction> defmt::Format for Instant<$i, F> {
             fn format(&self, f: defmt::Formatter) {
-                if NOM == 3_600 && DENOM == 1 {
+                if F.const_eq(Fraction::new(3600, 1)) {
                     defmt::write!(f, "{} h", self.ticks)
-                } else if NOM == 60 && DENOM == 1 {
+                } else if F.const_eq(Fraction::new(60, 1)) {
                     defmt::write!(f, "{} min", self.ticks)
-                } else if NOM == 1 && DENOM == 1 {
+                } else if F.const_eq(Fraction::ONE) {
                     defmt::write!(f, "{} s", self.ticks)
-                } else if NOM == 1 && DENOM == 1_000 {
+                } else if F.const_eq(Fraction::MILLI) {
                     defmt::write!(f, "{} ms", self.ticks)
-                } else if NOM == 1 && DENOM == 1_000_000 {
+                } else if F.const_eq(Fraction::MICRO) {
                     defmt::write!(f, "{} us", self.ticks)
-                } else if NOM == 1 && DENOM == 1_000_000_000 {
+                } else if F.const_eq(Fraction::NANO) {
                     defmt::write!(f, "{} ns", self.ticks)
                 } else {
-                    defmt::write!(f, "{} ticks @ ({}/{})", self.ticks, NOM, DENOM)
+                    defmt::write!(f, "{} ticks @ ({}/{})", self.ticks, F.num, F.denom)
                 }
             }
         }
 
-        impl<const NOM: u32, const DENOM: u32> core::fmt::Display for Instant<$i, NOM, DENOM> {
+        impl<const F: Fraction> core::fmt::Display for Instant<$i, F> {
             fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-                if NOM == 3_600 && DENOM == 1 {
+                if F.const_eq(Fraction::new(3600, 1)) {
                     write!(f, "{} h", self.ticks)
-                } else if NOM == 60 && DENOM == 1 {
+                } else if F.const_eq(Fraction::new(60, 1)) {
                     write!(f, "{} min", self.ticks)
-                } else if NOM == 1 && DENOM == 1 {
+                } else if F.const_eq(Fraction::ONE) {
                     write!(f, "{} s", self.ticks)
-                } else if NOM == 1 && DENOM == 1_000 {
+                } else if F.const_eq(Fraction::MILLI) {
                     write!(f, "{} ms", self.ticks)
-                } else if NOM == 1 && DENOM == 1_000_000 {
+                } else if F.const_eq(Fraction::MICRO) {
                     write!(f, "{} us", self.ticks)
-                } else if NOM == 1 && DENOM == 1_000_000_000 {
+                } else if F.const_eq(Fraction::NANO) {
                     write!(f, "{} ns", self.ticks)
                 } else {
-                    write!(f, "{} ticks @ ({}/{})", self.ticks, NOM, DENOM)
+                    write!(f, "{} ticks @ ({}/{})", self.ticks, F.num, F.denom)
                 }
             }
         }
@@ -363,13 +364,11 @@ impl_instant_for_integer!(u64);
 // We have limited this to use same numerator and denominator in both left and right hand sides,
 // this allows for the extension traits to work. For usage with different fraction, use
 // `checked_sub_duration`.
-impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<u32, NOM, DENOM>>
-    for Instant<u64, NOM, DENOM>
-{
-    type Output = Instant<u64, NOM, DENOM>;
+impl<const F: Fraction> ops::Sub<Duration<u32, F>> for Instant<u64, F> {
+    type Output = Self;
 
     #[inline]
-    fn sub(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
+    fn sub(self, other: Duration<u32, F>) -> Self::Output {
         if let Some(v) = self.checked_sub_duration(other.into()) {
             v
         } else {
@@ -382,11 +381,9 @@ impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<u32, NOM, DENOM>>
 // We have limited this to use same numerator and denominator in both left and right hand sides,
 // this allows for the extension traits to work. For usage with different fraction, use
 // `checked_sub_duration`.
-impl<const NOM: u32, const DENOM: u32> ops::SubAssign<Duration<u32, NOM, DENOM>>
-    for Instant<u64, NOM, DENOM>
-{
+impl<const F: Fraction> ops::SubAssign<Duration<u32, F>> for Instant<u64, F> {
     #[inline]
-    fn sub_assign(&mut self, other: Duration<u32, NOM, DENOM>) {
+    fn sub_assign(&mut self, other: Duration<u32, F>) {
         *self = *self - other;
     }
 }
@@ -395,13 +392,11 @@ impl<const NOM: u32, const DENOM: u32> ops::SubAssign<Duration<u32, NOM, DENOM>>
 // We have limited this to use same numerator and denominator in both left and right hand sides,
 // this allows for the extension traits to work. For usage with different fraction, use
 // `checked_add_duration`.
-impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<u32, NOM, DENOM>>
-    for Instant<u64, NOM, DENOM>
-{
-    type Output = Instant<u64, NOM, DENOM>;
+impl<const F: Fraction> ops::Add<Duration<u32, F>> for Instant<u64, F> {
+    type Output = Instant<u64, F>;
 
     #[inline]
-    fn add(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
+    fn add(self, other: Duration<u32, F>) -> Self::Output {
         if let Some(v) = self.checked_add_duration(other.into()) {
             v
         } else {
@@ -414,23 +409,21 @@ impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<u32, NOM, DENOM>>
 // We have limited this to use same numerator and denominator in both left and right hand sides,
 // this allows for the extension traits to work. For usage with different fraction, use
 // `checked_add_duration`.
-impl<const NOM: u32, const DENOM: u32> ops::AddAssign<Duration<u32, NOM, DENOM>>
-    for Instant<u64, NOM, DENOM>
-{
+impl<const F: Fraction> ops::AddAssign<Duration<u32, F>> for Instant<u64, F> {
     #[inline]
-    fn add_assign(&mut self, other: Duration<u32, NOM, DENOM>) {
+    fn add_assign(&mut self, other: Duration<u32, F>) {
         *self = *self + other;
     }
 }
 
-// impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
-//     ops::Add<Duration<u32, R_NOM, R_DENOM>> for Duration<u64, L_NOM, L_DENOM>
+// impl<const L: Fraction, const R: Fraction>
+//     ops::Add<Duration<u32, R>> for Duration<u64, L>
 // {
-//     type Output = Duration<u64, L_NOM, L_DENOM>;
+//     type Output = Self;
 //
 //     #[inline]
-//     fn add(self, other: Duration<u32, R_NOM, R_DENOM>) -> Self::Output {
-//         self.add(Duration::<u64, L_NOM, L_DENOM>::from_ticks(
+//     fn add(self, other: Duration<u32, R>) -> Self::Output {
+//         self.add(Duration::<u64, L>::from_ticks(
 //             other.ticks() as u64
 //         ))
 //     }
