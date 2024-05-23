@@ -1,3 +1,4 @@
+use super::Fraction;
 use crate::helpers::Helpers;
 use crate::NanosDurationU64;
 use crate::Rate;
@@ -16,7 +17,7 @@ use core::ops;
     derive(postcard::experimental::max_size::MaxSize)
 )]
 #[derive(Clone, Copy, Debug)]
-pub struct Duration<T, const NOM: u64, const DENOM: u64> {
+pub struct Duration<T, const F: Fraction> {
     pub(crate) ticks: T,
 }
 
@@ -28,19 +29,17 @@ macro_rules! shorthand {
         #[inline]
         pub const fn $as_unit(&self) -> $i {
             // Compile-time/runtime check - will fail if constants don't fit in target type
-            const {
-                assert!(
-                    Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN <= <$i>::MAX as u64,
-                    concat!("Conversion constant RD_TIMES_LN doesn't fit in ", stringify!($i), " for this Duration type")
-                );
-                assert!(
-                    Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN <= <$i>::MAX as u64,
-                    concat!("Conversion constant LD_TIMES_RN doesn't fit in ", stringify!($i), " for this Duration type")
-                );
-            }
+            assert!(
+                Helpers::<{ Fraction::new($nom, $denum) }, F>::RD_TIMES_LN <= <$i>::MAX as u64,
+                concat!("Conversion constant RD_TIMES_LN doesn't fit in ", stringify!($i), " for this Duration type")
+            );
+            assert!(
+                Helpers::<{ Fraction::new($nom, $denum) }, F>::LD_TIMES_RN <= <$i>::MAX as u64,
+                concat!("Conversion constant LD_TIMES_RN doesn't fit in ", stringify!($i), " for this Duration type")
+            );
 
-            (Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i * self.ticks)
-                / Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i
+            (Helpers::<{ Fraction::new($nom, $denum) }, F>::LD_TIMES_RN as $i * self.ticks)
+                / Helpers::<{ Fraction::new($nom, $denum) }, F>::RD_TIMES_LN as $i
         }
 
         #[doc = concat!("Create a duration from a number of ", $unitstr, ".")]
@@ -49,20 +48,18 @@ macro_rules! shorthand {
         #[inline]
         pub const fn $from_unit(val: $i) -> Self {
             // Compile-time/runtime check - will fail if constants don't fit in target type
-            const {
-                assert!(
-                    Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN <= <$i>::MAX as u64,
-                    concat!("Conversion constant RD_TIMES_LN doesn't fit in ", stringify!($i), " for this Duration type")
-                );
-                assert!(
-                    Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN <= <$i>::MAX as u64,
-                    concat!("Conversion constant LD_TIMES_RN doesn't fit in ", stringify!($i), " for this Duration type")
-                );
-            }
+            assert!(
+                Helpers::<{ Fraction::new($nom, $denum) }, F>::RD_TIMES_LN <= <$i>::MAX as u64,
+                concat!("Conversion constant RD_TIMES_LN doesn't fit in ", stringify!($i), " for this Duration type")
+            );
+            assert!(
+                Helpers::<{ Fraction::new($nom, $denum) }, F>::LD_TIMES_RN <= <$i>::MAX as u64,
+                concat!("Conversion constant LD_TIMES_RN doesn't fit in ", stringify!($i), " for this Duration type")
+            );
 
             Self::from_ticks(
-                (Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i * val)
-                    / Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i
+                (Helpers::<{ Fraction::new($nom, $denum) }, F>::RD_TIMES_LN as $i * val)
+                    / Helpers::<{ Fraction::new($nom, $denum) }, F>::LD_TIMES_RN as $i
             )
         }
 
@@ -72,19 +69,17 @@ macro_rules! shorthand {
         #[inline]
         pub const fn $from_unital(val: $i) -> Self {
             // Compile-time/runtime check - will fail if constants don't fit in target type
-            const {
-                assert!(
-                    Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN <= <$i>::MAX as u64,
-                    concat!("Conversion constant RD_TIMES_LN doesn't fit in ", stringify!($i), " for this Duration type")
-                );
-                assert!(
-                    Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN <= <$i>::MAX as u64,
-                    concat!("Conversion constant LD_TIMES_RN doesn't fit in ", stringify!($i), " for this Duration type")
-                );
-            }
+            assert!(
+                Helpers::<{ Fraction::new($nom, $denum) }, F>::RD_TIMES_LN <= <$i>::MAX as u64,
+                concat!("Conversion constant RD_TIMES_LN doesn't fit in ", stringify!($i), " for this Duration type")
+            );
+            assert!(
+                Helpers::<{ Fraction::new($nom, $denum) }, F>::LD_TIMES_RN <= <$i>::MAX as u64,
+                concat!("Conversion constant LD_TIMES_RN doesn't fit in ", stringify!($i), " for this Duration type")
+            );
 
-            let mul = Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i * val;
-            let ld_times_rn = Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i;
+            let mul = Helpers::<{ Fraction::new($nom, $denum) }, F>::RD_TIMES_LN as $i * val;
+            let ld_times_rn = Helpers::<{ Fraction::new($nom, $denum) }, F>::LD_TIMES_RN as $i;
             Self::from_ticks(mul.div_ceil(ld_times_rn))
         }
     };
@@ -92,17 +87,17 @@ macro_rules! shorthand {
 
 macro_rules! impl_duration_for_integer {
     ($i:ty) => {
-        impl<const NOM: u64, const DENOM: u64> Duration<$i, NOM, DENOM> {
+        impl<const F: Fraction> Duration<$i, F> {
             /// Create a `Duration` from a ticks value.
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let _d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let _d = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(1);")]
             /// ```
             #[inline]
             pub const fn from_ticks(ticks: $i) -> Self {
-                const { assert!(NOM > 0) };
-                const { assert!(DENOM > 0) };
+                assert!(F.num > 0);
+                assert!(F.denom > 0);
 
                 Duration { ticks }
             }
@@ -111,7 +106,7 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(234);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(234);")]
             ///
             /// assert_eq!(d.as_ticks(), 234);
             /// ```
@@ -124,7 +119,7 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::ZERO;")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::ZERO;")]
             ///
             /// assert_eq!(d.as_ticks(), 0);
             /// assert!(d.is_zero());
@@ -135,7 +130,7 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::MAX;")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::MAX;")]
             ///
             #[doc = concat!("assert_eq!(d.as_ticks(), ", stringify!($i), "::MAX);")]
             /// ```
@@ -145,8 +140,8 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let zero = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(0);")]
-            #[doc = concat!("let one = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let zero = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(0);")]
+            #[doc = concat!("let one = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(1);")]
             ///
             /// assert_eq!(zero.is_zero(), true);
             /// assert_eq!(one.is_zero(), false);
@@ -160,18 +155,18 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
-            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
-            #[doc = concat!("let d3 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(", stringify!($i), "::MAX);")]
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(1);")]
+            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(2);")]
+            #[doc = concat!("let d3 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(", stringify!($i), "::MAX);")]
             ///
             /// assert_eq!(d1.checked_add(d2).unwrap().as_ticks(), 3);
             /// assert_eq!(d1.checked_add(d3), None);
             /// ```
-            pub const fn checked_add<const O_NOM: u64, const O_DENOM: u64>(
+            pub const fn checked_add<const O: Fraction>(
                 self,
-                other: Duration<$i, O_NOM, O_DENOM>,
+                other: Duration<$i, O>,
             ) -> Option<Self> {
-                if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
+                if Helpers::<F, O>::SAME_BASE {
                     if let Some(ticks) = self.ticks.checked_add(other.ticks) {
                         Some(Self::from_ticks(ticks))
                     } else {
@@ -180,9 +175,9 @@ macro_rules! impl_duration_for_integer {
                 } else {
                     if let Some(lh) = other
                         .ticks
-                        .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN as $i)
+                        .checked_mul(Helpers::<F, O>::LD_TIMES_RN as $i)
                     {
-                        let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i;
+                        let ticks = lh / Helpers::<F, O>::RD_TIMES_LN as $i;
 
                         if let Some(ticks) = self.ticks.checked_add(ticks) {
                             Some(Self::from_ticks(ticks))
@@ -199,18 +194,18 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
-            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
-            #[doc = concat!("let d3 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(", stringify!($i), "::MAX);")]
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(1);")]
+            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(2);")]
+            #[doc = concat!("let d3 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(", stringify!($i), "::MAX);")]
             ///
             /// assert_eq!(d2.checked_sub(d1).unwrap().as_ticks(), 1);
             /// assert_eq!(d1.checked_sub(d3), None);
             /// ```
-            pub const fn checked_sub<const O_NOM: u64, const O_DENOM: u64>(
+            pub const fn checked_sub<const O: Fraction>(
                 self,
-                other: Duration<$i, O_NOM, O_DENOM>,
+                other: Duration<$i, O>,
             ) -> Option<Self> {
-                if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
+                if Helpers::<F, O>::SAME_BASE {
                     if let Some(ticks) = self.ticks.checked_sub(other.ticks) {
                         Some(Self::from_ticks(ticks))
                     } else {
@@ -219,9 +214,9 @@ macro_rules! impl_duration_for_integer {
                 } else {
                     if let Some(lh) = other
                         .ticks
-                        .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN as $i)
+                        .checked_mul(Helpers::<F, O>::LD_TIMES_RN as $i)
                     {
-                        let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i;
+                        let ticks = lh / Helpers::<F, O>::RD_TIMES_LN as $i;
 
                         if let Some(ticks) = self.ticks.checked_sub(ticks) {
                             Some(Self::from_ticks(ticks))
@@ -238,10 +233,10 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(10);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(10);")]
             ///
             /// assert_eq!(d.checked_mul(3).unwrap().as_ticks(), 30);
-            #[doc = concat!("assert_eq!(Duration::<", stringify!($i), ", 1, 1_000>::MAX.checked_mul(2), None);")]
+            #[doc = concat!("assert_eq!(Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::MAX.checked_mul(2), None);")]
             /// ```
             #[inline]
             pub const fn checked_mul(self, rhs: $i) -> Option<Self> {
@@ -256,10 +251,10 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(30);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(30);")]
             ///
             /// assert_eq!(d.checked_div(3).unwrap().as_ticks(), 10);
-            #[doc = concat!("assert_eq!(Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(10).checked_div(0), None);")]
+            #[doc = concat!("assert_eq!(Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(10).checked_div(0), None);")]
             /// ```
             #[inline]
             pub const fn checked_div(self, rhs: $i) -> Option<Self> {
@@ -274,25 +269,25 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(10);")]
-            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(3);")]
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(10);")]
+            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(3);")]
             ///
             /// assert_eq!(d1.checked_rem(d2).unwrap().as_ticks(), 1);
             /// ```
-            pub const fn checked_rem<const O_NOM: u64, const O_DENOM: u64>(
+            pub const fn checked_rem<const O: Fraction>(
                 self,
-                other: Duration<$i, O_NOM, O_DENOM>,
+                other: Duration<$i, O>,
             ) -> Option<Self> {
                 if other.ticks == 0 {
                     None
-                } else if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
+                } else if Helpers::<F, O>::SAME_BASE {
                     Some(Self::from_ticks(self.ticks % other.ticks))
                 } else {
                     if let Some(lh) = other
                         .ticks
-                        .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN as $i)
+                        .checked_mul(Helpers::<F, O>::LD_TIMES_RN as $i)
                     {
-                        let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i;
+                        let ticks = lh / Helpers::<F, O>::RD_TIMES_LN as $i;
 
                         if ticks > 0 {
                             Some(Self::from_ticks(self.ticks % ticks))
@@ -309,10 +304,10 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(31);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(31);")]
             ///
             /// assert_eq!(d.div_ceil(3).as_ticks(), 11);
-            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(30);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(30);")]
             /// assert_eq!(d.div_ceil(3).as_ticks(), 10);
             /// ```
             ///
@@ -329,15 +324,15 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
-            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(1);")]
+            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(2);")]
             ///
             /// assert_eq!(d1.saturating_add(d2).as_ticks(), 3);
-            #[doc = concat!("assert_eq!(Duration::<", stringify!($i), ", 1, 1_000>::MAX.saturating_add(d1).as_ticks(), ", stringify!($i), "::MAX);")]
+            #[doc = concat!("assert_eq!(Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::MAX.saturating_add(d1).as_ticks(), ", stringify!($i), "::MAX);")]
             /// ```
-            pub const fn saturating_add<const O_NOM: u64, const O_DENOM: u64>(
+            pub const fn saturating_add<const O: Fraction>(
                 self,
-                other: Duration<$i, O_NOM, O_DENOM>,
+                other: Duration<$i, O>,
             ) -> Self {
                 if let Some(result) = self.checked_add(other) {
                     result
@@ -350,15 +345,15 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(10);")]
-            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(10);")]
+            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(2);")]
             ///
             /// assert_eq!(d1.saturating_sub(d2).as_ticks(), 8);
             /// assert_eq!(d2.saturating_sub(d1).as_ticks(), 0);
             /// ```
-            pub const fn saturating_sub<const O_NOM: u64, const O_DENOM: u64>(
+            pub const fn saturating_sub<const O: Fraction>(
                 self,
-                other: Duration<$i, O_NOM, O_DENOM>,
+                other: Duration<$i, O>,
             ) -> Self {
                 if let Some(result) = self.checked_sub(other) {
                     result
@@ -371,10 +366,10 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(10);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(10);")]
             ///
             /// assert_eq!(d.saturating_mul(3).as_ticks(), 30);
-            #[doc = concat!("assert_eq!(Duration::<", stringify!($i), ", 1, 1_000>::MAX.saturating_mul(2).as_ticks(), ", stringify!($i), "::MAX);")]
+            #[doc = concat!("assert_eq!(Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::MAX.saturating_mul(2).as_ticks(), ", stringify!($i), "::MAX);")]
             /// ```
             #[inline]
             pub const fn saturating_mul(self, rhs: $i) -> Self {
@@ -401,15 +396,15 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 100>::from_ticks(1);")]
-            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_00) }>::from_ticks(1);")]
+            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(1);")]
             ///
             /// assert_eq!(d1.const_partial_cmp(d2), Some(core::cmp::Ordering::Greater));
             /// ```
             #[inline]
-            pub const fn const_partial_cmp<const R_NOM: u64, const R_DENOM: u64>(
+            pub const fn const_partial_cmp<const R: Fraction>(
                 self,
-                other: Duration<$i, R_NOM, R_DENOM>
+                other: Duration<$i, R>
             ) -> Option<Ordering> {
                 //
                 // We want to check:
@@ -426,16 +421,16 @@ macro_rules! impl_duration_for_integer {
                 // then perform the comparison in a comparable basis
                 //
 
-                if Helpers::<NOM, DENOM, R_NOM, R_DENOM>::SAME_BASE {
+                if Helpers::<F, R>::SAME_BASE {
                     // If we are in the same base, comparison in trivial
                     Some(Self::_const_cmp(self.ticks, other.ticks))
                 } else {
                     let lh = self
                         .ticks
-                        .checked_mul(Helpers::<NOM, DENOM, R_NOM, R_DENOM>::RD_TIMES_LN as $i);
+                        .checked_mul(Helpers::<F, R>::RD_TIMES_LN as $i);
                     let rh = other
                         .ticks
-                        .checked_mul(Helpers::<NOM, DENOM, R_NOM, R_DENOM>::LD_TIMES_RN as $i);
+                        .checked_mul(Helpers::<F, R>::LD_TIMES_RN as $i);
 
                     if let (Some(lh), Some(rh)) = (lh, rh) {
                         Some(Self::_const_cmp(lh, rh))
@@ -449,26 +444,26 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_00>::from_ticks(1);")]
-            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(10);")]
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_00) }>::from_ticks(1);")]
+            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(10);")]
             ///
             /// assert!(d1.const_eq(d2));
             /// ```
             #[inline]
-            pub const fn const_eq<const R_NOM: u64, const R_DENOM: u64>(
+            pub const fn const_eq<const R: Fraction>(
                 self,
-                other: Duration<$i, R_NOM, R_DENOM>
+                other: Duration<$i, R>
             ) -> bool {
-                if Helpers::<NOM, DENOM, R_NOM, R_DENOM>::SAME_BASE {
+                if Helpers::<F, R>::SAME_BASE {
                     // If we are in the same base, comparison in trivial
                     self.ticks == other.ticks
                 } else {
                     let lh = self
                         .ticks
-                        .checked_mul(Helpers::<NOM, DENOM, R_NOM, R_DENOM>::RD_TIMES_LN as $i);
+                        .checked_mul(Helpers::<F, R>::RD_TIMES_LN as $i);
                     let rh = other
                         .ticks
-                        .checked_mul(Helpers::<NOM, DENOM, R_NOM, R_DENOM>::LD_TIMES_RN as $i);
+                        .checked_mul(Helpers::<F, R>::LD_TIMES_RN as $i);
 
                     if let (Some(lh), Some(rh)) = (lh, rh) {
                         lh == rh
@@ -482,22 +477,22 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_00>::from_ticks(1);")]
-            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::const_try_from(d1);")]
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_00) }>::from_ticks(1);")]
+            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::const_try_from(d1);")]
             ///
             /// assert_eq!(d2.unwrap().as_ticks(), 10);
             /// ```
-            pub const fn const_try_from<const I_NOM: u64, const I_DENOM: u64>(
-                duration: Duration<$i, I_NOM, I_DENOM>,
+            pub const fn const_try_from<const I: Fraction>(
+                duration: Duration<$i, I>,
             ) -> Option<Self> {
-                if Helpers::<I_NOM, I_DENOM, NOM, DENOM>::SAME_BASE {
+                if Helpers::<I, F>::SAME_BASE {
                     Some(Self::from_ticks(duration.ticks))
                 } else {
                     if let Some(lh) = (duration.ticks as u64)
-                        .checked_mul(Helpers::<I_NOM, I_DENOM, NOM, DENOM>::RD_TIMES_LN)
+                        .checked_mul(Helpers::<I, F>::RD_TIMES_LN)
                     {
-                        let ticks = (lh + Helpers::<I_NOM, I_DENOM, NOM, DENOM>::LD_TIMES_RN / 2)
-                            / Helpers::<I_NOM, I_DENOM, NOM, DENOM>::LD_TIMES_RN;
+                        let ticks = (lh + Helpers::<I, F>::LD_TIMES_RN / 2)
+                            / Helpers::<I, F>::LD_TIMES_RN;
 
                         if ticks <= <$i>::MAX as u64 {
                             Some(Self::from_ticks(ticks as $i))
@@ -514,40 +509,40 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_00>::from_ticks(1);")]
-            #[doc = concat!("let d2: Option<Duration::<", stringify!($i), ", 1, 1_000>> = d1.const_try_into();")]
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_00) }>::from_ticks(1);")]
+            #[doc = concat!("let d2: Option<Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>> = d1.const_try_into();")]
             ///
             /// assert_eq!(d2.unwrap().as_ticks(), 10);
             /// ```
             #[inline]
-            pub const fn const_try_into<const O_NOM: u64, const O_DENOM: u64>(
+            pub const fn const_try_into<const O: Fraction>(
                 self,
-            ) -> Option<Duration<$i, O_NOM, O_DENOM>> {
-                Duration::<$i, O_NOM, O_DENOM>::const_try_from(self)
+            ) -> Option<Duration<$i, O>> {
+                Duration::<$i, O>::const_try_from(self)
             }
 
             /// Const try into rate, checking for divide-by-zero.
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
-            #[doc = concat!("let r1: Option<Rate::<", stringify!($i), ", 1, 1>> = d1.try_to_rate();")]
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_ticks(2);")]
+            #[doc = concat!("let r1: Option<Rate::<", stringify!($i), ", { Fraction::new(1, 1) }>> = d1.try_to_rate();")]
             ///
             /// assert_eq!(r1.unwrap().to_raw(), 500);
             /// ```
             #[inline]
-            pub const fn try_to_rate<const O_NOM: u64, const O_DENOM: u64>(
+            pub const fn try_to_rate<const O: Fraction>(
                 self,
-            ) -> Option<Rate<$i, O_NOM, O_DENOM>> {
-                Rate::<$i, O_NOM, O_DENOM>::try_from_duration(self)
+            ) -> Option<Rate<$i, O>> {
+                Rate::<$i, O>::try_from_duration(self)
             }
 
             /// Convert from duration to rate.
             #[inline]
             #[track_caller]
-            pub const fn to_rate<const O_NOM: u64, const O_DENOM: u64>(
+            pub const fn to_rate<const O: Fraction>(
                 self,
-            ) -> Rate<$i, O_NOM, O_DENOM> {
+            ) -> Rate<$i, O> {
                 if let Some(v) = self.try_to_rate() {
                     v
                 } else {
@@ -559,18 +554,18 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let r1 = Rate::<", stringify!($i), ", 1, 1>::from_raw(1);")]
-            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::try_from_rate(r1);")]
+            #[doc = concat!("let r1 = Rate::<", stringify!($i), ", { Fraction::new(1, 1) }>::from_raw(1);")]
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::try_from_rate(r1);")]
             ///
             /// assert_eq!(d1.unwrap().as_ticks(), 1_000);
             /// ```
             #[inline]
-            pub const fn try_from_rate<const I_NOM: u64, const I_DENOM: u64>(
-                rate: Rate<$i, I_NOM, I_DENOM>,
+            pub const fn try_from_rate<const I: Fraction>(
+                rate: Rate<$i, I>,
             ) -> Option<Self> {
                 if rate.raw > 0 {
                     Some(Self::from_ticks(
-                        Helpers::<I_NOM, I_DENOM, NOM, DENOM>::RATE_TO_DURATION_NUMERATOR as $i
+                        Helpers::<I, F>::RATE_TO_DURATION_NUMERATOR as $i
                         / rate.raw
                     ))
                 } else {
@@ -581,8 +576,8 @@ macro_rules! impl_duration_for_integer {
             /// Convert from rate to duration.
             #[inline]
             #[track_caller]
-            pub const fn from_rate<const I_NOM: u64, const I_DENOM: u64>(
-                rate: Rate<$i, I_NOM, I_DENOM>,
+            pub const fn from_rate<const I: Fraction>(
+                rate: Rate<$i, I>,
             ) -> Self {
                 if let Some(v) = Self::try_from_rate(rate) {
                     v
@@ -597,8 +592,8 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 100>::from_ticks(1);")]
-            #[doc = concat!("let d2: Duration::<", stringify!($i), ", 1, 1_000> = d1.convert();")]
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", { Fraction::new(1, 100) }>::from_ticks(1);")]
+            #[doc = concat!("let d2: Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }> = d1.convert();")]
             ///
             /// assert_eq!(d2.as_ticks(), 10);
             /// ```
@@ -606,14 +601,14 @@ macro_rules! impl_duration_for_integer {
             /// ```compile_fail
             /// # use fugit::*;
             #[doc = concat!("const TICKS: ", stringify!($i), "= ", stringify!($i), "::MAX - 10;")]
-            #[doc = concat!("const D1: Duration::<", stringify!($i), ", 1, 100> = Duration::<", stringify!($i), ", 1, 100>::from_ticks(TICKS);")]
+            #[doc = concat!("const D1: Duration::<", stringify!($i), ", { Fraction::new(1, 100) }> = Duration::<", stringify!($i), ", { Fraction::new(1, 100) }>::from_ticks(TICKS);")]
             /// // Fails conversion due to tick overflow
-            #[doc = concat!("const D2: Duration::<", stringify!($i), ", 1, 200> = D1.convert();")]
+            #[doc = concat!("const D2: Duration::<", stringify!($i), ", { Fraction::new(1, 200) }> = D1.convert();")]
             #[inline]
             #[track_caller]
-            pub const fn convert<const O_NOM: u64, const O_DENOM: u64>(
+            pub const fn convert<const O: Fraction>(
                 self,
-            ) -> Duration<$i, O_NOM, O_DENOM> {
+            ) -> Duration<$i, O> {
                 if let Some(v) = self.const_try_into() {
                     v
                 } else {
@@ -632,14 +627,14 @@ macro_rules! impl_duration_for_integer {
             /// Convert the Duration to a floating point number of seconds.
             #[inline]
             pub const fn as_secs_f32(&self) -> f32 {
-                let factor = const { NOM as f32 / DENOM as f32 };
+                let factor = const { F.factor_f32() };
                 factor * self.ticks as f32
             }
 
             /// Convert the Duration to a floating point number of seconds.
             #[inline]
             pub const fn as_secs_f64(&self) -> f64 {
-                let factor = const { NOM as f64 / DENOM as f64 };
+                let factor = const { F.factor_f64() };
                 factor * self.ticks as f64
             }
 
@@ -649,16 +644,16 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_secs_f32(1.5);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_secs_f32(1.5);")]
             ///
             /// assert_eq!(d.as_ticks(), 1_500);
             ///
-            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_secs_f32(1.5005);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_secs_f32(1.5005);")]
             /// assert_eq!(d.as_ticks(), 1_501);
             /// ```
             #[inline]
             pub const fn from_secs_f32(secs: f32) -> Self {
-                let factor = const { DENOM as f32 / NOM as f32 };
+                let factor = const { F.inv_factor_f32() };
                 Self::from_ticks((secs * factor + 0.5) as $i)
             }
 
@@ -668,16 +663,16 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_secs_f64(1.5);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_secs_f64(1.5);")]
             ///
             /// assert_eq!(d.as_ticks(), 1_500);
             ///
-            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_secs_f64(1.5005);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", { Fraction::new(1, 1_000) }>::from_secs_f64(1.5005);")]
             /// assert_eq!(d.as_ticks(), 1_501);
             /// ```
             #[inline]
             pub const fn from_secs_f64(secs: f64) -> Self {
-                let factor = const { DENOM as f64 / NOM as f64 };
+                let factor = const { F.inv_factor_f64() };
                 Self::from_ticks((secs * factor + 0.5) as $i)
             }
 
@@ -703,36 +698,36 @@ macro_rules! impl_duration_for_integer {
             }
         }
 
-        impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64>
-            PartialOrd<Duration<$i, R_NOM, R_DENOM>> for Duration<$i, L_NOM, L_DENOM>
+        impl<const L: Fraction, const R: Fraction>
+            PartialOrd<Duration<$i, R>> for Duration<$i, L>
         {
             #[inline]
-            fn partial_cmp(&self, other: &Duration<$i, R_NOM, R_DENOM>) -> Option<Ordering> {
+            fn partial_cmp(&self, other: &Duration<$i, R>) -> Option<Ordering> {
                 self.const_partial_cmp(*other)
             }
         }
 
-        impl<const NOM: u64, const DENOM: u64> Ord for Duration<$i, NOM, DENOM> {
+        impl<const F: Fraction> Ord for Duration<$i, F> {
             #[inline]
             fn cmp(&self, other: &Self) -> Ordering {
                 Self::_const_cmp(self.ticks, other.ticks)
             }
         }
 
-        impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64>
-            PartialEq<Duration<$i, R_NOM, R_DENOM>> for Duration<$i, L_NOM, L_DENOM>
+        impl<const L: Fraction, const R: Fraction>
+            PartialEq<Duration<$i, R>> for Duration<$i, L>
         {
             #[inline]
-            fn eq(&self, other: &Duration<$i, R_NOM, R_DENOM>) -> bool {
+            fn eq(&self, other: &Duration<$i, R>) -> bool {
                 self.const_eq(*other)
             }
         }
 
-        impl<const NOM: u64, const DENOM: u64> Eq for Duration<$i, NOM, DENOM> {}
+        impl<const F: Fraction> Eq for Duration<$i, F> {}
 
         // Duration - Duration = Duration (only same base until const_generics_defaults is
         // stabilized)
-        impl<const NOM: u64, const DENOM: u64> ops::Sub for Duration<$i, NOM, DENOM>
+        impl<const F: Fraction> ops::Sub for Duration<$i, F>
         {
             type Output = Self;
 
@@ -748,7 +743,7 @@ macro_rules! impl_duration_for_integer {
         }
 
         // Duration -= Duration
-        impl<const NOM: u64, const DENOM: u64> ops::SubAssign for Duration<$i, NOM, DENOM>
+        impl<const F: Fraction> ops::SubAssign for Duration<$i, F>
         {
             #[inline]
             fn sub_assign(&mut self, other: Self) {
@@ -758,7 +753,7 @@ macro_rules! impl_duration_for_integer {
 
         // Duration + Duration = Duration (only same base until const_generics_defaults is
         // stabilized)
-        impl<const NOM: u64, const DENOM: u64> ops::Add for Duration<$i, NOM, DENOM>
+        impl<const F: Fraction> ops::Add for Duration<$i, F>
         {
             type Output = Self;
 
@@ -774,7 +769,7 @@ macro_rules! impl_duration_for_integer {
         }
 
         // Duration += Duration
-        impl<const NOM: u64, const DENOM: u64> ops::AddAssign for Duration<$i, NOM, DENOM>
+        impl<const F: Fraction> ops::AddAssign for Duration<$i, F>
         {
             #[inline]
             fn add_assign(&mut self, other: Self) {
@@ -783,18 +778,18 @@ macro_rules! impl_duration_for_integer {
         }
 
         // integer * Duration = Duration
-        impl<const NOM: u64, const DENOM: u64> ops::Mul<Duration<$i, NOM, DENOM>> for u32 {
-            type Output = Duration<$i, NOM, DENOM>;
+        impl<const F: Fraction> ops::Mul<Duration<$i, F>> for u32 {
+            type Output = Duration<$i, F>;
 
             #[inline]
-            fn mul(self, mut other: Duration<$i, NOM, DENOM>) -> Self::Output {
+            fn mul(self, mut other: Duration<$i, F>) -> Self::Output {
                 other.ticks *= self as $i;
                 other
             }
         }
 
         // Duration * integer = Duration
-        impl<const NOM: u64, const DENOM: u64> ops::Mul<u32> for Duration<$i, NOM, DENOM> {
+        impl<const F: Fraction> ops::Mul<u32> for Duration<$i, F> {
             type Output = Self;
 
             #[inline]
@@ -805,8 +800,8 @@ macro_rules! impl_duration_for_integer {
         }
 
         // Duration *= integer
-        impl<const NOM: u64, const DENOM: u64> ops::MulAssign<u32>
-            for Duration<$i, NOM, DENOM>
+        impl<const F: Fraction> ops::MulAssign<u32>
+            for Duration<$i, F>
         {
             #[inline]
             fn mul_assign(&mut self, other: u32) {
@@ -815,7 +810,7 @@ macro_rules! impl_duration_for_integer {
         }
 
         // Duration / integer = Duration
-        impl<const NOM: u64, const DENOM: u64> ops::Div<u32> for Duration<$i, NOM, DENOM> {
+        impl<const F: Fraction> ops::Div<u32> for Duration<$i, F> {
             type Output = Self;
 
             #[inline]
@@ -826,8 +821,8 @@ macro_rules! impl_duration_for_integer {
         }
 
         // Duration /= integer
-        impl<const NOM: u64, const DENOM: u64> ops::DivAssign<u32>
-            for Duration<$i, NOM, DENOM>
+        impl<const F: Fraction> ops::DivAssign<u32>
+            for Duration<$i, F>
         {
             #[inline]
             fn div_assign(&mut self, other: u32) {
@@ -837,7 +832,8 @@ macro_rules! impl_duration_for_integer {
 
         // Duration % Duration = Duration (only same base until const_generics_defaults is
         // stabilized)
-        impl<const NOM: u64, const DENOM: u64> ops::Rem for Duration<$i, NOM, DENOM>
+        impl<const F: Fraction> ops::Rem<Duration<$i, F>>
+            for Duration<$i, F>
         {
             type Output = Self;
 
@@ -853,7 +849,8 @@ macro_rules! impl_duration_for_integer {
         }
 
         // Duration %= Duration
-        impl<const NOM: u64, const DENOM: u64> ops::RemAssign for Duration<$i, NOM, DENOM>
+        impl<const F: Fraction> ops::RemAssign<Duration<$i, F>>
+            for Duration<$i, F>
         {
             #[inline]
             fn rem_assign(&mut self, other: Self) {
@@ -862,57 +859,57 @@ macro_rules! impl_duration_for_integer {
         }
 
         // Duration / Duration = integer
-        impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64> ops::Div<Duration<$i, R_NOM, R_DENOM>>
-            for Duration<$i, L_NOM, L_DENOM>
+        impl<const L: Fraction, const R: Fraction> ops::Div<Duration<$i, R>>
+            for Duration<$i, L>
         {
             type Output = $i;
 
             #[inline]
             #[track_caller]
-            fn div(self, other: Duration<$i, R_NOM, R_DENOM>) -> Self::Output {
-                let conv: Duration<$i, R_NOM, R_DENOM> = self.convert();
+            fn div(self, other: Duration<$i, R>) -> Self::Output {
+                let conv: Duration<$i, R> = self.convert();
                 conv.ticks / other.ticks
             }
         }
 
         #[cfg(feature = "defmt")]
-        impl<const NOM: u64, const DENOM: u64> defmt::Format for Duration<$i, NOM, DENOM>
+        impl<const F: Fraction> defmt::Format for Duration<$i, F>
         {
             fn format(&self, f: defmt::Formatter) {
-                if NOM == 3_600 && DENOM == 1 {
+                if F.const_eq(Fraction::new(3600, 1)) {
                     defmt::write!(f, "{} h", self.ticks)
-                } else if NOM == 60 && DENOM == 1 {
+                } else if F.const_eq(Fraction::new(60, 1)) {
                     defmt::write!(f, "{} min", self.ticks)
-                } else if NOM == 1 && DENOM == 1 {
+                } else if F.const_eq(Fraction::ONE) {
                     defmt::write!(f, "{} s", self.ticks)
-                } else if NOM == 1 && DENOM == 1_000 {
+                } else if F.const_eq(Fraction::MILLI) {
                     defmt::write!(f, "{} ms", self.ticks)
-                } else if NOM == 1 && DENOM == 1_000_000 {
+                } else if F.const_eq(Fraction::MICRO) {
                     defmt::write!(f, "{} us", self.ticks)
-                } else if NOM == 1 && DENOM == 1_000_000_000 {
+                } else if F.const_eq(Fraction::NANO) {
                     defmt::write!(f, "{} ns", self.ticks)
                 } else {
-                    defmt::write!(f, "{} ticks @ ({}/{})", self.ticks, NOM, DENOM)
+                    defmt::write!(f, "{} ticks @ ({}/{})", self.ticks, F.num, F.denom)
                 }
             }
         }
 
-        impl<const NOM: u64, const DENOM: u64> core::fmt::Display for Duration<$i, NOM, DENOM> {
+        impl<const F: Fraction> core::fmt::Display for Duration<$i, F> {
             fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-                if NOM == 3_600 && DENOM == 1 {
+                if F.num == 3_600 && F.denom == 1 {
                     write!(f, "{} h", self.ticks)
-                } else if NOM == 60 && DENOM == 1 {
+                } else if F.num == 60 && F.denom == 1 {
                     write!(f, "{} min", self.ticks)
-                } else if NOM == 1 && DENOM == 1 {
+                } else if F.num == 1 && F.denom == 1 {
                     write!(f, "{} s", self.ticks)
-                } else if NOM == 1 && DENOM == 1_000 {
+                } else if F.num == 1 && F.denom == 1_000 {
                     write!(f, "{} ms", self.ticks)
-                } else if NOM == 1 && DENOM == 1_000_000 {
+                } else if F.num == 1 && F.denom == 1_000_000 {
                     write!(f, "{} us", self.ticks)
-                } else if NOM == 1 && DENOM == 1_000_000_000 {
+                } else if F.num == 1 && F.denom == 1_000_000_000 {
                     write!(f, "{} ns", self.ticks)
                 } else {
-                    write!(f, "{} ticks @ ({}/{})", self.ticks, NOM, DENOM)
+                    write!(f, "{} ticks @ ({}/{})", self.ticks, F.num, F.denom)
                 }
             }
         }
@@ -926,20 +923,16 @@ impl_duration_for_integer!(u64);
 // Conversion from core::time::Duration
 //
 
-impl<const NOM: u64, const DENOM: u64> convert::TryFrom<core::time::Duration>
-    for Duration<u32, NOM, DENOM>
-{
+impl<const F: Fraction> convert::TryFrom<core::time::Duration> for Duration<u32, F> {
     type Error = ();
 
     #[inline]
     fn try_from(val: core::time::Duration) -> Result<Self, Self::Error> {
-        Duration::<u64, NOM, DENOM>::try_from(val)?.try_into()
+        Duration::<u64, F>::try_from(val)?.try_into()
     }
 }
 
-impl<const NOM: u64, const DENOM: u64> convert::TryFrom<core::time::Duration>
-    for Duration<u64, NOM, DENOM>
-{
+impl<const F: Fraction> convert::TryFrom<core::time::Duration> for Duration<u64, F> {
     type Error = ();
 
     #[inline]
@@ -958,19 +951,19 @@ impl<const NOM: u64, const DENOM: u64> convert::TryFrom<core::time::Duration>
 // Conversion to core::time::Duration
 //
 
-impl<const NOM: u64, const DENOM: u64> From<Duration<u32, NOM, DENOM>> for core::time::Duration {
+impl<const F: Fraction> From<Duration<u32, F>> for core::time::Duration {
     #[inline]
-    fn from(val: Duration<u32, NOM, DENOM>) -> Self {
-        let val_u64: Duration<u64, NOM, DENOM> = val.into();
+    fn from(val: Duration<u32, F>) -> Self {
+        let val_u64: Duration<u64, F> = val.into();
         core::time::Duration::from(val_u64)
     }
 }
 
-impl<const NOM: u64, const DENOM: u64> From<Duration<u64, NOM, DENOM>> for core::time::Duration {
+impl<const F: Fraction> From<Duration<u64, F>> for core::time::Duration {
     #[inline]
-    fn from(val: Duration<u64, NOM, DENOM>) -> Self {
+    fn from(val: Duration<u64, F>) -> Self {
         let secs = val.as_secs();
-        let secs_duration = Duration::<u64, NOM, DENOM>::from_secs(secs);
+        let secs_duration = Duration::<u64, F>::from_secs(secs);
         let remainder = val.saturating_sub(secs_duration);
         let nanos = remainder.as_nanos() as u32;
 
@@ -982,38 +975,30 @@ impl<const NOM: u64, const DENOM: u64> From<Duration<u64, NOM, DENOM>> for core:
 // Operations between u32 and u64 Durations
 //
 
-impl<const NOM: u64, const DENOM: u64> From<Duration<u32, NOM, DENOM>>
-    for Duration<u64, NOM, DENOM>
-{
+impl<const F: Fraction> From<Duration<u32, F>> for Duration<u64, F> {
     #[inline]
-    fn from(val: Duration<u32, NOM, DENOM>) -> Self {
-        Duration::<u64, NOM, DENOM>::from_ticks(val.as_ticks() as u64)
+    fn from(val: Duration<u32, F>) -> Self {
+        Duration::<u64, F>::from_ticks(val.as_ticks() as u64)
     }
 }
 
-impl<const NOM: u64, const DENOM: u64> convert::TryFrom<Duration<u64, NOM, DENOM>>
-    for Duration<u32, NOM, DENOM>
-{
+impl<const F: Fraction> convert::TryFrom<Duration<u64, F>> for Duration<u32, F> {
     type Error = ();
 
     #[inline]
-    fn try_from(val: Duration<u64, NOM, DENOM>) -> Result<Self, ()> {
-        Ok(Duration::<u32, NOM, DENOM>::from_ticks(
-            val.as_ticks().try_into().map_err(|_| ())?,
-        ))
+    fn try_from(val: Duration<u64, F>) -> Result<Self, ()> {
+        Ok(Self::from_ticks(val.as_ticks().try_into().map_err(|_| ())?))
     }
 }
 
 // Duration - Duration = Duration (to make shorthands work, until const_generics_defaults is
 // stabilized)
-impl<const NOM: u64, const DENOM: u64> ops::Sub<Duration<u32, NOM, DENOM>>
-    for Duration<u64, NOM, DENOM>
-{
+impl<const F: Fraction> ops::Sub<Duration<u32, F>> for Duration<u64, F> {
     type Output = Self;
 
     #[inline]
     #[track_caller]
-    fn sub(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
+    fn sub(self, other: Duration<u32, F>) -> Self::Output {
         if let Some(v) = self.checked_sub(Self::from_ticks(other.as_ticks() as u64)) {
             v
         } else {
@@ -1023,25 +1008,21 @@ impl<const NOM: u64, const DENOM: u64> ops::Sub<Duration<u32, NOM, DENOM>>
 }
 
 // Duration -= Duration (to make shorthands work, until const_generics_defaults is stabilized)
-impl<const NOM: u64, const DENOM: u64> ops::SubAssign<Duration<u32, NOM, DENOM>>
-    for Duration<u64, NOM, DENOM>
-{
+impl<const F: Fraction> ops::SubAssign<Duration<u32, F>> for Duration<u64, F> {
     #[inline]
-    fn sub_assign(&mut self, other: Duration<u32, NOM, DENOM>) {
+    fn sub_assign(&mut self, other: Duration<u32, F>) {
         *self = *self - other;
     }
 }
 
 // Duration + Duration = Duration (to make shorthands work, until const_generics_defaults is
 // stabilized)
-impl<const NOM: u64, const DENOM: u64> ops::Add<Duration<u32, NOM, DENOM>>
-    for Duration<u64, NOM, DENOM>
-{
+impl<const F: Fraction> ops::Add<Duration<u32, F>> for Duration<u64, F> {
     type Output = Self;
 
     #[inline]
     #[track_caller]
-    fn add(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
+    fn add(self, other: Duration<u32, F>) -> Self::Output {
         if let Some(v) = self.checked_add(Self::from_ticks(other.as_ticks() as u64)) {
             v
         } else {
@@ -1051,295 +1032,281 @@ impl<const NOM: u64, const DENOM: u64> ops::Add<Duration<u32, NOM, DENOM>>
 }
 
 // Duration += Duration (to make shorthands work, until const_generics_defaults is stabilized)
-impl<const NOM: u64, const DENOM: u64> ops::AddAssign<Duration<u32, NOM, DENOM>>
-    for Duration<u64, NOM, DENOM>
-{
+impl<const F: Fraction> ops::AddAssign<Duration<u32, F>> for Duration<u64, F> {
     #[inline]
-    fn add_assign(&mut self, other: Duration<u32, NOM, DENOM>) {
+    fn add_assign(&mut self, other: Duration<u32, F>) {
         *self = *self + other;
     }
 }
 
-impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64>
-    PartialOrd<Duration<u32, R_NOM, R_DENOM>> for Duration<u64, L_NOM, L_DENOM>
-{
+impl<const L: Fraction, const R: Fraction> PartialOrd<Duration<u32, R>> for Duration<u64, L> {
     #[inline]
-    fn partial_cmp(&self, other: &Duration<u32, R_NOM, R_DENOM>) -> Option<Ordering> {
-        self.partial_cmp(&Duration::<u64, R_NOM, R_DENOM>::from_ticks(
-            other.as_ticks() as u64,
-        ))
+    fn partial_cmp(&self, other: &Duration<u32, R>) -> Option<Ordering> {
+        self.partial_cmp(&Duration::<u64, R>::from_ticks(other.as_ticks() as u64))
     }
 }
 
-impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64>
-    PartialEq<Duration<u32, R_NOM, R_DENOM>> for Duration<u64, L_NOM, L_DENOM>
-{
+impl<const L: Fraction, const R: Fraction> PartialEq<Duration<u32, R>> for Duration<u64, L> {
     #[inline]
-    fn eq(&self, other: &Duration<u32, R_NOM, R_DENOM>) -> bool {
-        self.eq(&Duration::<u64, R_NOM, R_DENOM>::from_ticks(
-            other.as_ticks() as u64,
-        ))
+    fn eq(&self, other: &Duration<u32, R>) -> bool {
+        self.eq(&Duration::<u64, R>::from_ticks(other.as_ticks() as u64))
     }
 }
 
-impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64>
-    PartialOrd<Duration<u64, R_NOM, R_DENOM>> for Duration<u32, L_NOM, L_DENOM>
-{
+impl<const L: Fraction, const R: Fraction> PartialOrd<Duration<u64, R>> for Duration<u32, L> {
     #[inline]
-    fn partial_cmp(&self, other: &Duration<u64, R_NOM, R_DENOM>) -> Option<Ordering> {
-        Duration::<u64, L_NOM, L_DENOM>::from_ticks(self.ticks as u64).partial_cmp(other)
+    fn partial_cmp(&self, other: &Duration<u64, R>) -> Option<Ordering> {
+        Duration::<u64, L>::from_ticks(self.ticks as u64).partial_cmp(other)
     }
 }
 
-impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64>
-    PartialEq<Duration<u64, R_NOM, R_DENOM>> for Duration<u32, L_NOM, L_DENOM>
-{
+impl<const L: Fraction, const R: Fraction> PartialEq<Duration<u64, R>> for Duration<u32, L> {
     #[inline]
-    fn eq(&self, other: &Duration<u64, R_NOM, R_DENOM>) -> bool {
-        Duration::<u64, L_NOM, L_DENOM>::from_ticks(self.ticks as u64).eq(other)
+    fn eq(&self, other: &Duration<u64, R>) -> bool {
+        Duration::<u64, L>::from_ticks(self.ticks as u64).eq(other)
     }
 }
 
 /// Extension trait for simple short-hands for u32 Durations
 pub trait ExtU32 {
     /// Shorthand for creating a duration which represents picoseconds.
-    fn picos<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM>;
+    fn picos<const F: Fraction>(self) -> Duration<u32, F>;
 
     /// Shorthand for creating a duration which represents nanoseconds.
-    fn nanos<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM>;
+    fn nanos<const F: Fraction>(self) -> Duration<u32, F>;
 
     /// Shorthand for creating a duration which represents microseconds.
-    fn micros<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM>;
+    fn micros<const F: Fraction>(self) -> Duration<u32, F>;
 
     /// Shorthand for creating a duration which represents milliseconds.
-    fn millis<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM>;
+    fn millis<const F: Fraction>(self) -> Duration<u32, F>;
 
     /// Shorthand for creating a duration which represents seconds.
-    fn secs<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM>;
+    fn secs<const F: Fraction>(self) -> Duration<u32, F>;
 
     /// Shorthand for creating a duration which represents minutes.
-    fn minutes<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM>;
+    fn minutes<const F: Fraction>(self) -> Duration<u32, F>;
 
     /// Shorthand for creating a duration which represents hours.
-    fn hours<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM>;
+    fn hours<const F: Fraction>(self) -> Duration<u32, F>;
 }
 
 impl ExtU32 for u32 {
     #[inline]
-    fn picos<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::from_picos(self)
+    fn picos<const F: Fraction>(self) -> Duration<u32, F> {
+        Duration::<u32, F>::from_picos(self)
     }
 
     #[inline]
-    fn nanos<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::from_nanos(self)
+    fn nanos<const F: Fraction>(self) -> Duration<u32, F> {
+        Duration::<u32, F>::from_nanos(self)
     }
 
     #[inline]
-    fn micros<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::from_micros(self)
+    fn micros<const F: Fraction>(self) -> Duration<u32, F> {
+        Duration::<u32, F>::from_micros(self)
     }
 
     #[inline]
-    fn millis<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::from_millis(self)
+    fn millis<const F: Fraction>(self) -> Duration<u32, F> {
+        Duration::<u32, F>::from_millis(self)
     }
 
     #[inline]
-    fn secs<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::from_secs(self)
+    fn secs<const F: Fraction>(self) -> Duration<u32, F> {
+        Duration::<u32, F>::from_secs(self)
     }
 
     #[inline]
-    fn minutes<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::from_minutes(self)
+    fn minutes<const F: Fraction>(self) -> Duration<u32, F> {
+        Duration::<u32, F>::from_minutes(self)
     }
 
     #[inline]
-    fn hours<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::from_hours(self)
+    fn hours<const F: Fraction>(self) -> Duration<u32, F> {
+        Duration::<u32, F>::from_hours(self)
     }
 }
 
 /// Extension trait for simple short-hands for u32 Durations (ceil rounded)
 pub trait ExtU32Ceil {
     /// Shorthand for creating a duration which represents picoseconds.
-    fn picos_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM>;
+    fn picos_at_least<const F: Fraction>(self) -> Duration<u32, F>;
 
     /// Shorthand for creating a duration which represents nanoseconds.
-    fn nanos_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM>;
+    fn nanos_at_least<const F: Fraction>(self) -> Duration<u32, F>;
 
     /// Shorthand for creating a duration which represents microseconds.
-    fn micros_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM>;
+    fn micros_at_least<const F: Fraction>(self) -> Duration<u32, F>;
 
     /// Shorthand for creating a duration which represents milliseconds.
-    fn millis_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM>;
+    fn millis_at_least<const F: Fraction>(self) -> Duration<u32, F>;
 
     /// Shorthand for creating a duration which represents seconds.
-    fn secs_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM>;
+    fn secs_at_least<const F: Fraction>(self) -> Duration<u32, F>;
 
     /// Shorthand for creating a duration which represents minutes.
-    fn minutes_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM>;
+    fn minutes_at_least<const F: Fraction>(self) -> Duration<u32, F>;
 
     /// Shorthand for creating a duration which represents hours.
-    fn hours_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM>;
+    fn hours_at_least<const F: Fraction>(self) -> Duration<u32, F>;
 }
 
 impl ExtU32Ceil for u32 {
     #[inline]
-    fn picos_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::from_picos_at_least(self)
+    fn picos_at_least<const F: Fraction>(self) -> Duration<u32, F> {
+        Duration::<u32, F>::from_picos_at_least(self)
     }
 
     #[inline]
-    fn nanos_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::from_nanos_at_least(self)
+    fn nanos_at_least<const F: Fraction>(self) -> Duration<u32, F> {
+        Duration::<u32, F>::from_nanos_at_least(self)
     }
 
     #[inline]
-    fn micros_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::from_micros_at_least(self)
+    fn micros_at_least<const F: Fraction>(self) -> Duration<u32, F> {
+        Duration::<u32, F>::from_micros_at_least(self)
     }
 
     #[inline]
-    fn millis_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::from_millis_at_least(self)
+    fn millis_at_least<const F: Fraction>(self) -> Duration<u32, F> {
+        Duration::<u32, F>::from_millis_at_least(self)
     }
 
     #[inline]
-    fn secs_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::from_secs_at_least(self)
+    fn secs_at_least<const F: Fraction>(self) -> Duration<u32, F> {
+        Duration::<u32, F>::from_secs_at_least(self)
     }
 
     #[inline]
-    fn minutes_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::from_minutes_at_least(self)
+    fn minutes_at_least<const F: Fraction>(self) -> Duration<u32, F> {
+        Duration::<u32, F>::from_minutes_at_least(self)
     }
 
     #[inline]
-    fn hours_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::from_hours_at_least(self)
+    fn hours_at_least<const F: Fraction>(self) -> Duration<u32, F> {
+        Duration::<u32, F>::from_hours_at_least(self)
     }
 }
 
 /// Extension trait for simple short-hands for u64 Durations
 pub trait ExtU64 {
     /// Shorthand for creating a duration which represents picoseconds.
-    fn picos<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM>;
+    fn picos<const F: Fraction>(self) -> Duration<u64, F>;
 
     /// Shorthand for creating a duration which represents nanoseconds.
-    fn nanos<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM>;
+    fn nanos<const F: Fraction>(self) -> Duration<u64, F>;
 
     /// Shorthand for creating a duration which represents microseconds.
-    fn micros<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM>;
+    fn micros<const F: Fraction>(self) -> Duration<u64, F>;
 
     /// Shorthand for creating a duration which represents milliseconds.
-    fn millis<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM>;
+    fn millis<const F: Fraction>(self) -> Duration<u64, F>;
 
     /// Shorthand for creating a duration which represents seconds.
-    fn secs<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM>;
+    fn secs<const F: Fraction>(self) -> Duration<u64, F>;
 
     /// Shorthand for creating a duration which represents minutes.
-    fn minutes<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM>;
+    fn minutes<const F: Fraction>(self) -> Duration<u64, F>;
 
     /// Shorthand for creating a duration which represents hours.
-    fn hours<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM>;
+    fn hours<const F: Fraction>(self) -> Duration<u64, F>;
 }
 
 impl ExtU64 for u64 {
     #[inline]
-    fn picos<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::from_picos(self)
+    fn picos<const F: Fraction>(self) -> Duration<u64, F> {
+        Duration::<u64, F>::from_picos(self)
     }
 
     #[inline]
-    fn nanos<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::from_nanos(self)
+    fn nanos<const F: Fraction>(self) -> Duration<u64, F> {
+        Duration::<u64, F>::from_nanos(self)
     }
 
     #[inline]
-    fn micros<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::from_micros(self)
+    fn micros<const F: Fraction>(self) -> Duration<u64, F> {
+        Duration::<u64, F>::from_micros(self)
     }
 
     #[inline]
-    fn millis<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::from_millis(self)
+    fn millis<const F: Fraction>(self) -> Duration<u64, F> {
+        Duration::<u64, F>::from_millis(self)
     }
 
     #[inline]
-    fn secs<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::from_secs(self)
+    fn secs<const F: Fraction>(self) -> Duration<u64, F> {
+        Duration::<u64, F>::from_secs(self)
     }
 
     #[inline]
-    fn minutes<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::from_minutes(self)
+    fn minutes<const F: Fraction>(self) -> Duration<u64, F> {
+        Duration::<u64, F>::from_minutes(self)
     }
 
     #[inline]
-    fn hours<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::from_hours(self)
+    fn hours<const F: Fraction>(self) -> Duration<u64, F> {
+        Duration::<u64, F>::from_hours(self)
     }
 }
 
 /// Extension trait for simple short-hands for u64 Durations (ceil rounded)
 pub trait ExtU64Ceil {
     /// Shorthand for creating a duration which represents picoseconds.
-    fn picos_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM>;
+    fn picos_at_least<const F: Fraction>(self) -> Duration<u64, F>;
 
     /// Shorthand for creating a duration which represents nanoseconds.
-    fn nanos_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM>;
+    fn nanos_at_least<const F: Fraction>(self) -> Duration<u64, F>;
 
     /// Shorthand for creating a duration which represents microseconds.
-    fn micros_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM>;
+    fn micros_at_least<const F: Fraction>(self) -> Duration<u64, F>;
 
     /// Shorthand for creating a duration which represents milliseconds.
-    fn millis_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM>;
+    fn millis_at_least<const F: Fraction>(self) -> Duration<u64, F>;
 
     /// Shorthand for creating a duration which represents seconds.
-    fn secs_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM>;
+    fn secs_at_least<const F: Fraction>(self) -> Duration<u64, F>;
 
     /// Shorthand for creating a duration which represents minutes.
-    fn minutes_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM>;
+    fn minutes_at_least<const F: Fraction>(self) -> Duration<u64, F>;
 
     /// Shorthand for creating a duration which represents hours.
-    fn hours_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM>;
+    fn hours_at_least<const F: Fraction>(self) -> Duration<u64, F>;
 }
 
 impl ExtU64Ceil for u64 {
     #[inline]
-    fn picos_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::from_picos_at_least(self)
+    fn picos_at_least<const F: Fraction>(self) -> Duration<u64, F> {
+        Duration::<u64, F>::from_picos_at_least(self)
     }
 
     #[inline]
-    fn nanos_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::from_nanos_at_least(self)
+    fn nanos_at_least<const F: Fraction>(self) -> Duration<u64, F> {
+        Duration::<u64, F>::from_nanos_at_least(self)
     }
 
     #[inline]
-    fn micros_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::from_micros_at_least(self)
+    fn micros_at_least<const F: Fraction>(self) -> Duration<u64, F> {
+        Duration::<u64, F>::from_micros_at_least(self)
     }
 
     #[inline]
-    fn millis_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::from_millis_at_least(self)
+    fn millis_at_least<const F: Fraction>(self) -> Duration<u64, F> {
+        Duration::<u64, F>::from_millis_at_least(self)
     }
 
     #[inline]
-    fn secs_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::from_secs_at_least(self)
+    fn secs_at_least<const F: Fraction>(self) -> Duration<u64, F> {
+        Duration::<u64, F>::from_secs_at_least(self)
     }
 
     #[inline]
-    fn minutes_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::from_minutes_at_least(self)
+    fn minutes_at_least<const F: Fraction>(self) -> Duration<u64, F> {
+        Duration::<u64, F>::from_minutes_at_least(self)
     }
 
     #[inline]
-    fn hours_at_least<const NOM: u64, const DENOM: u64>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::from_hours_at_least(self)
+    fn hours_at_least<const F: Fraction>(self) -> Duration<u64, F> {
+        Duration::<u64, F>::from_hours_at_least(self)
     }
 }
