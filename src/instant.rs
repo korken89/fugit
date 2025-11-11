@@ -7,6 +7,11 @@ use core::ops;
 ///
 /// The generic `T` can either be `u32` or `u64`, and the const generics represent the ratio of the
 /// ticks contained within the instant: `instant in seconds = NOM / DENOM * ticks`
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(
+    feature = "postcard_max_size",
+    derive(postcard::experimental::max_size::MaxSize)
+)]
 #[derive(Clone, Copy, Debug)]
 pub struct Instant<T, const NOM: u32, const DENOM: u32> {
     ticks: T,
