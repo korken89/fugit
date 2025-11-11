@@ -13,7 +13,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-## [v0.3.8]
+## [v0.3.9]
+
+### Added
+
+### Fixed
+
+- No default feature from `serde`
+
+### Changed
+
+## [v0.3.8] - YANKED
 
 ### Added
 
@@ -97,7 +107,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Now supports a `defmt` version span (0.2 and 0.3 is supported)
 
-[Unreleased]: https://github.com/korken89/fugit/compare/v0.3.8...HEAD
+[Unreleased]: https://github.com/korken89/fugit/compare/v0.3.9...HEAD
+[v0.3.9]: https://github.com/korken89/fugit/compare/v0.3.8...v0.3.9
 [v0.3.8]: https://github.com/korken89/fugit/compare/v0.3.7...v0.3.8
 [v0.3.7]: https://github.com/korken89/fugit/compare/v0.3.6...v0.3.7
 [v0.3.6]: https://github.com/korken89/fugit/compare/v0.3.5...v0.3.6
