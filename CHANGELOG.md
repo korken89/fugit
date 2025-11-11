@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+## [v0.3.8]
+
+### Added
+
+- Optional `serde` support
+- Optional `postcard` max size support
+
+### Fixed
+
+### Changed
+
 ## [v0.3.7]
 
 ### Added
@@ -86,11 +97,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Now supports a `defmt` version span (0.2 and 0.3 is supported)
 
-[Unreleased]: https://github.com/korken89/fugit/compare/v0.3.7...HEAD
+[Unreleased]: https://github.com/korken89/fugit/compare/v0.3.8...HEAD
+[v0.3.8]: https://github.com/korken89/fugit/compare/v0.3.7...v0.3.8
 [v0.3.7]: https://github.com/korken89/fugit/compare/v0.3.6...v0.3.7
 [v0.3.6]: https://github.com/korken89/fugit/compare/v0.3.5...v0.3.6
 [v0.3.5]: https://github.com/korken89/fugit/compare/v0.3.4...v0.3.5
 [v0.3.4]: https://github.com/korken89/fugit/compare/v0.3.3...v0.3.4
 [v0.3.3]: https://github.com/korken89/fugit/compare/v0.3.2...v0.3.3
 [v0.3.2]: https://github.com/korken89/fugit/compare/v0.3.1...v0.3.2
-[v0.3.1]: https://github.com/korken89/fugit/compare/v0.3.0...v0.3.1
+kv0.3.1]: https://github.com/korken89/fugit/compare/v0.3.0...v0.3.1

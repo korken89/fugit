@@ -14,7 +14,7 @@ jobs:
   # Run cargo fmt --check, includes macros/
   style:
     name: style
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,7 +36,7 @@ jobs:
   # Compilation check
   check:
     name: check
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         target:
@@ -85,7 +85,7 @@ jobs:
 
   tests:
     name: tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         target:
@@ -128,19 +128,3 @@ jobs:
           use-cross: false
           command: test
           args: --target=${{ matrix.target }}
-
-  # Refs: https://github.com/rust-lang/crater/blob/9ab6f9697c901c4a44025cf0a39b73ad5b37d198/.github/workflows/bors.yml#L125-L149
-  #
-  # ALL THE PREVIOUS JOBS NEEDS TO BE ADDED TO THE `needs` SECTION OF THIS JOB!
-
-  ci-success:
-    name: ci
-    if: github.event_name == 'push' && success()
-    needs:
-      - style
-      - check
-      - tests
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Mark the job as a success
-        run: exit 0
