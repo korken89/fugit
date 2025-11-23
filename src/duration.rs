@@ -122,6 +122,27 @@ macro_rules! impl_duration_for_integer {
                 self.ticks
             }
 
+            /// A duration of zero time.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::ZERO;")]
+            ///
+            /// assert_eq!(d.as_ticks(), 0);
+            /// assert!(d.is_zero());
+            /// ```
+            pub const ZERO: Self = Self::from_ticks(0);
+
+            /// The maximum duration.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::MAX;")]
+            ///
+            #[doc = concat!("assert_eq!(d.as_ticks(), ", stringify!($i), "::MAX);")]
+            /// ```
+            pub const MAX: Self = Self::from_ticks(<$i>::MAX);
+
             /// Returns true if this `Duration` spans no time
             ///
             /// ```
@@ -215,6 +236,122 @@ macro_rules! impl_duration_for_integer {
                 }
             }
 
+            /// Multiply this duration by an integer while checking for overflow.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(10);")]
+            ///
+            /// assert_eq!(d.checked_mul(3).unwrap().as_ticks(), 30);
+            #[doc = concat!("assert_eq!(Duration::<", stringify!($i), ", 1, 1_000>::MAX.checked_mul(2), None);")]
+            /// ```
+            #[inline]
+            pub const fn checked_mul(self, rhs: $i) -> Option<Self> {
+                if let Some(ticks) = self.ticks.checked_mul(rhs) {
+                    Some(Duration::<$i, NOM, DENOM>::from_ticks(ticks))
+                } else {
+                    None
+                }
+            }
+
+            /// Divide this duration by an integer while checking for division by zero.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(30);")]
+            ///
+            /// assert_eq!(d.checked_div(3).unwrap().as_ticks(), 10);
+            #[doc = concat!("assert_eq!(Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(10).checked_div(0), None);")]
+            /// ```
+            #[inline]
+            pub const fn checked_div(self, rhs: $i) -> Option<Self> {
+                if rhs == 0 {
+                    None
+                } else {
+                    Some(Duration::<$i, NOM, DENOM>::from_ticks(self.ticks / rhs))
+                }
+            }
+
+            /// Divide this duration by an integer, rounding up (ceiling division).
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(31);")]
+            ///
+            /// assert_eq!(d.div_ceil(3).as_ticks(), 11);
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(30);")]
+            /// assert_eq!(d.div_ceil(3).as_ticks(), 10);
+            /// ```
+            ///
+            /// # Panics
+            ///
+            /// This function will panic if `rhs` is zero.
+            #[inline]
+            #[track_caller]
+            pub const fn div_ceil(self, rhs: $i) -> Self {
+                Duration::<$i, NOM, DENOM>::from_ticks(self.ticks.div_ceil(rhs))
+            }
+
+            /// Saturating duration addition. Computes `self + other`, saturating at the maximum value.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
+            ///
+            /// assert_eq!(d1.saturating_add(d2).as_ticks(), 3);
+            #[doc = concat!("assert_eq!(Duration::<", stringify!($i), ", 1, 1_000>::MAX.saturating_add(d1).as_ticks(), ", stringify!($i), "::MAX);")]
+            /// ```
+            pub const fn saturating_add<const O_NOM: u32, const O_DENOM: u32>(
+                self,
+                other: Duration<$i, O_NOM, O_DENOM>,
+            ) -> Self {
+                if let Some(result) = self.checked_add(other) {
+                    result
+                } else {
+                    Self::MAX
+                }
+            }
+
+            /// Saturating duration subtraction. Computes `self - other`, saturating at zero.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(10);")]
+            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
+            ///
+            /// assert_eq!(d1.saturating_sub(d2).as_ticks(), 8);
+            /// assert_eq!(d2.saturating_sub(d1).as_ticks(), 0);
+            /// ```
+            pub const fn saturating_sub<const O_NOM: u32, const O_DENOM: u32>(
+                self,
+                other: Duration<$i, O_NOM, O_DENOM>,
+            ) -> Self {
+                if let Some(result) = self.checked_sub(other) {
+                    result
+                } else {
+                    Self::ZERO
+                }
+            }
+
+            /// Saturating duration multiplication. Computes `self * rhs`, saturating at the maximum value.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(10);")]
+            ///
+            /// assert_eq!(d.saturating_mul(3).as_ticks(), 30);
+            #[doc = concat!("assert_eq!(Duration::<", stringify!($i), ", 1, 1_000>::MAX.saturating_mul(2).as_ticks(), ", stringify!($i), "::MAX);")]
+            /// ```
+            #[inline]
+            pub const fn saturating_mul(self, rhs: $i) -> Self {
+                if let Some(result) = self.checked_mul(rhs) {
+                    result
+                } else {
+                    Self::MAX
+                }
+            }
+
             #[doc = concat!("Const `cmp` for ", stringify!($i))]
             #[inline(always)]
             const fn _const_cmp(a: $i, b: $i) -> Ordering {
@@ -231,7 +368,7 @@ macro_rules! impl_duration_for_integer {
             ///
             /// ```
             /// # use fugit::*;
-            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_00>::from_ticks(1);")]
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 100>::from_ticks(1);")]
             #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             ///
             /// assert_eq!(d1.const_partial_cmp(d2), Some(core::cmp::Ordering::Greater));
@@ -469,6 +606,44 @@ macro_rules! impl_duration_for_integer {
             pub const fn as_secs_f64(&self) -> f64 {
                 let factor = const { NOM as f64 / DENOM as f64 };
                 factor * self.ticks as f64
+            }
+
+            /// Create a duration from a floating point number of seconds.
+            ///
+            /// The value is rounded to the nearest tick.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_secs_f32(1.5);")]
+            ///
+            /// assert_eq!(d.as_ticks(), 1_500);
+            ///
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_secs_f32(1.5005);")]
+            /// assert_eq!(d.as_ticks(), 1_501);
+            /// ```
+            #[inline]
+            pub const fn from_secs_f32(secs: f32) -> Self {
+                let factor = const { DENOM as f32 / NOM as f32 };
+                Self::from_ticks((secs * factor + 0.5) as $i)
+            }
+
+            /// Create a duration from a floating point number of seconds.
+            ///
+            /// The value is rounded to the nearest tick.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_secs_f64(1.5);")]
+            ///
+            /// assert_eq!(d.as_ticks(), 1_500);
+            ///
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_secs_f64(1.5005);")]
+            /// assert_eq!(d.as_ticks(), 1_501);
+            /// ```
+            #[inline]
+            pub const fn from_secs_f64(secs: f64) -> Self {
+                let factor = const { DENOM as f64 / NOM as f64 };
+                Self::from_ticks((secs * factor + 0.5) as $i)
             }
 
             /// Shorthand for creating a duration which represents hertz.
@@ -726,9 +901,9 @@ impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<u32, NOM, DENOM>>
     #[inline]
     #[track_caller]
     fn sub(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
-        if let Some(v) =
-            self.checked_sub(Duration::<u64, NOM, DENOM>::from_ticks(other.as_ticks() as u64))
-        {
+        if let Some(v) = self.checked_sub(Duration::<u64, NOM, DENOM>::from_ticks(
+            other.as_ticks() as u64
+        )) {
             v
         } else {
             panic!("Sub failed!");
@@ -756,9 +931,9 @@ impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<u32, NOM, DENOM>>
     #[inline]
     #[track_caller]
     fn add(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
-        if let Some(v) =
-            self.checked_add(Duration::<u64, NOM, DENOM>::from_ticks(other.as_ticks() as u64))
-        {
+        if let Some(v) = self.checked_add(Duration::<u64, NOM, DENOM>::from_ticks(
+            other.as_ticks() as u64
+        )) {
             v
         } else {
             panic!("Add failed!");
@@ -782,7 +957,7 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
     #[inline]
     fn partial_cmp(&self, other: &Duration<u32, R_NOM, R_DENOM>) -> Option<Ordering> {
         self.partial_cmp(&Duration::<u64, R_NOM, R_DENOM>::from_ticks(
-            other.as_ticks() as u64
+            other.as_ticks() as u64,
         ))
     }
 }
@@ -793,7 +968,7 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
     #[inline]
     fn eq(&self, other: &Duration<u32, R_NOM, R_DENOM>) -> bool {
         self.eq(&Duration::<u64, R_NOM, R_DENOM>::from_ticks(
-            other.as_ticks() as u64
+            other.as_ticks() as u64,
         ))
     }
 }
