@@ -41,10 +41,10 @@ macro_rules! impl_rate_for_integer {
             /// # use fugit::*;
             #[doc = concat!("let d = Rate::<", stringify!($i), ", 1, 1_000>::from_raw(234);")]
             ///
-            /// assert_eq!(d.raw(), 234);
+            /// assert_eq!(d.to_raw(), 234);
             /// ```
             #[inline]
-            pub const fn raw(&self) -> $i {
+            pub const fn to_raw(&self) -> $i {
                 self.raw
             }
 
@@ -56,7 +56,7 @@ macro_rules! impl_rate_for_integer {
             #[doc = concat!("let r2 = Rate::<", stringify!($i), ", 1, 1_000>::from_raw(2);")]
             #[doc = concat!("let r3 = Rate::<", stringify!($i), ", 1, 1_000>::from_raw(", stringify!($i), "::MAX);")]
             ///
-            /// assert_eq!(r1.checked_add(r2).unwrap().raw(), 3);
+            /// assert_eq!(r1.checked_add(r2).unwrap().to_raw(), 3);
             /// assert_eq!(r1.checked_add(r3), None);
             /// ```
             pub const fn checked_add<const O_NOM: u32, const O_DENOM: u32>(
@@ -95,7 +95,7 @@ macro_rules! impl_rate_for_integer {
             #[doc = concat!("let r2 = Rate::<", stringify!($i), ", 1, 1_000>::from_raw(2);")]
             #[doc = concat!("let r3 = Rate::<", stringify!($i), ", 1, 1_000>::from_raw(", stringify!($i), "::MAX);")]
             ///
-            /// assert_eq!(r2.checked_sub(r1).unwrap().raw(), 1);
+            /// assert_eq!(r2.checked_sub(r1).unwrap().to_raw(), 1);
             /// assert_eq!(r1.checked_sub(r3), None);
             /// ```
             pub const fn checked_sub<const O_NOM: u32, const O_DENOM: u32>(
@@ -211,7 +211,7 @@ macro_rules! impl_rate_for_integer {
             #[doc = concat!("let r1 = Rate::<", stringify!($i), ", 1, 1_00>::from_raw(1);")]
             #[doc = concat!("let r2 = Rate::<", stringify!($i), ", 1, 1_000>::const_try_from(r1);")]
             ///
-            /// assert_eq!(r2.unwrap().raw(), 10);
+            /// assert_eq!(r2.unwrap().to_raw(), 10);
             /// ```
             pub const fn const_try_from<const I_NOM: u32, const I_DENOM: u32>(
                 rate: Rate<$i, I_NOM, I_DENOM>,
@@ -242,7 +242,7 @@ macro_rules! impl_rate_for_integer {
             #[doc = concat!("let r1 = Rate::<", stringify!($i), ", 1, 1_00>::from_raw(1);")]
             #[doc = concat!("let r2: Option<Rate::<", stringify!($i), ", 1, 1_000>> = r1.const_try_into();")]
             ///
-            /// assert_eq!(r2.unwrap().raw(), 10);
+            /// assert_eq!(r2.unwrap().to_raw(), 10);
             /// ```
             #[inline]
             pub const fn const_try_into<const O_NOM: u32, const O_DENOM: u32>(
@@ -256,21 +256,21 @@ macro_rules! impl_rate_for_integer {
             /// ```
             /// # use fugit::*;
             #[doc = concat!("let r1 = Rate::<", stringify!($i), ", 1, 1>::from_raw(1);")]
-            #[doc = concat!("let d1: Option<Duration::<", stringify!($i), ", 1, 1_000>> = r1.try_into_duration();")]
+            #[doc = concat!("let d1: Option<Duration::<", stringify!($i), ", 1, 1_000>> = r1.try_to_duration();")]
             ///
-            /// assert_eq!(d1.unwrap().ticks(), 1_000);
+            /// assert_eq!(d1.unwrap().as_ticks(), 1_000);
             /// ```
-            pub const fn try_into_duration<const O_NOM: u32, const O_DENOM: u32>(
+            pub const fn try_to_duration<const O_NOM: u32, const O_DENOM: u32>(
                 self,
             ) -> Option<Duration<$i, O_NOM, O_DENOM>> {
                 Duration::<$i, O_NOM, O_DENOM>::try_from_rate(self)
             }
 
             /// Convert from rate to duration.
-            pub const fn into_duration<const O_NOM: u32, const O_DENOM: u32>(
+            pub const fn to_duration<const O_NOM: u32, const O_DENOM: u32>(
                 self,
             ) -> Duration<$i, O_NOM, O_DENOM> {
-                if let Some(v) = self.try_into_duration() {
+                if let Some(v) = self.try_to_duration() {
                     v
                 } else {
                     panic!("Into duration failed, divide-by-zero!");
@@ -284,7 +284,7 @@ macro_rules! impl_rate_for_integer {
             #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
             #[doc = concat!("let r1 = Rate::<", stringify!($i), ", 1, 1>::try_from_duration(d1);")]
             ///
-            /// assert_eq!(r1.unwrap().raw(), 500);
+            /// assert_eq!(r1.unwrap().to_raw(), 500);
             /// ```
             #[inline]
             pub const fn try_from_duration<const I_NOM: u32, const I_DENOM: u32>(
@@ -321,7 +321,7 @@ macro_rules! impl_rate_for_integer {
             #[doc = concat!("let r1 = Rate::<", stringify!($i), ", 1, 100>::from_raw(1);")]
             #[doc = concat!("let r2: Rate::<", stringify!($i), ", 1, 1_000> = r1.convert();")]
             ///
-            /// assert_eq!(r2.raw(), 10);
+            /// assert_eq!(r2.to_raw(), 10);
             /// ```
             ///
             /// Can be used in const contexts. Compilation will fail if the conversion causes overflow
@@ -599,7 +599,7 @@ impl_rate_for_integer!(u64);
 impl<const NOM: u32, const DENOM: u32> From<Rate<u32, NOM, DENOM>> for Rate<u64, NOM, DENOM> {
     #[inline]
     fn from(val: Rate<u32, NOM, DENOM>) -> Rate<u64, NOM, DENOM> {
-        Rate::<u64, NOM, DENOM>::from_raw(val.raw() as u64)
+        Rate::<u64, NOM, DENOM>::from_raw(val.to_raw() as u64)
     }
 }
 
@@ -611,7 +611,7 @@ impl<const NOM: u32, const DENOM: u32> convert::TryFrom<Rate<u64, NOM, DENOM>>
     #[inline]
     fn try_from(val: Rate<u64, NOM, DENOM>) -> Result<Rate<u32, NOM, DENOM>, ()> {
         Ok(Rate::<u32, NOM, DENOM>::from_raw(
-            val.raw().try_into().map_err(|_| ())?,
+            val.to_raw().try_into().map_err(|_| ())?,
         ))
     }
 }
@@ -623,7 +623,7 @@ impl<const NOM: u32, const DENOM: u32> ops::Sub<Rate<u32, NOM, DENOM>> for Rate<
 
     #[inline]
     fn sub(self, other: Rate<u32, NOM, DENOM>) -> Self::Output {
-        if let Some(v) = self.checked_sub(Rate::<u64, NOM, DENOM>::from_raw(other.raw() as u64)) {
+        if let Some(v) = self.checked_sub(Rate::<u64, NOM, DENOM>::from_raw(other.to_raw() as u64)) {
             v
         } else {
             panic!("Sub failed!");
@@ -648,7 +648,7 @@ impl<const NOM: u32, const DENOM: u32> ops::Add<Rate<u32, NOM, DENOM>> for Rate<
 
     #[inline]
     fn add(self, other: Rate<u32, NOM, DENOM>) -> Self::Output {
-        if let Some(v) = self.checked_add(Rate::<u64, NOM, DENOM>::from_raw(other.raw() as u64)) {
+        if let Some(v) = self.checked_add(Rate::<u64, NOM, DENOM>::from_raw(other.to_raw() as u64)) {
             v
         } else {
             panic!("Add failed!");
@@ -671,7 +671,7 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
 {
     #[inline]
     fn partial_cmp(&self, other: &Rate<u32, R_NOM, R_DENOM>) -> Option<Ordering> {
-        self.partial_cmp(&Rate::<u64, R_NOM, R_DENOM>::from_raw(other.raw() as u64))
+        self.partial_cmp(&Rate::<u64, R_NOM, R_DENOM>::from_raw(other.to_raw() as u64))
     }
 }
 
@@ -680,7 +680,7 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
 {
     #[inline]
     fn eq(&self, other: &Rate<u32, R_NOM, R_DENOM>) -> bool {
-        self.eq(&Rate::<u64, R_NOM, R_DENOM>::from_raw(other.raw() as u64))
+        self.eq(&Rate::<u64, R_NOM, R_DENOM>::from_raw(other.to_raw() as u64))
     }
 }
 

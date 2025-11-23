@@ -19,26 +19,26 @@ pub struct Duration<T, const NOM: u32, const DENOM: u32> {
 }
 
 macro_rules! shorthand {
-    ($i:ty, $nom:literal, $denum:literal, $unit:ident, $to_unit:ident, $unital:ident, $unitstr:literal) => {
+    ($i:ty, $nom:literal, $denum:literal, $from_unit:ident, $as_unit:ident, $from_unital:ident, $unitstr:literal) => {
         #[doc = concat!("Convert the Duration to an integer number of ", $unitstr, ".")]
         #[inline]
-        pub const fn $to_unit(&self) -> $i {
+        pub const fn $as_unit(&self) -> $i {
             (Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i * self.ticks)
                 / Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i
         }
 
-        #[doc = concat!("Shorthand for creating a duration which represents ", $unitstr, ".")]
+        #[doc = concat!("Create a duration from a number of ", $unitstr, ".")]
         #[inline]
-        pub const fn $unit(val: $i) -> Self {
+        pub const fn $from_unit(val: $i) -> Self {
             Self::from_ticks(
                 (Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i * val)
                     / Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i
             )
         }
 
-        #[doc = concat!("Shorthand for creating a duration which represents ", $unitstr, " (ceil rounded).")]
+        #[doc = concat!("Create a duration from a number of ", $unitstr, " (ceil rounded).")]
         #[inline]
-        pub const fn $unital(val: $i) -> Self {
+        pub const fn $from_unital(val: $i) -> Self {
             let mul = Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i * val;
             let ld_times_rn = Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i;
             Self::from_ticks(if mul % ld_times_rn == 0 {
@@ -73,10 +73,10 @@ macro_rules! impl_duration_for_integer {
             /// # use fugit::*;
             #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(234);")]
             ///
-            /// assert_eq!(d.ticks(), 234);
+            /// assert_eq!(d.as_ticks(), 234);
             /// ```
             #[inline]
-            pub const fn ticks(&self) -> $i {
+            pub const fn as_ticks(&self) -> $i {
                 self.ticks
             }
 
@@ -103,7 +103,7 @@ macro_rules! impl_duration_for_integer {
             #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
             #[doc = concat!("let d3 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(", stringify!($i), "::MAX);")]
             ///
-            /// assert_eq!(d1.checked_add(d2).unwrap().ticks(), 3);
+            /// assert_eq!(d1.checked_add(d2).unwrap().as_ticks(), 3);
             /// assert_eq!(d1.checked_add(d3), None);
             /// ```
             pub const fn checked_add<const O_NOM: u32, const O_DENOM: u32>(
@@ -142,7 +142,7 @@ macro_rules! impl_duration_for_integer {
             #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
             #[doc = concat!("let d3 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(", stringify!($i), "::MAX);")]
             ///
-            /// assert_eq!(d2.checked_sub(d1).unwrap().ticks(), 1);
+            /// assert_eq!(d2.checked_sub(d1).unwrap().as_ticks(), 1);
             /// assert_eq!(d1.checked_sub(d3), None);
             /// ```
             pub const fn checked_sub<const O_NOM: u32, const O_DENOM: u32>(
@@ -273,7 +273,7 @@ macro_rules! impl_duration_for_integer {
             #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_00>::from_ticks(1);")]
             #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::const_try_from(d1);")]
             ///
-            /// assert_eq!(d2.unwrap().ticks(), 10);
+            /// assert_eq!(d2.unwrap().as_ticks(), 10);
             /// ```
             pub const fn const_try_from<const I_NOM: u32, const I_DENOM: u32>(
                 duration: Duration<$i, I_NOM, I_DENOM>,
@@ -304,7 +304,7 @@ macro_rules! impl_duration_for_integer {
             #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_00>::from_ticks(1);")]
             #[doc = concat!("let d2: Option<Duration::<", stringify!($i), ", 1, 1_000>> = d1.const_try_into();")]
             ///
-            /// assert_eq!(d2.unwrap().ticks(), 10);
+            /// assert_eq!(d2.unwrap().as_ticks(), 10);
             /// ```
             #[inline]
             pub const fn const_try_into<const O_NOM: u32, const O_DENOM: u32>(
@@ -318,12 +318,12 @@ macro_rules! impl_duration_for_integer {
             /// ```
             /// # use fugit::*;
             #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
-            #[doc = concat!("let r1: Option<Rate::<", stringify!($i), ", 1, 1>> = d1.try_into_rate();")]
+            #[doc = concat!("let r1: Option<Rate::<", stringify!($i), ", 1, 1>> = d1.try_to_rate();")]
             ///
-            /// assert_eq!(r1.unwrap().raw(), 500);
+            /// assert_eq!(r1.unwrap().to_raw(), 500);
             /// ```
             #[inline]
-            pub const fn try_into_rate<const O_NOM: u32, const O_DENOM: u32>(
+            pub const fn try_to_rate<const O_NOM: u32, const O_DENOM: u32>(
                 self,
             ) -> Option<Rate<$i, O_NOM, O_DENOM>> {
                 Rate::<$i, O_NOM, O_DENOM>::try_from_duration(self)
@@ -331,10 +331,10 @@ macro_rules! impl_duration_for_integer {
 
             /// Convert from duration to rate.
             #[inline]
-            pub const fn into_rate<const O_NOM: u32, const O_DENOM: u32>(
+            pub const fn to_rate<const O_NOM: u32, const O_DENOM: u32>(
                 self,
             ) -> Rate<$i, O_NOM, O_DENOM> {
-                if let Some(v) = self.try_into_rate() {
+                if let Some(v) = self.try_to_rate() {
                     v
                 } else {
                     panic!("Into rate failed, divide-by-zero!");
@@ -348,7 +348,7 @@ macro_rules! impl_duration_for_integer {
             #[doc = concat!("let r1 = Rate::<", stringify!($i), ", 1, 1>::from_raw(1);")]
             #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::try_from_rate(r1);")]
             ///
-            /// assert_eq!(d1.unwrap().ticks(), 1_000);
+            /// assert_eq!(d1.unwrap().as_ticks(), 1_000);
             /// ```
             #[inline]
             pub const fn try_from_rate<const I_NOM: u32, const I_DENOM: u32>(
@@ -385,7 +385,7 @@ macro_rules! impl_duration_for_integer {
             #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 100>::from_ticks(1);")]
             #[doc = concat!("let d2: Duration::<", stringify!($i), ", 1, 1_000> = d1.convert();")]
             ///
-            /// assert_eq!(d2.ticks(), 10);
+            /// assert_eq!(d2.as_ticks(), 10);
             /// ```
             /// Can be used in const contexts. Compilation will fail if the conversion causes overflow
             /// ```compile_fail
@@ -405,12 +405,12 @@ macro_rules! impl_duration_for_integer {
                 }
             }
 
-            shorthand!($i, 1, 1_000_000_000, nanos, to_nanos, nanos_at_least, "nanoseconds");
-            shorthand!($i, 1, 1_000_000, micros, to_micros, micros_at_least, "microseconds");
-            shorthand!($i, 1, 1_000, millis, to_millis, millis_at_least, "milliseconds");
-            shorthand!($i, 1, 1, secs, to_secs, secs_at_least, "seconds");
-            shorthand!($i, 60, 1, minutes, to_minutes, minutes_at_least, "minutes");
-            shorthand!($i, 3600, 1, hours, to_hours, hours_at_least, "hours");
+            shorthand!($i, 1, 1_000_000_000, from_nanos, as_nanos, from_nanos_at_least, "nanoseconds");
+            shorthand!($i, 1, 1_000_000, from_micros, as_micros, from_micros_at_least, "microseconds");
+            shorthand!($i, 1, 1_000, from_millis, as_millis, from_millis_at_least, "milliseconds");
+            shorthand!($i, 1, 1, from_secs, as_secs, from_secs_at_least, "seconds");
+            shorthand!($i, 60, 1, from_minutes, as_minutes, from_minutes_at_least, "minutes");
+            shorthand!($i, 3600, 1, from_hours, as_hours, from_hours_at_least, "hours");
 
             /// Convert the Duration to a floating point number of seconds.
             #[inline]
@@ -651,7 +651,7 @@ impl<const NOM: u32, const DENOM: u32> From<Duration<u32, NOM, DENOM>>
 {
     #[inline]
     fn from(val: Duration<u32, NOM, DENOM>) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::from_ticks(val.ticks() as u64)
+        Duration::<u64, NOM, DENOM>::from_ticks(val.as_ticks() as u64)
     }
 }
 
@@ -663,7 +663,7 @@ impl<const NOM: u32, const DENOM: u32> convert::TryFrom<Duration<u64, NOM, DENOM
     #[inline]
     fn try_from(val: Duration<u64, NOM, DENOM>) -> Result<Duration<u32, NOM, DENOM>, ()> {
         Ok(Duration::<u32, NOM, DENOM>::from_ticks(
-            val.ticks().try_into().map_err(|_| ())?,
+            val.as_ticks().try_into().map_err(|_| ())?,
         ))
     }
 }
@@ -678,7 +678,7 @@ impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<u32, NOM, DENOM>>
     #[inline]
     fn sub(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
         if let Some(v) =
-            self.checked_sub(Duration::<u64, NOM, DENOM>::from_ticks(other.ticks() as u64))
+            self.checked_sub(Duration::<u64, NOM, DENOM>::from_ticks(other.as_ticks() as u64))
         {
             v
         } else {
@@ -707,7 +707,7 @@ impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<u32, NOM, DENOM>>
     #[inline]
     fn add(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
         if let Some(v) =
-            self.checked_add(Duration::<u64, NOM, DENOM>::from_ticks(other.ticks() as u64))
+            self.checked_add(Duration::<u64, NOM, DENOM>::from_ticks(other.as_ticks() as u64))
         {
             v
         } else {
@@ -732,7 +732,7 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
     #[inline]
     fn partial_cmp(&self, other: &Duration<u32, R_NOM, R_DENOM>) -> Option<Ordering> {
         self.partial_cmp(&Duration::<u64, R_NOM, R_DENOM>::from_ticks(
-            other.ticks() as u64
+            other.as_ticks() as u64
         ))
     }
 }
@@ -743,7 +743,7 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
     #[inline]
     fn eq(&self, other: &Duration<u32, R_NOM, R_DENOM>) -> bool {
         self.eq(&Duration::<u64, R_NOM, R_DENOM>::from_ticks(
-            other.ticks() as u64
+            other.as_ticks() as u64
         ))
     }
 }
@@ -790,32 +790,32 @@ pub trait ExtU32 {
 impl ExtU32 for u32 {
     #[inline]
     fn nanos<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::nanos(self)
+        Duration::<u32, NOM, DENOM>::from_nanos(self)
     }
 
     #[inline]
     fn micros<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::micros(self)
+        Duration::<u32, NOM, DENOM>::from_micros(self)
     }
 
     #[inline]
     fn millis<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::millis(self)
+        Duration::<u32, NOM, DENOM>::from_millis(self)
     }
 
     #[inline]
     fn secs<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::secs(self)
+        Duration::<u32, NOM, DENOM>::from_secs(self)
     }
 
     #[inline]
     fn minutes<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::minutes(self)
+        Duration::<u32, NOM, DENOM>::from_minutes(self)
     }
 
     #[inline]
     fn hours<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::hours(self)
+        Duration::<u32, NOM, DENOM>::from_hours(self)
     }
 }
 
@@ -843,32 +843,32 @@ pub trait ExtU32Ceil {
 impl ExtU32Ceil for u32 {
     #[inline]
     fn nanos_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::nanos_at_least(self)
+        Duration::<u32, NOM, DENOM>::from_nanos_at_least(self)
     }
 
     #[inline]
     fn micros_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::micros_at_least(self)
+        Duration::<u32, NOM, DENOM>::from_micros_at_least(self)
     }
 
     #[inline]
     fn millis_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::millis_at_least(self)
+        Duration::<u32, NOM, DENOM>::from_millis_at_least(self)
     }
 
     #[inline]
     fn secs_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::secs_at_least(self)
+        Duration::<u32, NOM, DENOM>::from_secs_at_least(self)
     }
 
     #[inline]
     fn minutes_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::minutes_at_least(self)
+        Duration::<u32, NOM, DENOM>::from_minutes_at_least(self)
     }
 
     #[inline]
     fn hours_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u32, NOM, DENOM> {
-        Duration::<u32, NOM, DENOM>::hours_at_least(self)
+        Duration::<u32, NOM, DENOM>::from_hours_at_least(self)
     }
 }
 
@@ -896,32 +896,32 @@ pub trait ExtU64 {
 impl ExtU64 for u64 {
     #[inline]
     fn nanos<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::nanos(self)
+        Duration::<u64, NOM, DENOM>::from_nanos(self)
     }
 
     #[inline]
     fn micros<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::micros(self)
+        Duration::<u64, NOM, DENOM>::from_micros(self)
     }
 
     #[inline]
     fn millis<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::millis(self)
+        Duration::<u64, NOM, DENOM>::from_millis(self)
     }
 
     #[inline]
     fn secs<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::secs(self)
+        Duration::<u64, NOM, DENOM>::from_secs(self)
     }
 
     #[inline]
     fn minutes<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::minutes(self)
+        Duration::<u64, NOM, DENOM>::from_minutes(self)
     }
 
     #[inline]
     fn hours<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::hours(self)
+        Duration::<u64, NOM, DENOM>::from_hours(self)
     }
 }
 
@@ -949,31 +949,31 @@ pub trait ExtU64Ceil {
 impl ExtU64Ceil for u64 {
     #[inline]
     fn nanos_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::nanos_at_least(self)
+        Duration::<u64, NOM, DENOM>::from_nanos_at_least(self)
     }
 
     #[inline]
     fn micros_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::micros_at_least(self)
+        Duration::<u64, NOM, DENOM>::from_micros_at_least(self)
     }
 
     #[inline]
     fn millis_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::millis_at_least(self)
+        Duration::<u64, NOM, DENOM>::from_millis_at_least(self)
     }
 
     #[inline]
     fn secs_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::secs_at_least(self)
+        Duration::<u64, NOM, DENOM>::from_secs_at_least(self)
     }
 
     #[inline]
     fn minutes_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::minutes_at_least(self)
+        Duration::<u64, NOM, DENOM>::from_minutes_at_least(self)
     }
 
     #[inline]
     fn hours_at_least<const NOM: u32, const DENOM: u32>(self) -> Duration<u64, NOM, DENOM> {
-        Duration::<u64, NOM, DENOM>::hours_at_least(self)
+        Duration::<u64, NOM, DENOM>::from_hours_at_least(self)
     }
 }
