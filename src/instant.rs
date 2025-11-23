@@ -192,6 +192,7 @@ macro_rules! impl_instant_for_integer {
             }
         }
 
+        #[allow(clippy::non_canonical_partial_ord_impl)]
         impl<const NOM: u32, const DENOM: u32> PartialOrd for Instant<$i, NOM, DENOM> {
             /// This implementation deviates from the definition of
             /// [PartialOrd::partial_cmp](core::cmp::PartialOrd::partial_cmp):

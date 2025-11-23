@@ -1,4 +1,5 @@
 name: Build
+
 on:
   pull_request:
   push:
@@ -9,122 +10,114 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+  DEFMT_LOG: "off"
 
 jobs:
-  # Run cargo fmt --check, includes macros/
+  # Run cargo fmt --check
   style:
-    name: style
+    name: Check formatting
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
-          toolchain: stable
-          override: true
           components: rustfmt
 
-      - name: cargo fmt --check
-        uses: actions-rs/cargo@v1
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+  # Run clippy
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
         with:
-          command: fmt
-          args: --all -- --check
+          components: clippy
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features
 
   # Compilation check
   check:
-    name: check
+    name: Check
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target:
-          - x86_64-unknown-linux-gnu
-        toolchain:
-          - stable
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Cache cargo dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            - ~/.cargo/bin/
-            - ~/.cargo/registry/index/
-            - ~/.cargo/registry/cache/
-            - ~/.cargo/git/db/
-          key: ${{ runner.OS }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.OS }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-            ${{ runner.OS }}-cargo-
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: Cache build output dependencies
-        uses: actions/cache@v4
-        with:
-          path: target
-          key: ${{ runner.OS }}-build-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-${{ hashFiles('**/Cargo.lock') }}
-            ${{ runner.OS }}-build-
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
 
-      - name: Install Rust ${{ matrix.toolchain }} with target (${{ matrix.target }})
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.toolchain }}
-          target: ${{ matrix.target }}
-          override: true
+      - name: Check build
+        run: cargo check
 
-      - name: cargo check
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: false
-          command: check
-          args: --target=${{ matrix.target }}
-
-  tests:
-    name: tests
+  # Run tests
+  test:
+    name: Test
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target:
-          - x86_64-unknown-linux-gnu
-        toolchain:
-          - stable
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Cache cargo dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            - ~/.cargo/bin/
-            - ~/.cargo/registry/index/
-            - ~/.cargo/registry/cache/
-            - ~/.cargo/git/db/
-          key: ${{ runner.OS }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.OS }}-cargo-
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: Cache build output dependencies
-        uses: actions/cache@v4
-        with:
-          path: target
-          key: ${{ runner.OS }}-build-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.toolchain }}
-          target: ${{ matrix.target }}
-          override: true
+      - name: Run tests
+        run: cargo test --all-features
 
-      - uses: actions-rs/cargo@v1
-        with:
-          use-cross: false
-          command: test
-          args: --target=${{ matrix.target }}
+      - name: Run doc tests
+        run: cargo test --doc
+
+  # Check documentation
+  doc:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check documentation
+        run: cargo doc --all-features --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  # Check minimum supported Rust version
+  msrv:
+    name: MSRV
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust 1.82
+        uses: dtolnay/rust-toolchain@1.82
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check with MSRV
+        run: cargo check --all-features
