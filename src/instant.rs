@@ -242,6 +242,7 @@ macro_rules! impl_instant_for_integer {
             type Output = Duration<$i, NOM, DENOM>;
 
             #[inline]
+            #[track_caller]
             fn sub(self, other: Self) -> Self::Output {
                 if let Some(v) = self.checked_duration_since(other) {
                     v
@@ -261,6 +262,7 @@ macro_rules! impl_instant_for_integer {
             type Output = Instant<$i, NOM, DENOM>;
 
             #[inline]
+            #[track_caller]
             fn sub(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
                 if let Some(v) = self.checked_sub_duration(other) {
                     v
@@ -293,6 +295,7 @@ macro_rules! impl_instant_for_integer {
             type Output = Instant<$i, NOM, DENOM>;
 
             #[inline]
+            #[track_caller]
             fn add(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
                 if let Some(v) = self.checked_add_duration(other) {
                     v
@@ -375,6 +378,7 @@ impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<u32, NOM, DENOM>>
     type Output = Instant<u64, NOM, DENOM>;
 
     #[inline]
+    #[track_caller]
     fn sub(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
         if let Some(v) = self.checked_sub_duration(other.into()) {
             v
@@ -407,6 +411,7 @@ impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<u32, NOM, DENOM>>
     type Output = Instant<u64, NOM, DENOM>;
 
     #[inline]
+    #[track_caller]
     fn add(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
         if let Some(v) = self.checked_add_duration(other.into()) {
             v
