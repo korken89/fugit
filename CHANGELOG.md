@@ -9,12 +9,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- `Durations::as_secs_{f32, f64}` conversion
+- `Duration::ZERO` and `Duration::MAX` constants
+- `Duration::checked_mul`, `checked_div`, `div_ceil` methods
+- `Duration::saturating_add`, `saturating_sub`, `saturating_mul` methods
+- `Duration::from_secs_f32` and `from_secs_f64` constructors with rounding
+- `Duration::as_secs_f32` and `as_secs_f64` conversions
 
 ### Fixed
 
+- Issue #53: Overflow detection in shorthand conversions (e.g., `NanosDurationU32.minutes()`)
+- Added `#[track_caller]` to all panicking functions for better error locations
+
 ### Changed
 
+- Standardized API naming: constructors use `from_*`, getters use `to_*` or `as_*`
 - Modernized CI
 
 ## [v0.3.9]
