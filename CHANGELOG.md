@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Support for picosecond-level precision (enabled by u64 const generics)
 - `picos()` shorthand method to `ExtU32`, `ExtU64`, `ExtU32Ceil`, and `ExtU64Ceil` traits
 - `Duration::from_picos`, `as_picos`, `from_picos_at_least` methods
+- `std::ops::Rem` and `std::ops::RemAssign` trait implementations for `Rate` and `Duration` (fixes #41)
 
 ### Fixed
 

@@ -272,6 +272,41 @@ macro_rules! impl_duration_for_integer {
                 }
             }
 
+            /// Get the remainder of dividing two durations while checking for divide-by-zero.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(10);")]
+            #[doc = concat!("let d2 = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(3);")]
+            ///
+            /// assert_eq!(d1.checked_rem(d2).unwrap().as_ticks(), 1);
+            /// ```
+            pub const fn checked_rem<const O_NOM: u64, const O_DENOM: u64>(
+                self,
+                other: Duration<$i, O_NOM, O_DENOM>,
+            ) -> Option<Self> {
+                if other.ticks == 0 {
+                    None
+                } else if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
+                    Some(Duration::<$i, NOM, DENOM>::from_ticks(self.ticks % other.ticks))
+                } else {
+                    if let Some(lh) = other
+                        .ticks
+                        .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN as $i)
+                    {
+                        let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i;
+
+                        if ticks > 0 {
+                            Some(Duration::<$i, NOM, DENOM>::from_ticks(self.ticks % ticks))
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                }
+            }
+
             /// Divide this duration by an integer, rounding up (ceiling division).
             ///
             /// ```
@@ -802,6 +837,55 @@ macro_rules! impl_duration_for_integer {
             #[inline]
             fn div_assign(&mut self, other: u32) {
                 *self = *self / other;
+            }
+        }
+
+        // Duration % Duration = Duration (only same base until const_generics_defaults is
+        // stabilized)
+        impl<const NOM: u64, const DENOM: u64> ops::Rem<Duration<$i, NOM, DENOM>>
+            for Duration<$i, NOM, DENOM>
+        {
+            type Output = Duration<$i, NOM, DENOM>;
+
+            #[inline]
+            #[track_caller]
+            fn rem(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
+                if let Some(v) = self.checked_rem(other) {
+                    v
+                } else {
+                    panic!("Rem failed!");
+                }
+            }
+        }
+
+        // Duration % integer = Duration
+        impl<const NOM: u64, const DENOM: u64> ops::Rem<u32> for Duration<$i, NOM, DENOM> {
+            type Output = Duration<$i, NOM, DENOM>;
+
+            #[inline]
+            fn rem(mut self, other: u32) -> Self::Output {
+                self.ticks %= other as $i;
+                self
+            }
+        }
+
+        // Duration %= Duration
+        impl<const NOM: u64, const DENOM: u64> ops::RemAssign<Duration<$i, NOM, DENOM>>
+            for Duration<$i, NOM, DENOM>
+        {
+            #[inline]
+            fn rem_assign(&mut self, other: Self) {
+                *self = *self % other;
+            }
+        }
+
+        // Duration %= integer
+        impl<const NOM: u64, const DENOM: u64> ops::RemAssign<u32>
+            for Duration<$i, NOM, DENOM>
+        {
+            #[inline]
+            fn rem_assign(&mut self, other: u32) {
+                *self = *self % other;
             }
         }
 
