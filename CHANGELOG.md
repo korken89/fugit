@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- `Durations::as_secs_{f32, f64}` conversion
+
 ### Fixed
 
 ### Changed

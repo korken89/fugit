@@ -786,6 +786,36 @@ mod test {
         assert_eq!(d.is_zero(), false);
     }
 
+    #[test]
+    fn duration_as_secs_f32() {
+        let d = Duration::<u32, 1, 1>::from_ticks(5);
+        assert!((d.as_secs_f32() - 5.0).abs() < 1e-6);
+
+        let d = Duration::<u32, 1, 1_000>::from_ticks(1_500);
+        assert!((d.as_secs_f32() - 1.5).abs() < 1e-6);
+
+        let d = Duration::<u64, 1, 1>::from_ticks(10);
+        assert!((d.as_secs_f32() - 10.0).abs() < 1e-6);
+
+        let d = Duration::<u64, 60, 1>::from_ticks(2);
+        assert!((d.as_secs_f32() - 120.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn duration_as_secs_f64() {
+        let d = Duration::<u32, 1, 1>::from_ticks(5);
+        assert_eq!(d.as_secs_f64(), 5.0);
+
+        let d = Duration::<u32, 1, 1_000>::from_ticks(1_500);
+        assert_eq!(d.as_secs_f64(), 1.5);
+
+        let d = Duration::<u64, 1, 1>::from_ticks(10);
+        assert_eq!(d.as_secs_f64(), 10.0);
+
+        let d = Duration::<u64, 60, 1>::from_ticks(2);
+        assert_eq!(d.as_secs_f64(), 120.0);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
     //
     // Instant tests
