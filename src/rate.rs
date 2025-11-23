@@ -267,6 +267,7 @@ macro_rules! impl_rate_for_integer {
             }
 
             /// Convert from rate to duration.
+            #[track_caller]
             pub const fn to_duration<const O_NOM: u32, const O_DENOM: u32>(
                 self,
             ) -> Duration<$i, O_NOM, O_DENOM> {
@@ -302,6 +303,7 @@ macro_rules! impl_rate_for_integer {
 
             /// Convert from duration to rate.
             #[inline]
+            #[track_caller]
             pub const fn from_duration<const I_NOM: u32, const I_DENOM: u32>(
                 duration: Duration<$i, I_NOM, I_DENOM>,
             ) -> Self {
@@ -333,6 +335,7 @@ macro_rules! impl_rate_for_integer {
             /// // Fails conversion due to overflow
             #[doc = concat!("const R2: Rate::<", stringify!($i), ", 1, 200> = R1.convert();")]
             /// ```
+            #[track_caller]
             pub const fn convert<const O_NOM: u32, const O_DENOM: u32>(
                 self,
             ) -> Rate<$i, O_NOM, O_DENOM> {
@@ -451,6 +454,7 @@ macro_rules! impl_rate_for_integer {
             type Output = Rate<$i, NOM, DENOM>;
 
             #[inline]
+            #[track_caller]
             fn sub(self, other: Rate<$i, NOM, DENOM>) -> Self::Output {
                 if let Some(v) = self.checked_sub(other) {
                     v
@@ -468,6 +472,7 @@ macro_rules! impl_rate_for_integer {
             type Output = Rate<$i, NOM, DENOM>;
 
             #[inline]
+            #[track_caller]
             fn add(self, other: Rate<$i, NOM, DENOM>) -> Self::Output {
                 if let Some(v) = self.checked_add(other) {
                     v
@@ -537,6 +542,7 @@ macro_rules! impl_rate_for_integer {
             type Output = $i;
 
             #[inline]
+            #[track_caller]
             fn div(self, other: Rate<$i, R_NOM, R_DENOM>) -> Self::Output {
                 let conv: Rate<$i, R_NOM, R_DENOM> = self.convert();
                 conv.raw / other.raw
@@ -622,6 +628,7 @@ impl<const NOM: u32, const DENOM: u32> ops::Sub<Rate<u32, NOM, DENOM>> for Rate<
     type Output = Rate<u64, NOM, DENOM>;
 
     #[inline]
+    #[track_caller]
     fn sub(self, other: Rate<u32, NOM, DENOM>) -> Self::Output {
         if let Some(v) = self.checked_sub(Rate::<u64, NOM, DENOM>::from_raw(other.to_raw() as u64)) {
             v
@@ -647,6 +654,7 @@ impl<const NOM: u32, const DENOM: u32> ops::Add<Rate<u32, NOM, DENOM>> for Rate<
     type Output = Rate<u64, NOM, DENOM>;
 
     #[inline]
+    #[track_caller]
     fn add(self, other: Rate<u32, NOM, DENOM>) -> Self::Output {
         if let Some(v) = self.checked_add(Rate::<u64, NOM, DENOM>::from_raw(other.to_raw() as u64)) {
             v

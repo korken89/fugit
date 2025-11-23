@@ -331,6 +331,7 @@ macro_rules! impl_duration_for_integer {
 
             /// Convert from duration to rate.
             #[inline]
+            #[track_caller]
             pub const fn to_rate<const O_NOM: u32, const O_DENOM: u32>(
                 self,
             ) -> Rate<$i, O_NOM, O_DENOM> {
@@ -366,6 +367,7 @@ macro_rules! impl_duration_for_integer {
 
             /// Convert from rate to duration.
             #[inline]
+            #[track_caller]
             pub const fn from_rate<const I_NOM: u32, const I_DENOM: u32>(
                 rate: Rate<$i, I_NOM, I_DENOM>,
             ) -> Self {
@@ -395,6 +397,7 @@ macro_rules! impl_duration_for_integer {
             /// // Fails conversion due to tick overflow
             #[doc = concat!("const D2: Duration::<", stringify!($i), ", 1, 200> = D1.convert();")]
             #[inline]
+            #[track_caller]
             pub const fn convert<const O_NOM: u32, const O_DENOM: u32>(
                 self,
             ) -> Duration<$i, O_NOM, O_DENOM> {
@@ -483,6 +486,7 @@ macro_rules! impl_duration_for_integer {
             type Output = Duration<$i, NOM, DENOM>;
 
             #[inline]
+            #[track_caller]
             fn sub(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
                 if let Some(v) = self.checked_sub(other) {
                     v
@@ -510,6 +514,7 @@ macro_rules! impl_duration_for_integer {
             type Output = Duration<$i, NOM, DENOM>;
 
             #[inline]
+            #[track_caller]
             fn add(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
                 if let Some(v) = self.checked_add(other) {
                     v
@@ -589,6 +594,7 @@ macro_rules! impl_duration_for_integer {
             type Output = $i;
 
             #[inline]
+            #[track_caller]
             fn div(self, other: Duration<$i, R_NOM, R_DENOM>) -> Self::Output {
                 let conv: Duration<$i, R_NOM, R_DENOM> = self.convert();
                 conv.ticks / other.ticks
@@ -676,6 +682,7 @@ impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<u32, NOM, DENOM>>
     type Output = Duration<u64, NOM, DENOM>;
 
     #[inline]
+    #[track_caller]
     fn sub(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
         if let Some(v) =
             self.checked_sub(Duration::<u64, NOM, DENOM>::from_ticks(other.as_ticks() as u64))
@@ -705,6 +712,7 @@ impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<u32, NOM, DENOM>>
     type Output = Duration<u64, NOM, DENOM>;
 
     #[inline]
+    #[track_caller]
     fn add(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
         if let Some(v) =
             self.checked_add(Duration::<u64, NOM, DENOM>::from_ticks(other.as_ticks() as u64))
