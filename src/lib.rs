@@ -777,13 +777,13 @@ mod test {
     #[test]
     fn duration_is_zero() {
         let d = Duration::<u64, 1, 1_000>::from_ticks(0);
-        assert_eq!(d.is_zero(), true);
+        assert!(d.is_zero());
         let d = Duration::<u64, 1, 1_000>::from_ticks(1);
-        assert_eq!(d.is_zero(), false);
+        assert!(!d.is_zero());
         let d = Duration::<u32, 1, 1_000>::from_ticks(0);
-        assert_eq!(d.is_zero(), true);
+        assert!(d.is_zero());
         let d = Duration::<u32, 1, 1_000>::from_ticks(1);
-        assert_eq!(d.is_zero(), false);
+        assert!(!d.is_zero());
     }
 
     #[test]
