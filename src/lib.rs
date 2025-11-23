@@ -1375,4 +1375,94 @@ mod test {
             TimerRateU64::<1_000_000>::from_raw(1)
         );
     }
+
+    #[test]
+    fn duration_constants() {
+        // Test ZERO constant
+        let zero_u32 = Duration::<u32, 1, 1_000>::ZERO;
+        assert_eq!(zero_u32.as_ticks(), 0);
+        assert!(zero_u32.is_zero());
+
+        let zero_u64 = Duration::<u64, 1, 1_000>::ZERO;
+        assert_eq!(zero_u64.as_ticks(), 0);
+        assert!(zero_u64.is_zero());
+
+        // Test MAX constant
+        let max_u32 = Duration::<u32, 1, 1_000>::MAX;
+        assert_eq!(max_u32.as_ticks(), u32::MAX);
+
+        let max_u64 = Duration::<u64, 1, 1_000>::MAX;
+        assert_eq!(max_u64.as_ticks(), u64::MAX);
+    }
+
+    #[test]
+    fn duration_checked_mul_div() {
+        let d = Duration::<u32, 1, 1_000>::from_ticks(100);
+
+        // checked_mul
+        assert_eq!(d.checked_mul(3).unwrap().as_ticks(), 300);
+        assert_eq!(d.checked_mul(0).unwrap().as_ticks(), 0);
+        assert_eq!(Duration::<u32, 1, 1_000>::MAX.checked_mul(2), None);
+
+        // checked_div
+        assert_eq!(d.checked_div(2).unwrap().as_ticks(), 50);
+        assert_eq!(d.checked_div(3).unwrap().as_ticks(), 33); // Truncates
+        assert_eq!(d.checked_div(0), None);
+
+        // div_ceil
+        assert_eq!(d.div_ceil(3).as_ticks(), 34); // Rounds up
+        assert_eq!(d.div_ceil(2).as_ticks(), 50); // Exact division
+        let d2 = Duration::<u32, 1, 1_000>::from_ticks(30);
+        assert_eq!(d2.div_ceil(3).as_ticks(), 10); // Exact division
+        let d3 = Duration::<u32, 1, 1_000>::from_ticks(31);
+        assert_eq!(d3.div_ceil(3).as_ticks(), 11); // Rounds up
+    }
+
+    #[test]
+    fn duration_saturating_ops() {
+        let d1 = Duration::<u32, 1, 1_000>::from_ticks(100);
+        let d2 = Duration::<u32, 1, 1_000>::from_ticks(50);
+        let max = Duration::<u32, 1, 1_000>::MAX;
+
+        // saturating_add
+        assert_eq!(d1.saturating_add(d2).as_ticks(), 150);
+        assert_eq!(max.saturating_add(d1).as_ticks(), u32::MAX);
+
+        // saturating_sub
+        assert_eq!(d1.saturating_sub(d2).as_ticks(), 50);
+        assert_eq!(d2.saturating_sub(d1).as_ticks(), 0);
+
+        // saturating_mul
+        assert_eq!(d1.saturating_mul(3).as_ticks(), 300);
+        assert_eq!(max.saturating_mul(2).as_ticks(), u32::MAX);
+    }
+
+    #[test]
+    fn duration_from_float() {
+        // from_secs_f32
+        let d = Duration::<u32, 1, 1_000>::from_secs_f32(1.5);
+        assert_eq!(d.as_ticks(), 1_500);
+
+        let d = Duration::<u32, 1, 1_000>::from_secs_f32(1.5005);
+        assert_eq!(d.as_ticks(), 1_501);
+
+        let d = Duration::<u32, 1, 1_000>::from_secs_f32(1.4994);
+        assert_eq!(d.as_ticks(), 1_499);
+
+        // from_secs_f64
+        let d = Duration::<u64, 1, 1_000>::from_secs_f64(1.5);
+        assert_eq!(d.as_ticks(), 1_500);
+
+        let d = Duration::<u64, 1, 1_000>::from_secs_f64(1.5005);
+        assert_eq!(d.as_ticks(), 1_501);
+
+        let d = Duration::<u64, 1, 1_000>::from_secs_f64(1.4994);
+        assert_eq!(d.as_ticks(), 1_499);
+
+        // Test round-trip
+        let d = Duration::<u32, 1, 1_000>::from_ticks(1_234);
+        let f = d.as_secs_f32();
+        let d2 = Duration::<u32, 1, 1_000>::from_secs_f32(f);
+        assert_eq!(d.as_ticks(), d2.as_ticks());
+    }
 }

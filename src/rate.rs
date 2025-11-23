@@ -630,7 +630,8 @@ impl<const NOM: u32, const DENOM: u32> ops::Sub<Rate<u32, NOM, DENOM>> for Rate<
     #[inline]
     #[track_caller]
     fn sub(self, other: Rate<u32, NOM, DENOM>) -> Self::Output {
-        if let Some(v) = self.checked_sub(Rate::<u64, NOM, DENOM>::from_raw(other.to_raw() as u64)) {
+        if let Some(v) = self.checked_sub(Rate::<u64, NOM, DENOM>::from_raw(other.to_raw() as u64))
+        {
             v
         } else {
             panic!("Sub failed!");
@@ -656,7 +657,8 @@ impl<const NOM: u32, const DENOM: u32> ops::Add<Rate<u32, NOM, DENOM>> for Rate<
     #[inline]
     #[track_caller]
     fn add(self, other: Rate<u32, NOM, DENOM>) -> Self::Output {
-        if let Some(v) = self.checked_add(Rate::<u64, NOM, DENOM>::from_raw(other.to_raw() as u64)) {
+        if let Some(v) = self.checked_add(Rate::<u64, NOM, DENOM>::from_raw(other.to_raw() as u64))
+        {
             v
         } else {
             panic!("Add failed!");
