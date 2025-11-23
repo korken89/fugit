@@ -126,6 +126,41 @@ macro_rules! impl_rate_for_integer {
                 }
             }
 
+            /// Get the remainder of dividing two rates while checking for divide-by-zero.
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let r1 = Rate::<", stringify!($i), ", 1, 1_000>::from_raw(10);")]
+            #[doc = concat!("let r2 = Rate::<", stringify!($i), ", 1, 1_000>::from_raw(3);")]
+            ///
+            /// assert_eq!(r1.checked_rem(r2).unwrap().to_raw(), 1);
+            /// ```
+            pub const fn checked_rem<const O_NOM: u64, const O_DENOM: u64>(
+                self,
+                other: Rate<$i, O_NOM, O_DENOM>,
+            ) -> Option<Self> {
+                if other.raw == 0 {
+                    None
+                } else if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
+                    Some(Rate::<$i, NOM, DENOM>::from_raw(self.raw % other.raw))
+                } else {
+                    if let Some(lh) = other
+                        .raw
+                        .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN as $i)
+                    {
+                        let raw = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i;
+
+                        if raw > 0 {
+                            Some(Rate::<$i, NOM, DENOM>::from_raw(self.raw % raw))
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                }
+            }
+
             #[doc = concat!("Const `cmp` for ", stringify!($i))]
             #[inline(always)]
             const fn _const_cmp(a: $i, b: $i) -> Ordering {
@@ -561,6 +596,55 @@ macro_rules! impl_rate_for_integer {
             #[inline]
             fn div_assign(&mut self, other: u32) {
                 *self = *self / other;
+            }
+        }
+
+        // Rate % Rate = Rate (only same base until const_generics_defaults is
+        // stabilized)
+        impl<const NOM: u64, const DENOM: u64> ops::Rem<Rate<$i, NOM, DENOM>>
+            for Rate<$i, NOM, DENOM>
+        {
+            type Output = Rate<$i, NOM, DENOM>;
+
+            #[inline]
+            #[track_caller]
+            fn rem(self, other: Rate<$i, NOM, DENOM>) -> Self::Output {
+                if let Some(v) = self.checked_rem(other) {
+                    v
+                } else {
+                    panic!("Rem failed!");
+                }
+            }
+        }
+
+        // Rate % integer = Rate
+        impl<const NOM: u64, const DENOM: u64> ops::Rem<u32> for Rate<$i, NOM, DENOM> {
+            type Output = Rate<$i, NOM, DENOM>;
+
+            #[inline]
+            fn rem(mut self, other: u32) -> Self::Output {
+                self.raw %= other as $i;
+                self
+            }
+        }
+
+        // Rate %= Rate
+        impl<const NOM: u64, const DENOM: u64> ops::RemAssign<Rate<$i, NOM, DENOM>>
+            for Rate<$i, NOM, DENOM>
+        {
+            #[inline]
+            fn rem_assign(&mut self, other: Self) {
+                *self = *self % other;
+            }
+        }
+
+        // Rate %= integer
+        impl<const NOM: u64, const DENOM: u64> ops::RemAssign<u32>
+            for Rate<$i, NOM, DENOM>
+        {
+            #[inline]
+            fn rem_assign(&mut self, other: u32) {
+                *self = *self % other;
             }
         }
 
