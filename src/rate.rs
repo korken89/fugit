@@ -222,7 +222,9 @@ macro_rules! impl_rate_for_integer {
                     if let Some(lh) = (rate.raw as u64)
                         .checked_mul(Helpers::<I_NOM, I_DENOM, NOM, DENOM>::RD_TIMES_LN)
                     {
-                        let raw = lh / Helpers::<I_NOM, I_DENOM, NOM, DENOM>::LD_TIMES_RN;
+                        // Add half of divisor for proper rounding (half-up)
+                        let raw = (lh + Helpers::<I_NOM, I_DENOM, NOM, DENOM>::LD_TIMES_RN / 2)
+                            / Helpers::<I_NOM, I_DENOM, NOM, DENOM>::LD_TIMES_RN;
 
                         if raw <= <$i>::MAX as u64 {
                             Some(Self::from_raw(raw as $i))
@@ -350,7 +352,8 @@ macro_rules! impl_rate_for_integer {
             #[inline]
             #[allow(non_snake_case)]
             pub const fn to_Hz(&self) -> $i {
-                    (Helpers::<1, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.raw)
+                    (Helpers::<1, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.raw
+                        + Helpers::<1, 1, NOM, DENOM>::RD_TIMES_LN as $i / 2)
                         / Helpers::<1, 1, NOM, DENOM>::RD_TIMES_LN as $i
             }
 
@@ -358,7 +361,8 @@ macro_rules! impl_rate_for_integer {
             #[inline]
             #[allow(non_snake_case)]
             pub const fn to_kHz(&self) -> $i {
-                    (Helpers::<1_000, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.raw)
+                    (Helpers::<1_000, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.raw
+                        + Helpers::<1_000, 1, NOM, DENOM>::RD_TIMES_LN as $i / 2)
                         / Helpers::<1_000, 1, NOM, DENOM>::RD_TIMES_LN as $i
             }
 
@@ -366,7 +370,8 @@ macro_rules! impl_rate_for_integer {
             #[inline]
             #[allow(non_snake_case)]
             pub const fn to_MHz(&self) -> $i {
-                    (Helpers::<1_000_000, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.raw)
+                    (Helpers::<1_000_000, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.raw
+                        + Helpers::<1_000_000, 1, NOM, DENOM>::RD_TIMES_LN as $i / 2)
                         / Helpers::<1_000_000, 1, NOM, DENOM>::RD_TIMES_LN as $i
             }
 
