@@ -412,6 +412,20 @@ macro_rules! impl_duration_for_integer {
             shorthand!($i, 60, 1, minutes, to_minutes, minutes_at_least, "minutes");
             shorthand!($i, 3600, 1, hours, to_hours, hours_at_least, "hours");
 
+            /// Convert the Duration to a floating point number of seconds.
+            #[inline]
+            pub const fn as_secs_f32(&self) -> f32 {
+                let factor = const { NOM as f32 / DENOM as f32 };
+                factor * self.ticks as f32
+            }
+
+            /// Convert the Duration to a floating point number of seconds.
+            #[inline]
+            pub const fn as_secs_f64(&self) -> f64 {
+                let factor = const { NOM as f64 / DENOM as f64 };
+                factor * self.ticks as f64
+            }
+
             /// Shorthand for creating a duration which represents hertz.
             #[inline]
             #[allow(non_snake_case)]
