@@ -1465,4 +1465,22 @@ mod test {
         let d2 = Duration::<u32, 1, 1_000>::from_secs_f32(f);
         assert_eq!(d.as_ticks(), d2.as_ticks());
     }
+
+    #[test]
+    fn rate_conversion_rounding() {
+        // Issue #50: Rate conversion should round to nearest instead of truncating
+        // Test with simple conversions that should round up
+
+        // Convert a rate where the division would have a remainder >= 0.5
+        let rate1 = Rate::<u32, 1, 1>::from_raw(100);
+        let rate2: Rate<u32, 1, 3> = rate1.const_try_into().unwrap();
+        // 100 Hz -> base 1/3: 100 * 3 / 1 = 300, so raw should be 300
+        assert_eq!(rate2.to_raw(), 300);
+
+        // Test conversion that needs rounding
+        let rate3 = Rate::<u32, 1, 1>::from_raw(5);
+        let rate4: Rate<u32, 1, 3> = rate3.const_try_into().unwrap();
+        // 5 Hz -> base 1/3: 5 * 3 / 1 = 15
+        assert_eq!(rate4.to_raw(), 15);
+    }
 }
