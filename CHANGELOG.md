@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Duration::saturating_add`, `saturating_sub`, `saturating_mul` methods
 - `Duration::from_secs_f32` and `from_secs_f64` constructors with rounding
 - `Duration::as_secs_f32` and `as_secs_f64` conversions
+- Support for picosecond-level precision (enabled by u64 const generics)
+- `picos()` shorthand method to `ExtU32`, `ExtU64`, `ExtU32Ceil`, and `ExtU64Ceil` traits
+- `Duration::from_picos`, `as_picos`, `from_picos_at_least` methods
 
 ### Fixed
 
@@ -23,8 +26,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- Standardized API naming: constructors use `from_*`, getters use `to_*` or `as_*`
 - Modernized CI
+
+### Breaking Changes
+
+- **BREAKING**: Standardized API naming conventions
+  - Constructors now use `from_*` prefix (e.g., `from_ticks`, `from_rate`)
+  - Getters now use `to_*` or `as_*` prefix (e.g., `to_rate`, `as_ticks`)
+- **BREAKING**: Changed `NOM` and `DENOM` const generic parameters from `u32` to `u64` across all types (`Duration`, `Rate`, `Instant`)
+  - This enables support for higher precision time units (e.g., picoseconds with denominator 1_000_000_000_000)
+  - Type aliases with `FREQ_HZ` parameters now use `u64` instead of `u32`
+  - Compile-time calculations use u128 intermediates with overflow checks, but results are guaranteed to fit in u64 for embedded compatibility
 
 ## [v0.3.9]
 

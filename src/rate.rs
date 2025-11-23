@@ -14,13 +14,13 @@ use core::ops;
     derive(postcard::experimental::max_size::MaxSize)
 )]
 #[derive(Clone, Copy, Debug)]
-pub struct Rate<T, const NOM: u32, const DENOM: u32> {
+pub struct Rate<T, const NOM: u64, const DENOM: u64> {
     pub(crate) raw: T,
 }
 
 macro_rules! impl_rate_for_integer {
     ($i:ty) => {
-        impl<const NOM: u32, const DENOM: u32> Rate<$i, NOM, DENOM> {
+        impl<const NOM: u64, const DENOM: u64> Rate<$i, NOM, DENOM> {
             /// Create a `Rate` from a raw value.
             ///
             /// ```
@@ -59,7 +59,7 @@ macro_rules! impl_rate_for_integer {
             /// assert_eq!(r1.checked_add(r2).unwrap().to_raw(), 3);
             /// assert_eq!(r1.checked_add(r3), None);
             /// ```
-            pub const fn checked_add<const O_NOM: u32, const O_DENOM: u32>(
+            pub const fn checked_add<const O_NOM: u64, const O_DENOM: u64>(
                 self,
                 other: Rate<$i, O_NOM, O_DENOM>,
             ) -> Option<Self> {
@@ -98,7 +98,7 @@ macro_rules! impl_rate_for_integer {
             /// assert_eq!(r2.checked_sub(r1).unwrap().to_raw(), 1);
             /// assert_eq!(r1.checked_sub(r3), None);
             /// ```
-            pub const fn checked_sub<const O_NOM: u32, const O_DENOM: u32>(
+            pub const fn checked_sub<const O_NOM: u64, const O_DENOM: u64>(
                 self,
                 other: Rate<$i, O_NOM, O_DENOM>,
             ) -> Option<Self> {
@@ -148,7 +148,7 @@ macro_rules! impl_rate_for_integer {
             /// assert_eq!(r1.const_partial_cmp(r2), Some(core::cmp::Ordering::Greater));
             /// ```
             #[inline]
-            pub const fn const_partial_cmp<const R_NOM: u32, const R_DENOM: u32>(
+            pub const fn const_partial_cmp<const R_NOM: u64, const R_DENOM: u64>(
                 self,
                 other: Rate<$i, R_NOM, R_DENOM>
             ) -> Option<Ordering> {
@@ -181,7 +181,7 @@ macro_rules! impl_rate_for_integer {
             /// assert!(r1.const_eq(r2));
             /// ```
             #[inline]
-            pub const fn const_eq<const R_NOM: u32, const R_DENOM: u32>(
+            pub const fn const_eq<const R_NOM: u64, const R_DENOM: u64>(
                 self,
                 other: Rate<$i, R_NOM, R_DENOM>
             ) -> bool {
@@ -213,7 +213,7 @@ macro_rules! impl_rate_for_integer {
             ///
             /// assert_eq!(r2.unwrap().to_raw(), 10);
             /// ```
-            pub const fn const_try_from<const I_NOM: u32, const I_DENOM: u32>(
+            pub const fn const_try_from<const I_NOM: u64, const I_DENOM: u64>(
                 rate: Rate<$i, I_NOM, I_DENOM>,
             ) -> Option<Self> {
                 if Helpers::<I_NOM, I_DENOM, NOM, DENOM>::SAME_BASE {
@@ -247,7 +247,7 @@ macro_rules! impl_rate_for_integer {
             /// assert_eq!(r2.unwrap().to_raw(), 10);
             /// ```
             #[inline]
-            pub const fn const_try_into<const O_NOM: u32, const O_DENOM: u32>(
+            pub const fn const_try_into<const O_NOM: u64, const O_DENOM: u64>(
                 self,
             ) -> Option<Rate<$i, O_NOM, O_DENOM>> {
                 Rate::<$i, O_NOM, O_DENOM>::const_try_from(self)
@@ -262,7 +262,7 @@ macro_rules! impl_rate_for_integer {
             ///
             /// assert_eq!(d1.unwrap().as_ticks(), 1_000);
             /// ```
-            pub const fn try_to_duration<const O_NOM: u32, const O_DENOM: u32>(
+            pub const fn try_to_duration<const O_NOM: u64, const O_DENOM: u64>(
                 self,
             ) -> Option<Duration<$i, O_NOM, O_DENOM>> {
                 Duration::<$i, O_NOM, O_DENOM>::try_from_rate(self)
@@ -270,7 +270,7 @@ macro_rules! impl_rate_for_integer {
 
             /// Convert from rate to duration.
             #[track_caller]
-            pub const fn to_duration<const O_NOM: u32, const O_DENOM: u32>(
+            pub const fn to_duration<const O_NOM: u64, const O_DENOM: u64>(
                 self,
             ) -> Duration<$i, O_NOM, O_DENOM> {
                 if let Some(v) = self.try_to_duration() {
@@ -290,7 +290,7 @@ macro_rules! impl_rate_for_integer {
             /// assert_eq!(r1.unwrap().to_raw(), 500);
             /// ```
             #[inline]
-            pub const fn try_from_duration<const I_NOM: u32, const I_DENOM: u32>(
+            pub const fn try_from_duration<const I_NOM: u64, const I_DENOM: u64>(
                 duration: Duration<$i, I_NOM, I_DENOM>,
             ) -> Option<Self> {
                 if duration.ticks > 0 {
@@ -306,7 +306,7 @@ macro_rules! impl_rate_for_integer {
             /// Convert from duration to rate.
             #[inline]
             #[track_caller]
-            pub const fn from_duration<const I_NOM: u32, const I_DENOM: u32>(
+            pub const fn from_duration<const I_NOM: u64, const I_DENOM: u64>(
                 duration: Duration<$i, I_NOM, I_DENOM>,
             ) -> Self {
                 if let Some(v) = Self::try_from_duration(duration) {
@@ -338,7 +338,7 @@ macro_rules! impl_rate_for_integer {
             #[doc = concat!("const R2: Rate::<", stringify!($i), ", 1, 200> = R1.convert();")]
             /// ```
             #[track_caller]
-            pub const fn convert<const O_NOM: u32, const O_DENOM: u32>(
+            pub const fn convert<const O_NOM: u64, const O_DENOM: u64>(
                 self,
             ) -> Rate<$i, O_NOM, O_DENOM> {
                 if let Some(v) = self.const_try_into() {
@@ -424,7 +424,7 @@ macro_rules! impl_rate_for_integer {
             }
         }
 
-        impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
+        impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64>
             PartialOrd<Rate<$i, R_NOM, R_DENOM>> for Rate<$i, L_NOM, L_DENOM>
         {
             #[inline]
@@ -433,14 +433,14 @@ macro_rules! impl_rate_for_integer {
             }
         }
 
-        impl<const NOM: u32, const DENOM: u32> Ord for Rate<$i, NOM, DENOM> {
+        impl<const NOM: u64, const DENOM: u64> Ord for Rate<$i, NOM, DENOM> {
             #[inline]
             fn cmp(&self, other: &Self) -> Ordering {
                 Self::_const_cmp(self.raw, other.raw)
             }
         }
 
-        impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
+        impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64>
             PartialEq<Rate<$i, R_NOM, R_DENOM>> for Rate<$i, L_NOM, L_DENOM>
         {
             #[inline]
@@ -449,11 +449,11 @@ macro_rules! impl_rate_for_integer {
             }
         }
 
-        impl<const NOM: u32, const DENOM: u32> Eq for Rate<$i, NOM, DENOM> {}
+        impl<const NOM: u64, const DENOM: u64> Eq for Rate<$i, NOM, DENOM> {}
 
         // Rate - Rate = Rate (only same base until const_generics_defaults is
         // stabilized)
-        impl<const NOM: u32, const DENOM: u32> ops::Sub<Rate<$i, NOM, DENOM>>
+        impl<const NOM: u64, const DENOM: u64> ops::Sub<Rate<$i, NOM, DENOM>>
             for Rate<$i, NOM, DENOM>
         {
             type Output = Rate<$i, NOM, DENOM>;
@@ -471,7 +471,7 @@ macro_rules! impl_rate_for_integer {
 
         // Rate + Rate = Rate (only same base until const_generics_defaults is
         // stabilized)
-        impl<const NOM: u32, const DENOM: u32> ops::Add<Rate<$i, NOM, DENOM>>
+        impl<const NOM: u64, const DENOM: u64> ops::Add<Rate<$i, NOM, DENOM>>
             for Rate<$i, NOM, DENOM>
         {
             type Output = Rate<$i, NOM, DENOM>;
@@ -488,7 +488,7 @@ macro_rules! impl_rate_for_integer {
         }
 
         // Rate += Rate
-        impl<const NOM: u32, const DENOM: u32> ops::AddAssign<Rate<$i, NOM, DENOM>>
+        impl<const NOM: u64, const DENOM: u64> ops::AddAssign<Rate<$i, NOM, DENOM>>
             for Rate<$i, NOM, DENOM>
         {
             #[inline]
@@ -498,7 +498,7 @@ macro_rules! impl_rate_for_integer {
         }
 
         // integer * Rate = Rate
-        impl<const NOM: u32, const DENOM: u32> ops::Mul<Rate<$i, NOM, DENOM>> for u32 {
+        impl<const NOM: u64, const DENOM: u64> ops::Mul<Rate<$i, NOM, DENOM>> for u32 {
             type Output = Rate<$i, NOM, DENOM>;
 
             #[inline]
@@ -509,7 +509,7 @@ macro_rules! impl_rate_for_integer {
         }
 
         // Rate * integer = Rate
-        impl<const NOM: u32, const DENOM: u32> ops::Mul<u32> for Rate<$i, NOM, DENOM> {
+        impl<const NOM: u64, const DENOM: u64> ops::Mul<u32> for Rate<$i, NOM, DENOM> {
             type Output = Rate<$i, NOM, DENOM>;
 
             #[inline]
@@ -520,7 +520,7 @@ macro_rules! impl_rate_for_integer {
         }
 
         // Rate *= integer
-        impl<const NOM: u32, const DENOM: u32> ops::MulAssign<u32>
+        impl<const NOM: u64, const DENOM: u64> ops::MulAssign<u32>
             for Rate<$i, NOM, DENOM>
         {
             #[inline]
@@ -530,7 +530,7 @@ macro_rules! impl_rate_for_integer {
         }
 
         // Rate / integer = Rate
-        impl<const NOM: u32, const DENOM: u32> ops::Div<u32> for Rate<$i, NOM, DENOM> {
+        impl<const NOM: u64, const DENOM: u64> ops::Div<u32> for Rate<$i, NOM, DENOM> {
             type Output = Rate<$i, NOM, DENOM>;
 
             #[inline]
@@ -541,7 +541,7 @@ macro_rules! impl_rate_for_integer {
         }
 
         // Rate / Rate = integer
-        impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32> ops::Div<Rate<$i, R_NOM, R_DENOM>>
+        impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64> ops::Div<Rate<$i, R_NOM, R_DENOM>>
             for Rate<$i, L_NOM, L_DENOM>
         {
             type Output = $i;
@@ -555,7 +555,7 @@ macro_rules! impl_rate_for_integer {
         }
 
         // Rate /= integer
-        impl<const NOM: u32, const DENOM: u32> ops::DivAssign<u32>
+        impl<const NOM: u64, const DENOM: u64> ops::DivAssign<u32>
             for Rate<$i, NOM, DENOM>
         {
             #[inline]
@@ -565,7 +565,7 @@ macro_rules! impl_rate_for_integer {
         }
 
         #[cfg(feature = "defmt")]
-        impl<const NOM: u32, const DENOM: u32> defmt::Format for Rate<$i, NOM, DENOM>
+        impl<const NOM: u64, const DENOM: u64> defmt::Format for Rate<$i, NOM, DENOM>
         {
             fn format(&self, f: defmt::Formatter) {
                 if NOM == 1 && DENOM == 1 {
@@ -582,7 +582,7 @@ macro_rules! impl_rate_for_integer {
             }
         }
 
-        impl<const NOM: u32, const DENOM: u32> core::fmt::Display for Rate<$i, NOM, DENOM> {
+        impl<const NOM: u64, const DENOM: u64> core::fmt::Display for Rate<$i, NOM, DENOM> {
             fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                 if NOM == 1 && DENOM == 1 {
                     write!(f, "{} Hz", self.raw)
@@ -607,14 +607,14 @@ impl_rate_for_integer!(u64);
 // Operations between u32 and u64 Rate
 //
 
-impl<const NOM: u32, const DENOM: u32> From<Rate<u32, NOM, DENOM>> for Rate<u64, NOM, DENOM> {
+impl<const NOM: u64, const DENOM: u64> From<Rate<u32, NOM, DENOM>> for Rate<u64, NOM, DENOM> {
     #[inline]
     fn from(val: Rate<u32, NOM, DENOM>) -> Rate<u64, NOM, DENOM> {
         Rate::<u64, NOM, DENOM>::from_raw(val.to_raw() as u64)
     }
 }
 
-impl<const NOM: u32, const DENOM: u32> convert::TryFrom<Rate<u64, NOM, DENOM>>
+impl<const NOM: u64, const DENOM: u64> convert::TryFrom<Rate<u64, NOM, DENOM>>
     for Rate<u32, NOM, DENOM>
 {
     type Error = ();
@@ -629,7 +629,7 @@ impl<const NOM: u32, const DENOM: u32> convert::TryFrom<Rate<u64, NOM, DENOM>>
 
 // Rate - Rate = Rate (to make shorthands work, until const_generics_defaults is
 // stabilized)
-impl<const NOM: u32, const DENOM: u32> ops::Sub<Rate<u32, NOM, DENOM>> for Rate<u64, NOM, DENOM> {
+impl<const NOM: u64, const DENOM: u64> ops::Sub<Rate<u32, NOM, DENOM>> for Rate<u64, NOM, DENOM> {
     type Output = Rate<u64, NOM, DENOM>;
 
     #[inline]
@@ -645,7 +645,7 @@ impl<const NOM: u32, const DENOM: u32> ops::Sub<Rate<u32, NOM, DENOM>> for Rate<
 }
 
 // Rate -= Rate (to make shorthands work, until const_generics_defaults is stabilized)
-impl<const NOM: u32, const DENOM: u32> ops::SubAssign<Rate<u32, NOM, DENOM>>
+impl<const NOM: u64, const DENOM: u64> ops::SubAssign<Rate<u32, NOM, DENOM>>
     for Rate<u64, NOM, DENOM>
 {
     #[inline]
@@ -656,7 +656,7 @@ impl<const NOM: u32, const DENOM: u32> ops::SubAssign<Rate<u32, NOM, DENOM>>
 
 // Rate + Rate = Rate (to make shorthands work, until const_generics_defaults is
 // stabilized)
-impl<const NOM: u32, const DENOM: u32> ops::Add<Rate<u32, NOM, DENOM>> for Rate<u64, NOM, DENOM> {
+impl<const NOM: u64, const DENOM: u64> ops::Add<Rate<u32, NOM, DENOM>> for Rate<u64, NOM, DENOM> {
     type Output = Rate<u64, NOM, DENOM>;
 
     #[inline]
@@ -672,7 +672,7 @@ impl<const NOM: u32, const DENOM: u32> ops::Add<Rate<u32, NOM, DENOM>> for Rate<
 }
 
 // Rate += Rate (to make shorthands work, until const_generics_defaults is stabilized)
-impl<const NOM: u32, const DENOM: u32> ops::AddAssign<Rate<u32, NOM, DENOM>>
+impl<const NOM: u64, const DENOM: u64> ops::AddAssign<Rate<u32, NOM, DENOM>>
     for Rate<u64, NOM, DENOM>
 {
     #[inline]
@@ -681,7 +681,7 @@ impl<const NOM: u32, const DENOM: u32> ops::AddAssign<Rate<u32, NOM, DENOM>>
     }
 }
 
-impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
+impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64>
     PartialOrd<Rate<u32, R_NOM, R_DENOM>> for Rate<u64, L_NOM, L_DENOM>
 {
     #[inline]
@@ -690,7 +690,7 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
     }
 }
 
-impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
+impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64>
     PartialEq<Rate<u32, R_NOM, R_DENOM>> for Rate<u64, L_NOM, L_DENOM>
 {
     #[inline]
@@ -699,7 +699,7 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
     }
 }
 
-impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
+impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64>
     PartialOrd<Rate<u64, R_NOM, R_DENOM>> for Rate<u32, L_NOM, L_DENOM>
 {
     #[inline]
@@ -708,7 +708,7 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
     }
 }
 
-impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
+impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64>
     PartialEq<Rate<u64, R_NOM, R_DENOM>> for Rate<u32, L_NOM, L_DENOM>
 {
     #[inline]
@@ -721,33 +721,33 @@ impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
 pub trait ExtU32 {
     /// Shorthand for creating a rate which represents hertz.
     #[allow(non_snake_case)]
-    fn Hz<const NOM: u32, const DENOM: u32>(self) -> Rate<u32, NOM, DENOM>;
+    fn Hz<const NOM: u64, const DENOM: u64>(self) -> Rate<u32, NOM, DENOM>;
 
     /// Shorthand for creating a rate which represents kilohertz.
     #[allow(non_snake_case)]
-    fn kHz<const NOM: u32, const DENOM: u32>(self) -> Rate<u32, NOM, DENOM>;
+    fn kHz<const NOM: u64, const DENOM: u64>(self) -> Rate<u32, NOM, DENOM>;
 
     /// Shorthand for creating a rate which represents megahertz.
     #[allow(non_snake_case)]
-    fn MHz<const NOM: u32, const DENOM: u32>(self) -> Rate<u32, NOM, DENOM>;
+    fn MHz<const NOM: u64, const DENOM: u64>(self) -> Rate<u32, NOM, DENOM>;
 }
 
 impl ExtU32 for u32 {
     #[inline]
     #[allow(non_snake_case)]
-    fn Hz<const NOM: u32, const DENOM: u32>(self) -> Rate<u32, NOM, DENOM> {
+    fn Hz<const NOM: u64, const DENOM: u64>(self) -> Rate<u32, NOM, DENOM> {
         Rate::<u32, NOM, DENOM>::Hz(self)
     }
 
     #[inline]
     #[allow(non_snake_case)]
-    fn kHz<const NOM: u32, const DENOM: u32>(self) -> Rate<u32, NOM, DENOM> {
+    fn kHz<const NOM: u64, const DENOM: u64>(self) -> Rate<u32, NOM, DENOM> {
         Rate::<u32, NOM, DENOM>::kHz(self)
     }
 
     #[inline]
     #[allow(non_snake_case)]
-    fn MHz<const NOM: u32, const DENOM: u32>(self) -> Rate<u32, NOM, DENOM> {
+    fn MHz<const NOM: u64, const DENOM: u64>(self) -> Rate<u32, NOM, DENOM> {
         Rate::<u32, NOM, DENOM>::MHz(self)
     }
 }
@@ -756,33 +756,33 @@ impl ExtU32 for u32 {
 pub trait ExtU64 {
     /// Shorthand for creating a rate which represents hertz.
     #[allow(non_snake_case)]
-    fn Hz<const NOM: u32, const DENOM: u32>(self) -> Rate<u64, NOM, DENOM>;
+    fn Hz<const NOM: u64, const DENOM: u64>(self) -> Rate<u64, NOM, DENOM>;
 
     /// Shorthand for creating a rate which represents kilohertz.
     #[allow(non_snake_case)]
-    fn kHz<const NOM: u32, const DENOM: u32>(self) -> Rate<u64, NOM, DENOM>;
+    fn kHz<const NOM: u64, const DENOM: u64>(self) -> Rate<u64, NOM, DENOM>;
 
     /// Shorthand for creating a rate which represents megahertz.
     #[allow(non_snake_case)]
-    fn MHz<const NOM: u32, const DENOM: u32>(self) -> Rate<u64, NOM, DENOM>;
+    fn MHz<const NOM: u64, const DENOM: u64>(self) -> Rate<u64, NOM, DENOM>;
 }
 
 impl ExtU64 for u64 {
     #[inline]
     #[allow(non_snake_case)]
-    fn Hz<const NOM: u32, const DENOM: u32>(self) -> Rate<u64, NOM, DENOM> {
+    fn Hz<const NOM: u64, const DENOM: u64>(self) -> Rate<u64, NOM, DENOM> {
         Rate::<u64, NOM, DENOM>::Hz(self)
     }
 
     #[inline]
     #[allow(non_snake_case)]
-    fn kHz<const NOM: u32, const DENOM: u32>(self) -> Rate<u64, NOM, DENOM> {
+    fn kHz<const NOM: u64, const DENOM: u64>(self) -> Rate<u64, NOM, DENOM> {
         Rate::<u64, NOM, DENOM>::kHz(self)
     }
 
     #[inline]
     #[allow(non_snake_case)]
-    fn MHz<const NOM: u32, const DENOM: u32>(self) -> Rate<u64, NOM, DENOM> {
+    fn MHz<const NOM: u64, const DENOM: u64>(self) -> Rate<u64, NOM, DENOM> {
         Rate::<u64, NOM, DENOM>::MHz(self)
     }
 }
