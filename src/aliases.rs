@@ -59,24 +59,24 @@ pub type HoursDurationU32 = Duration<u32, 3_600, 1>;
 pub type HoursDurationU64 = Duration<u64, 3_600, 1>;
 
 /// Alias for durations that come from timers with a specific frequency
-pub type TimerDuration<T, const FREQ_HZ: u32> = Duration<T, 1, FREQ_HZ>;
+pub type TimerDuration<T, const FREQ_HZ: u64> = Duration<T, 1, FREQ_HZ>;
 
 /// Alias for durations that come from timers with a specific frequency (`u32` backing storage)
-pub type TimerDurationU32<const FREQ_HZ: u32> = Duration<u32, 1, FREQ_HZ>;
+pub type TimerDurationU32<const FREQ_HZ: u64> = Duration<u32, 1, FREQ_HZ>;
 
 /// Alias for durations that come from timers with a specific frequency (`u64` backing storage)
-pub type TimerDurationU64<const FREQ_HZ: u32> = Duration<u64, 1, FREQ_HZ>;
+pub type TimerDurationU64<const FREQ_HZ: u64> = Duration<u64, 1, FREQ_HZ>;
 
 // -------------------------------
 
 /// Alias for instants that come from timers with a specific frequency
-pub type TimerInstant<T, const FREQ_HZ: u32> = Instant<T, 1, FREQ_HZ>;
+pub type TimerInstant<T, const FREQ_HZ: u64> = Instant<T, 1, FREQ_HZ>;
 
 /// Alias for instants that come from timers with a specific frequency (`u32` backing storage)
-pub type TimerInstantU32<const FREQ_HZ: u32> = Instant<u32, 1, FREQ_HZ>;
+pub type TimerInstantU32<const FREQ_HZ: u64> = Instant<u32, 1, FREQ_HZ>;
 
 /// Alias for instants that come from timers with a specific frequency (`u64` backing storage)
-pub type TimerInstantU64<const FREQ_HZ: u32> = Instant<u64, 1, FREQ_HZ>;
+pub type TimerInstantU64<const FREQ_HZ: u64> = Instant<u64, 1, FREQ_HZ>;
 
 // -------------------------------
 
@@ -108,10 +108,10 @@ pub type MegahertzU32 = Rate<u32, 1_000_000, 1>;
 pub type MegahertzU64 = Rate<u64, 1_000_000, 1>;
 
 /// Alias for rate that come from timers with a specific frequency
-pub type TimerRate<T, const FREQ_HZ: u32> = Rate<T, FREQ_HZ, 1>;
+pub type TimerRate<T, const FREQ_HZ: u64> = Rate<T, FREQ_HZ, 1>;
 
 /// Alias for rate that come from timers with a specific frequency (`u32` backing storage)
-pub type TimerRateU32<const FREQ_HZ: u32> = Rate<u32, FREQ_HZ, 1>;
+pub type TimerRateU32<const FREQ_HZ: u64> = Rate<u32, FREQ_HZ, 1>;
 
 /// Alias for rate that come from timers with a specific frequency (`u64` backing storage)
-pub type TimerRateU64<const FREQ_HZ: u32> = Rate<u64, FREQ_HZ, 1>;
+pub type TimerRateU64<const FREQ_HZ: u64> = Rate<u64, FREQ_HZ, 1>;

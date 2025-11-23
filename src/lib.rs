@@ -650,6 +650,15 @@ mod test {
     fn duration_shorthands_u32() {
         use crate::{ExtU32, ExtU32Ceil};
 
+        let d: Duration<u32, 1, 1_000_000> = 1_000_000_000.picos();
+        assert_eq!(d.as_ticks(), 1_000);
+
+        let d: Duration<u32, 1, 1_000_000> = 40_000_000.picos_at_least();
+        assert_eq!(d.as_ticks(), 40);
+
+        let d: Duration<u32, 1, 1_000_000> = 40_000_075.picos_at_least();
+        assert_eq!(d.as_ticks(), 41);
+
         let d: Duration<u32, 1, 10_000> = 100_000_000.nanos();
         assert_eq!(d.as_ticks(), 1_000);
 
@@ -713,6 +722,15 @@ mod test {
     #[test]
     fn duration_shorthands_u64() {
         use crate::{ExtU64, ExtU64Ceil};
+
+        let d: Duration<u64, 1, 10_000> = 10_000_000_000.picos();
+        assert_eq!(d.as_ticks(), 100);
+
+        let d: Duration<u64, 1, 1_000_000> = 40_000_000.picos_at_least();
+        assert_eq!(d.as_ticks(), 40);
+
+        let d: Duration<u64, 1, 1_000_000> = 40_000_075.picos_at_least();
+        assert_eq!(d.as_ticks(), 41);
 
         let d: Duration<u64, 1, 10_000> = 100_000_000.nanos();
         assert_eq!(d.as_ticks(), 1_000);
@@ -1482,5 +1500,44 @@ mod test {
         let rate4: Rate<u32, 1, 3> = rate3.const_try_into().unwrap();
         // 5 Hz -> base 1/3: 5 * 3 / 1 = 15
         assert_eq!(rate4.to_raw(), 15);
+    }
+
+    #[test]
+    fn duration_picosecond_support() {
+        // This test verifies that u64 const generics enable picosecond precision
+        // Picoseconds: 1 second = 1_000_000_000_000 picoseconds
+        // This value exceeds u32::MAX (4_294_967_295), so it requires u64
+
+        type PicosDurationU64 = Duration<u64, 1, 1_000_000_000_000>;
+
+        // Create a duration of 1 second in picoseconds
+        let one_sec = PicosDurationU64::from_ticks(1_000_000_000_000);
+        assert_eq!(one_sec.as_ticks(), 1_000_000_000_000);
+
+        // Test conversion from milliseconds to picoseconds
+        let one_ms = Duration::<u64, 1, 1_000>::from_ticks(1);
+        let one_ms_in_picos: PicosDurationU64 = one_ms.convert();
+        assert_eq!(one_ms_in_picos.as_ticks(), 1_000_000_000);
+
+        // Test conversion from microseconds to picoseconds
+        let one_us = Duration::<u64, 1, 1_000_000>::from_ticks(1);
+        let one_us_in_picos: PicosDurationU64 = one_us.convert();
+        assert_eq!(one_us_in_picos.as_ticks(), 1_000_000);
+
+        // Test conversion from nanoseconds to picoseconds
+        let one_ns = Duration::<u64, 1, 1_000_000_000>::from_ticks(1);
+        let one_ns_in_picos: PicosDurationU64 = one_ns.convert();
+        assert_eq!(one_ns_in_picos.as_ticks(), 1_000);
+
+        // Test arithmetic with picosecond durations
+        let picos_1 = PicosDurationU64::from_ticks(5_000);
+        let picos_2 = PicosDurationU64::from_ticks(3_000);
+        let sum = picos_1 + picos_2;
+        assert_eq!(sum.as_ticks(), 8_000);
+
+        // Test conversion from picoseconds to seconds
+        let picos = PicosDurationU64::from_ticks(2_500_000_000_000);
+        let secs: Duration<u64, 1, 1> = picos.convert();
+        assert_eq!(secs.as_ticks(), 2); // 2.5 seconds truncates to 2
     }
 }

@@ -13,13 +13,13 @@ use core::ops;
     derive(postcard::experimental::max_size::MaxSize)
 )]
 #[derive(Clone, Copy, Debug)]
-pub struct Instant<T, const NOM: u32, const DENOM: u32> {
+pub struct Instant<T, const NOM: u64, const DENOM: u64> {
     ticks: T,
 }
 
 macro_rules! impl_instant_for_integer {
     ($i:ty) => {
-        impl<const NOM: u32, const DENOM: u32> Instant<$i, NOM, DENOM> {
+        impl<const NOM: u64, const DENOM: u64> Instant<$i, NOM, DENOM> {
             /// Create an `Instant` from a ticks value.
             ///
             /// ```
@@ -134,7 +134,7 @@ macro_rules! impl_instant_for_integer {
             ///
             /// assert_eq!(i.checked_sub_duration(d).unwrap().as_ticks(), 0);
             /// ```
-            pub const fn checked_sub_duration<const O_NOM: u32, const O_DENOM: u32>(
+            pub const fn checked_sub_duration<const O_NOM: u64, const O_DENOM: u64>(
                 self,
                 other: Duration<$i, O_NOM, O_DENOM>,
             ) -> Option<Self> {
@@ -167,7 +167,7 @@ macro_rules! impl_instant_for_integer {
             ///
             /// assert_eq!(i.checked_add_duration(d).unwrap().as_ticks(), 2);
             /// ```
-            pub const fn checked_add_duration<const O_NOM: u32, const O_DENOM: u32>(
+            pub const fn checked_add_duration<const O_NOM: u64, const O_DENOM: u64>(
                 self,
                 other: Duration<$i, O_NOM, O_DENOM>,
             ) -> Option<Self> {
@@ -193,7 +193,7 @@ macro_rules! impl_instant_for_integer {
         }
 
         #[allow(clippy::non_canonical_partial_ord_impl)]
-        impl<const NOM: u32, const DENOM: u32> PartialOrd for Instant<$i, NOM, DENOM> {
+        impl<const NOM: u64, const DENOM: u64> PartialOrd for Instant<$i, NOM, DENOM> {
             /// This implementation deviates from the definition of
             /// [PartialOrd::partial_cmp](core::cmp::PartialOrd::partial_cmp):
             ///
@@ -208,7 +208,7 @@ macro_rules! impl_instant_for_integer {
             }
         }
 
-        impl<const NOM: u32, const DENOM: u32> Ord for Instant<$i, NOM, DENOM> {
+        impl<const NOM: u64, const DENOM: u64> Ord for Instant<$i, NOM, DENOM> {
             /// This implementation deviates from the definition of
             /// [Ord::cmp](core::cmp::Ord::cmp):
             ///
@@ -223,20 +223,20 @@ macro_rules! impl_instant_for_integer {
             }
         }
 
-        impl<const NOM: u32, const DENOM: u32> PartialEq for Instant<$i, NOM, DENOM> {
+        impl<const NOM: u64, const DENOM: u64> PartialEq for Instant<$i, NOM, DENOM> {
             #[inline]
             fn eq(&self, other: &Self) -> bool {
                 self.ticks.eq(&other.ticks)
             }
         }
 
-        impl<const NOM: u32, const DENOM: u32> Eq for Instant<$i, NOM, DENOM> {}
+        impl<const NOM: u64, const DENOM: u64> Eq for Instant<$i, NOM, DENOM> {}
 
         // Instant - Instant = Duration
         // We have limited this to use same numerator and denominator in both left and right hand sides,
         // this allows for the extension traits to work. For usage with different fraction, use
         // `checked_duration_since`.
-        impl<const NOM: u32, const DENOM: u32> ops::Sub<Instant<$i, NOM, DENOM>>
+        impl<const NOM: u64, const DENOM: u64> ops::Sub<Instant<$i, NOM, DENOM>>
             for Instant<$i, NOM, DENOM>
         {
             type Output = Duration<$i, NOM, DENOM>;
@@ -256,7 +256,7 @@ macro_rules! impl_instant_for_integer {
         // We have limited this to use same numerator and denominator in both left and right hand sides,
         // this allows for the extension traits to work. For usage with different fraction, use
         // `checked_sub_duration`.
-        impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<$i, NOM, DENOM>>
+        impl<const NOM: u64, const DENOM: u64> ops::Sub<Duration<$i, NOM, DENOM>>
             for Instant<$i, NOM, DENOM>
         {
             type Output = Instant<$i, NOM, DENOM>;
@@ -276,7 +276,7 @@ macro_rules! impl_instant_for_integer {
         // We have limited this to use same numerator and denominator in both left and right hand sides,
         // this allows for the extension traits to work. For usage with different fraction, use
         // `checked_sub_duration`.
-        impl<const NOM: u32, const DENOM: u32> ops::SubAssign<Duration<$i, NOM, DENOM>>
+        impl<const NOM: u64, const DENOM: u64> ops::SubAssign<Duration<$i, NOM, DENOM>>
             for Instant<$i, NOM, DENOM>
         {
             #[inline]
@@ -289,7 +289,7 @@ macro_rules! impl_instant_for_integer {
         // We have limited this to use same numerator and denominator in both left and right hand sides,
         // this allows for the extension traits to work. For usage with different fraction, use
         // `checked_add_duration`.
-        impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<$i, NOM, DENOM>>
+        impl<const NOM: u64, const DENOM: u64> ops::Add<Duration<$i, NOM, DENOM>>
             for Instant<$i, NOM, DENOM>
         {
             type Output = Instant<$i, NOM, DENOM>;
@@ -309,7 +309,7 @@ macro_rules! impl_instant_for_integer {
         // We have limited this to use same numerator and denominator in both left and right hand sides,
         // this allows for the extension traits to work. For usage with different fraction, use
         // `checked_add_duration`.
-        impl<const NOM: u32, const DENOM: u32> ops::AddAssign<Duration<$i, NOM, DENOM>>
+        impl<const NOM: u64, const DENOM: u64> ops::AddAssign<Duration<$i, NOM, DENOM>>
             for Instant<$i, NOM, DENOM>
         {
             #[inline]
@@ -319,7 +319,7 @@ macro_rules! impl_instant_for_integer {
         }
 
         #[cfg(feature = "defmt")]
-        impl<const NOM: u32, const DENOM: u32> defmt::Format for Instant<$i, NOM, DENOM> {
+        impl<const NOM: u64, const DENOM: u64> defmt::Format for Instant<$i, NOM, DENOM> {
             fn format(&self, f: defmt::Formatter) {
                 if NOM == 3_600 && DENOM == 1 {
                     defmt::write!(f, "{} h", self.ticks)
@@ -339,7 +339,7 @@ macro_rules! impl_instant_for_integer {
             }
         }
 
-        impl<const NOM: u32, const DENOM: u32> core::fmt::Display for Instant<$i, NOM, DENOM> {
+        impl<const NOM: u64, const DENOM: u64> core::fmt::Display for Instant<$i, NOM, DENOM> {
             fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                 if NOM == 3_600 && DENOM == 1 {
                     write!(f, "{} h", self.ticks)
@@ -372,7 +372,7 @@ impl_instant_for_integer!(u64);
 // We have limited this to use same numerator and denominator in both left and right hand sides,
 // this allows for the extension traits to work. For usage with different fraction, use
 // `checked_sub_duration`.
-impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<u32, NOM, DENOM>>
+impl<const NOM: u64, const DENOM: u64> ops::Sub<Duration<u32, NOM, DENOM>>
     for Instant<u64, NOM, DENOM>
 {
     type Output = Instant<u64, NOM, DENOM>;
@@ -392,7 +392,7 @@ impl<const NOM: u32, const DENOM: u32> ops::Sub<Duration<u32, NOM, DENOM>>
 // We have limited this to use same numerator and denominator in both left and right hand sides,
 // this allows for the extension traits to work. For usage with different fraction, use
 // `checked_sub_duration`.
-impl<const NOM: u32, const DENOM: u32> ops::SubAssign<Duration<u32, NOM, DENOM>>
+impl<const NOM: u64, const DENOM: u64> ops::SubAssign<Duration<u32, NOM, DENOM>>
     for Instant<u64, NOM, DENOM>
 {
     #[inline]
@@ -405,7 +405,7 @@ impl<const NOM: u32, const DENOM: u32> ops::SubAssign<Duration<u32, NOM, DENOM>>
 // We have limited this to use same numerator and denominator in both left and right hand sides,
 // this allows for the extension traits to work. For usage with different fraction, use
 // `checked_add_duration`.
-impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<u32, NOM, DENOM>>
+impl<const NOM: u64, const DENOM: u64> ops::Add<Duration<u32, NOM, DENOM>>
     for Instant<u64, NOM, DENOM>
 {
     type Output = Instant<u64, NOM, DENOM>;
@@ -425,7 +425,7 @@ impl<const NOM: u32, const DENOM: u32> ops::Add<Duration<u32, NOM, DENOM>>
 // We have limited this to use same numerator and denominator in both left and right hand sides,
 // this allows for the extension traits to work. For usage with different fraction, use
 // `checked_add_duration`.
-impl<const NOM: u32, const DENOM: u32> ops::AddAssign<Duration<u32, NOM, DENOM>>
+impl<const NOM: u64, const DENOM: u64> ops::AddAssign<Duration<u32, NOM, DENOM>>
     for Instant<u64, NOM, DENOM>
 {
     #[inline]
@@ -434,7 +434,7 @@ impl<const NOM: u32, const DENOM: u32> ops::AddAssign<Duration<u32, NOM, DENOM>>
     }
 }
 
-// impl<const L_NOM: u32, const L_DENOM: u32, const R_NOM: u32, const R_DENOM: u32>
+// impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64>
 //     ops::Add<Duration<u32, R_NOM, R_DENOM>> for Duration<u64, L_NOM, L_DENOM>
 // {
 //     type Output = Duration<u64, L_NOM, L_DENOM>;
