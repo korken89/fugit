@@ -21,15 +21,43 @@ pub struct Duration<T, const NOM: u32, const DENOM: u32> {
 macro_rules! shorthand {
     ($i:ty, $nom:literal, $denum:literal, $from_unit:ident, $as_unit:ident, $from_unital:ident, $unitstr:literal) => {
         #[doc = concat!("Convert the Duration to an integer number of ", $unitstr, ".")]
+        #[doc = ""]
+        #[doc = concat!("**Warning**: This function will cause a compilation error if the conversion constants don't fit in `", stringify!($i), "`.")]
         #[inline]
         pub const fn $as_unit(&self) -> $i {
+            // Compile-time/runtime check - will fail if constants don't fit in target type
+            const {
+                assert!(
+                    Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN <= <$i>::MAX as u64,
+                    concat!("Conversion constant RD_TIMES_LN doesn't fit in ", stringify!($i), " for this Duration type")
+                );
+                assert!(
+                    Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN <= <$i>::MAX as u64,
+                    concat!("Conversion constant LD_TIMES_RN doesn't fit in ", stringify!($i), " for this Duration type")
+                );
+            }
+
             (Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i * self.ticks)
                 / Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i
         }
 
         #[doc = concat!("Create a duration from a number of ", $unitstr, ".")]
+        #[doc = ""]
+        #[doc = concat!("**Warning**: This function will cause a compilation error if the conversion constants don't fit in `", stringify!($i), "`.")]
         #[inline]
         pub const fn $from_unit(val: $i) -> Self {
+            // Compile-time/runtime check - will fail if constants don't fit in target type
+            const {
+                assert!(
+                    Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN <= <$i>::MAX as u64,
+                    concat!("Conversion constant RD_TIMES_LN doesn't fit in ", stringify!($i), " for this Duration type")
+                );
+                assert!(
+                    Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN <= <$i>::MAX as u64,
+                    concat!("Conversion constant LD_TIMES_RN doesn't fit in ", stringify!($i), " for this Duration type")
+                );
+            }
+
             Self::from_ticks(
                 (Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i * val)
                     / Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i
@@ -37,8 +65,22 @@ macro_rules! shorthand {
         }
 
         #[doc = concat!("Create a duration from a number of ", $unitstr, " (ceil rounded).")]
+        #[doc = ""]
+        #[doc = concat!("**Warning**: This function will cause a compilation error if the conversion constants don't fit in `", stringify!($i), "`.")]
         #[inline]
         pub const fn $from_unital(val: $i) -> Self {
+            // Compile-time/runtime check - will fail if constants don't fit in target type
+            const {
+                assert!(
+                    Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN <= <$i>::MAX as u64,
+                    concat!("Conversion constant RD_TIMES_LN doesn't fit in ", stringify!($i), " for this Duration type")
+                );
+                assert!(
+                    Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN <= <$i>::MAX as u64,
+                    concat!("Conversion constant LD_TIMES_RN doesn't fit in ", stringify!($i), " for this Duration type")
+                );
+            }
+
             let mul = Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i * val;
             let ld_times_rn = Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i;
             Self::from_ticks(if mul % ld_times_rn == 0 {
