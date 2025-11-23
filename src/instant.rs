@@ -40,10 +40,10 @@ macro_rules! impl_instant_for_integer {
             /// # use fugit::*;
             #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(234);")]
             ///
-            /// assert_eq!(i.ticks(), 234);
+            /// assert_eq!(i.as_ticks(), 234);
             /// ```
             #[inline]
-            pub const fn ticks(&self) -> $i {
+            pub const fn as_ticks(&self) -> $i {
                 self.ticks
             }
 
@@ -93,11 +93,11 @@ macro_rules! impl_instant_for_integer {
             /// # use fugit::*;
             #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(11);")]
             ///
-            /// assert_eq!(i.duration_since_epoch().ticks(), 11);
+            /// assert_eq!(i.duration_since_epoch().as_ticks(), 11);
             /// ```
             #[inline]
             pub const fn duration_since_epoch(self) -> Duration<$i, NOM, DENOM> {
-                Duration::<$i, NOM, DENOM>::from_ticks(self.ticks())
+                Duration::<$i, NOM, DENOM>::from_ticks(self.as_ticks())
             }
 
             /// Duration between `Instant`s.
@@ -108,7 +108,7 @@ macro_rules! impl_instant_for_integer {
             #[doc = concat!("let i2 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
             ///
             /// assert_eq!(i1.checked_duration_since(i2), None);
-            /// assert_eq!(i2.checked_duration_since(i1).unwrap().ticks(), 1);
+            /// assert_eq!(i2.checked_duration_since(i1).unwrap().as_ticks(), 1);
             /// ```
             #[inline]
             pub const fn checked_duration_since(
@@ -132,7 +132,7 @@ macro_rules! impl_instant_for_integer {
             #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             ///
-            /// assert_eq!(i.checked_sub_duration(d).unwrap().ticks(), 0);
+            /// assert_eq!(i.checked_sub_duration(d).unwrap().as_ticks(), 0);
             /// ```
             pub const fn checked_sub_duration<const O_NOM: u32, const O_DENOM: u32>(
                 self,
@@ -140,11 +140,11 @@ macro_rules! impl_instant_for_integer {
             ) -> Option<Self> {
                 if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
                     Some(Instant::<$i, NOM, DENOM>::from_ticks(
-                        self.ticks.wrapping_sub(other.ticks()),
+                        self.ticks.wrapping_sub(other.as_ticks()),
                     ))
                 } else {
                     if let Some(lh) = other
-                        .ticks()
+                        .as_ticks()
                         .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN as $i)
                     {
                         let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i;
@@ -165,7 +165,7 @@ macro_rules! impl_instant_for_integer {
             #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             ///
-            /// assert_eq!(i.checked_add_duration(d).unwrap().ticks(), 2);
+            /// assert_eq!(i.checked_add_duration(d).unwrap().as_ticks(), 2);
             /// ```
             pub const fn checked_add_duration<const O_NOM: u32, const O_DENOM: u32>(
                 self,
@@ -173,11 +173,11 @@ macro_rules! impl_instant_for_integer {
             ) -> Option<Self> {
                 if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
                     Some(Instant::<$i, NOM, DENOM>::from_ticks(
-                        self.ticks.wrapping_add(other.ticks()),
+                        self.ticks.wrapping_add(other.as_ticks()),
                     ))
                 } else {
                     if let Some(lh) = other
-                        .ticks()
+                        .as_ticks()
                         .checked_mul(Helpers::<NOM, DENOM, O_NOM, O_DENOM>::LD_TIMES_RN as $i)
                     {
                         let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i;
@@ -437,7 +437,7 @@ impl<const NOM: u32, const DENOM: u32> ops::AddAssign<Duration<u32, NOM, DENOM>>
 //     #[inline]
 //     fn add(self, other: Duration<u32, R_NOM, R_DENOM>) -> Self::Output {
 //         self.add(Duration::<u64, L_NOM, L_DENOM>::from_ticks(
-//             other.ticks() as u64
+//             other.as_ticks() as u64
 //         ))
 //     }
 // }

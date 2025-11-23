@@ -499,7 +499,7 @@ mod test {
 
         // Fixed in v0.3.2
         let d: Duration<u32, 1, 1_000> = Duration::<u32, 1, 32_768>::from_ticks(42949672).convert();
-        assert_eq!(d.ticks(), 1_310_719);
+        assert_eq!(d.as_ticks(), 1_310_719);
 
         // Division and multiplication by integers
         let mul: Duration<u32, 1, 1_000> = Duration::<u32, 1, 1_000>::from_ticks(10) * 2;
@@ -651,63 +651,63 @@ mod test {
         use crate::{ExtU32, ExtU32Ceil};
 
         let d: Duration<u32, 1, 10_000> = 100_000_000.nanos();
-        assert_eq!(d.ticks(), 1_000);
+        assert_eq!(d.as_ticks(), 1_000);
 
         let d: Duration<u32, 1, 1_000_000> = 40_000.nanos_at_least();
-        assert_eq!(d.ticks(), 40);
+        assert_eq!(d.as_ticks(), 40);
 
         let d: Duration<u32, 1, 1_000_000> = 40_075.nanos_at_least();
-        assert_eq!(d.ticks(), 41);
+        assert_eq!(d.as_ticks(), 41);
 
         let d: Duration<u32, 1, 1_000> = 4001.micros_at_least();
-        assert_eq!(d.ticks(), 5);
+        assert_eq!(d.as_ticks(), 5);
 
         let d: Duration<u32, 1, 10_000> = 100_000.micros();
-        assert_eq!(d.ticks(), 1_000);
+        assert_eq!(d.as_ticks(), 1_000);
 
         let d: Duration<u32, 1, 10_000> = 1.millis();
-        assert_eq!(d.ticks(), 10);
+        assert_eq!(d.as_ticks(), 10);
 
         let d: Duration<u32, 1, 10_000> = 1.secs();
-        assert_eq!(d.ticks(), 10_000);
+        assert_eq!(d.as_ticks(), 10_000);
 
         let d: Duration<u32, 1, 10_000> = 1.minutes();
-        assert_eq!(d.ticks(), 600_000);
+        assert_eq!(d.as_ticks(), 600_000);
 
         let d: Duration<u32, 1, 10_000> = 1.hours();
-        assert_eq!(d.ticks(), 36_000_000);
+        assert_eq!(d.as_ticks(), 36_000_000);
 
-        let d = Duration::<u32, 1, 10_000>::millis(10);
-        assert_eq!(d.ticks(), 100);
+        let d = Duration::<u32, 1, 10_000>::from_millis(10);
+        assert_eq!(d.as_ticks(), 100);
 
         let d = Duration::<u32, 1, 10_000>::Hz(200);
-        assert_eq!(d.ticks(), 50);
+        assert_eq!(d.as_ticks(), 50);
 
         let d = Duration::<u32, 1, 1>::from_ticks(2);
-        assert_eq!(d.to_secs(), 2);
-        assert_eq!(d.to_nanos(), 2_000_000_000);
+        assert_eq!(d.as_secs(), 2);
+        assert_eq!(d.as_nanos(), 2_000_000_000);
 
         let d = Duration::<u32, 1, 1_000_000_000>::from_ticks(2_000_000_000);
-        assert_eq!(d.to_secs(), 2);
-        assert_eq!(d.to_nanos(), 2_000_000_000);
+        assert_eq!(d.as_secs(), 2);
+        assert_eq!(d.as_nanos(), 2_000_000_000);
 
         let d = Duration::<u32, 1, 10_000>::from_ticks(100);
-        assert_eq!(d.to_nanos(), 10_000_000);
+        assert_eq!(d.as_nanos(), 10_000_000);
 
         let d = Duration::<u32, 1, 10_000>::from_ticks(100);
-        assert_eq!(d.to_micros(), 10_000);
+        assert_eq!(d.as_micros(), 10_000);
 
         let d = Duration::<u32, 1, 10_000>::from_ticks(100);
-        assert_eq!(d.to_millis(), 10);
+        assert_eq!(d.as_millis(), 10);
 
         let d = Duration::<u32, 1, 10_000>::from_ticks(100_000);
-        assert_eq!(d.to_secs(), 10);
+        assert_eq!(d.as_secs(), 10);
 
         let d = Duration::<u32, 1, 10_000>::from_ticks(1_800_000);
-        assert_eq!(d.to_minutes(), 3);
+        assert_eq!(d.as_minutes(), 3);
 
         let d = Duration::<u32, 1, 10_000>::from_ticks(180_000_000);
-        assert_eq!(d.to_hours(), 5);
+        assert_eq!(d.as_hours(), 5);
     }
 
     #[test]
@@ -715,63 +715,63 @@ mod test {
         use crate::{ExtU64, ExtU64Ceil};
 
         let d: Duration<u64, 1, 10_000> = 100_000_000.nanos();
-        assert_eq!(d.ticks(), 1_000);
+        assert_eq!(d.as_ticks(), 1_000);
 
         let d: Duration<u64, 1, 1_000_000> = 40_000.nanos_at_least();
-        assert_eq!(d.ticks(), 40);
+        assert_eq!(d.as_ticks(), 40);
 
         let d: Duration<u64, 1, 1_000_000> = 40_075.nanos_at_least();
-        assert_eq!(d.ticks(), 41);
+        assert_eq!(d.as_ticks(), 41);
 
         let d: Duration<u64, 1, 1_000> = 4001.micros_at_least();
-        assert_eq!(d.ticks(), 5);
+        assert_eq!(d.as_ticks(), 5);
 
         let d: Duration<u64, 1, 10_000> = 100_000.micros();
-        assert_eq!(d.ticks(), 1_000);
+        assert_eq!(d.as_ticks(), 1_000);
 
         let d: Duration<u64, 1, 10_000> = 1.millis();
-        assert_eq!(d.ticks(), 10);
+        assert_eq!(d.as_ticks(), 10);
 
         let d: Duration<u64, 1, 10_000> = 1.secs();
-        assert_eq!(d.ticks(), 10_000);
+        assert_eq!(d.as_ticks(), 10_000);
 
         let d: Duration<u64, 1, 10_000> = 1.minutes();
-        assert_eq!(d.ticks(), 600_000);
+        assert_eq!(d.as_ticks(), 600_000);
 
         let d: Duration<u64, 1, 10_000> = 1.hours();
-        assert_eq!(d.ticks(), 36_000_000);
+        assert_eq!(d.as_ticks(), 36_000_000);
 
-        let d = Duration::<u64, 1, 10_000>::millis(10);
-        assert_eq!(d.ticks(), 100);
+        let d = Duration::<u64, 1, 10_000>::from_millis(10);
+        assert_eq!(d.as_ticks(), 100);
 
         let d = Duration::<u64, 1, 10_000>::Hz(200);
-        assert_eq!(d.ticks(), 50);
+        assert_eq!(d.as_ticks(), 50);
 
         let d = Duration::<u32, 1, 1>::from_ticks(2);
-        assert_eq!(d.to_secs(), 2);
-        assert_eq!(d.to_nanos(), 2_000_000_000);
+        assert_eq!(d.as_secs(), 2);
+        assert_eq!(d.as_nanos(), 2_000_000_000);
 
         let d = Duration::<u32, 1, 1_000_000_000>::from_ticks(2_000_000_000);
-        assert_eq!(d.to_secs(), 2);
-        assert_eq!(d.to_nanos(), 2_000_000_000);
+        assert_eq!(d.as_secs(), 2);
+        assert_eq!(d.as_nanos(), 2_000_000_000);
 
         let d = Duration::<u64, 1, 10_000>::from_ticks(100);
-        assert_eq!(d.to_nanos(), 10_000_000);
+        assert_eq!(d.as_nanos(), 10_000_000);
 
         let d = Duration::<u64, 1, 10_000>::from_ticks(100);
-        assert_eq!(d.to_micros(), 10_000);
+        assert_eq!(d.as_micros(), 10_000);
 
         let d = Duration::<u64, 1, 10_000>::from_ticks(100);
-        assert_eq!(d.to_millis(), 10);
+        assert_eq!(d.as_millis(), 10);
 
         let d = Duration::<u64, 1, 10_000>::from_ticks(100_000);
-        assert_eq!(d.to_secs(), 10);
+        assert_eq!(d.as_secs(), 10);
 
         let d = Duration::<u64, 1, 10_000>::from_ticks(1_800_000);
-        assert_eq!(d.to_minutes(), 3);
+        assert_eq!(d.as_minutes(), 3);
 
         let d = Duration::<u64, 1, 10_000>::from_ticks(180_000_000);
-        assert_eq!(d.to_hours(), 5);
+        assert_eq!(d.as_hours(), 5);
     }
 
     #[test]
@@ -1287,19 +1287,19 @@ mod test {
         use crate::RateExtU32;
 
         let r: Rate<u32, 1, 1> = 1.Hz();
-        assert_eq!(r.raw(), 1);
+        assert_eq!(r.to_raw(), 1);
 
         let r: Rate<u32, 1, 1> = 1.kHz();
-        assert_eq!(r.raw(), 1_000);
+        assert_eq!(r.to_raw(), 1_000);
 
         let r: Rate<u32, 1, 1> = 1.MHz();
-        assert_eq!(r.raw(), 1_000_000);
+        assert_eq!(r.to_raw(), 1_000_000);
 
         let r = Rate::<u32, 1, 1>::kHz(20);
-        assert_eq!(r.raw(), 20_000);
+        assert_eq!(r.to_raw(), 20_000);
 
         let r = Rate::<u32, 1, 1>::micros(50);
-        assert_eq!(r.raw(), 20_000);
+        assert_eq!(r.to_raw(), 20_000);
     }
 
     #[test]
@@ -1307,34 +1307,34 @@ mod test {
         use crate::RateExtU64;
 
         let r: Rate<u64, 1, 1> = 1.Hz();
-        assert_eq!(r.raw(), 1);
+        assert_eq!(r.to_raw(), 1);
 
         let r: Rate<u64, 1, 1> = 1.kHz();
-        assert_eq!(r.raw(), 1_000);
+        assert_eq!(r.to_raw(), 1_000);
 
         let r: Rate<u64, 1, 1> = 1.MHz();
-        assert_eq!(r.raw(), 1_000_000);
+        assert_eq!(r.to_raw(), 1_000_000);
 
         let r = Rate::<u64, 1, 1>::kHz(20);
-        assert_eq!(r.raw(), 20_000);
+        assert_eq!(r.to_raw(), 20_000);
 
         let r = Rate::<u64, 1, 1>::micros(50);
-        assert_eq!(r.raw(), 20_000);
+        assert_eq!(r.to_raw(), 20_000);
     }
 
     #[test]
     fn rate_duration_conversion() {
         let r = Rate::<u32, 1_000, 1>::from_raw(1);
-        let d: Duration<u32, 1, 1_000_000> = r.into_duration();
-        assert_eq!(d.ticks(), 1_000);
+        let d: Duration<u32, 1, 1_000_000> = r.to_duration();
+        assert_eq!(d.as_ticks(), 1_000);
         let d2 = Duration::<u32, 1, 1_000_000>::from_rate(r);
-        assert_eq!(d2.ticks(), 1_000);
+        assert_eq!(d2.as_ticks(), 1_000);
 
         let r = Rate::<u64, 1_000, 1>::from_raw(1);
-        let d: Duration<u64, 1, 1_000_000> = r.into_duration();
-        assert_eq!(d.ticks(), 1_000);
+        let d: Duration<u64, 1, 1_000_000> = r.to_duration();
+        assert_eq!(d.as_ticks(), 1_000);
         let d2 = Duration::<u64, 1, 1_000_000>::from_rate(r);
-        assert_eq!(d2.ticks(), 1_000);
+        assert_eq!(d2.as_ticks(), 1_000);
     }
 
     #[test]
