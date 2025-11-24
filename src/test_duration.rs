@@ -307,7 +307,7 @@ fn duration_duration_math_u32() {
 
     // Fixed in v0.3.2
     let d: Duration<u32, 1, 1_000> = Duration::<u32, 1, 32_768>::from_ticks(42949672).convert();
-    assert_eq!(d.as_ticks(), 1_310_719);
+    assert_eq!(d.as_ticks(), 1_310_720);
 
     // Division and multiplication by integers
     let mul: Duration<u32, 1, 1_000> = Duration::<u32, 1, 1_000>::from_ticks(10) * 2;
@@ -338,6 +338,12 @@ fn duration_duration_math_u32() {
         Duration::<u32, 1, 1_000>::from_ticks(500) / Duration::<u32, 1, 100>::from_ticks(5),
         10
     );
+
+    // Rounding
+    let d: Duration<u32, 1, 1> = Duration::<u32, 1, 1_000>::from_ticks(500).convert();
+    assert_eq!(d.as_ticks(), 1); // Rounds up
+    let d: Duration<u32, 1, 1> = Duration::<u32, 1, 1_000>::from_ticks(499).convert();
+    assert_eq!(d.as_ticks(), 0); // Rounds down
 }
 
 #[test]
@@ -415,6 +421,12 @@ fn duration_duration_math_u64() {
         Duration::<u64, 1, 1_000>::from_ticks(500) / Duration::<u64, 1, 1_00>::from_ticks(5),
         10
     );
+
+    // Rounding
+    let d: Duration<u64, 1, 1> = Duration::<u64, 1, 1_000>::from_ticks(500).convert();
+    assert_eq!(d.as_ticks(), 1); // Rounds up
+    let d: Duration<u64, 1, 1> = Duration::<u64, 1, 1_000>::from_ticks(499).convert();
+    assert_eq!(d.as_ticks(), 0); // Rounds down
 }
 
 #[test]
@@ -768,7 +780,7 @@ fn duration_picosecond_support() {
     // Test conversion from picoseconds to seconds
     let picos = PicosDurationU64::from_ticks(2_500_000_000_000);
     let secs: Duration<u64, 1, 1> = picos.convert();
-    assert_eq!(secs.as_ticks(), 2); // 2.5 seconds truncates to 2
+    assert_eq!(secs.as_ticks(), 3); // 2.5 seconds rounds to 3
 }
 
 #[test]

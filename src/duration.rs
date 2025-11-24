@@ -496,9 +496,10 @@ macro_rules! impl_duration_for_integer {
                     Some(Self::from_ticks(duration.ticks))
                 } else {
                     if let Some(lh) = (duration.ticks as u64)
-                        .checked_mul(Helpers::<I_NOM, I_DENOM, NOM, DENOM>::RD_TIMES_LN as u64)
+                        .checked_mul(Helpers::<I_NOM, I_DENOM, NOM, DENOM>::RD_TIMES_LN)
                     {
-                        let ticks = lh / Helpers::<I_NOM, I_DENOM, NOM, DENOM>::LD_TIMES_RN as u64;
+                        let ticks = (lh + Helpers::<I_NOM, I_DENOM, NOM, DENOM>::LD_TIMES_RN / 2)
+                            / Helpers::<I_NOM, I_DENOM, NOM, DENOM>::LD_TIMES_RN;
 
                         if ticks <= <$i>::MAX as u64 {
                             Some(Self::from_ticks(ticks as $i))
@@ -592,7 +593,7 @@ macro_rules! impl_duration_for_integer {
                 }
             }
 
-            /// Convert between bases for a duration.
+            /// Convert between bases for a duration, rounds to nearest.
             ///
             /// Unfortunately not a `From` impl due to collision with the std lib.
             ///
