@@ -75,37 +75,3 @@ impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64>
     /// Helper constants generated at compile time
     pub const SAME_BASE: bool = Self::LD_TIMES_RN == Self::RD_TIMES_LN;
 }
-
-#[allow(dead_code)]
-#[allow(path_statements)]
-pub(crate) const fn greater_than_0<const N: u64>() {
-    Assert::<N, 0>::GREATER;
-}
-
-#[allow(dead_code)]
-/// Const assert hack
-pub struct Assert<const L: u64, const R: u64>;
-
-#[allow(dead_code)]
-impl<const L: u64, const R: u64> Assert<L, R> {
-    /// Const assert hack
-    pub const GREATER_EQ: () = assert!(L >= R);
-
-    /// Const assert hack
-    pub const LESS_EQ: () = assert!(L <= R);
-
-    /// Const assert hack
-    pub const NOT_EQ: () = assert!(L != R);
-
-    /// Const assert hack
-    pub const EQ: () = assert!(L == R);
-
-    /// Const assert hack
-    pub const GREATER: () = assert!(L > R);
-
-    /// Const assert hack
-    pub const LESS: () = assert!(L < R);
-
-    /// Const assert hack
-    pub const POWER_OF_TWO: () = assert!(L.is_power_of_two());
-}
