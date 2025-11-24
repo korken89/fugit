@@ -1,5 +1,7 @@
 use crate::helpers::Helpers;
+use crate::NanosDurationU64;
 use crate::Rate;
+use crate::SecsDurationU64;
 use core::cmp::Ordering;
 use core::convert;
 use core::ops;
@@ -925,6 +927,62 @@ macro_rules! impl_duration_for_integer {
 
 impl_duration_for_integer!(u32);
 impl_duration_for_integer!(u64);
+
+//
+// Conversion from core::time::Duration
+//
+
+impl<const NOM: u64, const DENOM: u64> convert::TryFrom<core::time::Duration>
+    for Duration<u32, NOM, DENOM>
+{
+    type Error = ();
+
+    #[inline]
+    fn try_from(val: core::time::Duration) -> Result<Self, Self::Error> {
+        Duration::<u64, NOM, DENOM>::try_from(val)?.try_into()
+    }
+}
+
+impl<const NOM: u64, const DENOM: u64> convert::TryFrom<core::time::Duration>
+    for Duration<u64, NOM, DENOM>
+{
+    type Error = ();
+
+    #[inline]
+    fn try_from(val: core::time::Duration) -> Result<Self, Self::Error> {
+        let secs_duration = SecsDurationU64::from_ticks(val.as_secs());
+        let nanos_duration = NanosDurationU64::from_ticks(val.subsec_nanos() as u64);
+
+        let secs_converted: Self = secs_duration.const_try_into().ok_or(())?;
+        let nanos_converted: Self = nanos_duration.const_try_into().ok_or(())?;
+
+        secs_converted.checked_add(nanos_converted).ok_or(())
+    }
+}
+
+//
+// Conversion to core::time::Duration
+//
+
+impl<const NOM: u64, const DENOM: u64> From<Duration<u32, NOM, DENOM>> for core::time::Duration {
+    #[inline]
+    fn from(val: Duration<u32, NOM, DENOM>) -> Self {
+        let val_u64: Duration<u64, NOM, DENOM> = val.into();
+        core::time::Duration::from(val_u64)
+    }
+}
+
+impl<const NOM: u64, const DENOM: u64> From<Duration<u64, NOM, DENOM>> for core::time::Duration {
+    #[inline]
+    fn from(val: Duration<u64, NOM, DENOM>) -> Self {
+        let secs = val.as_secs();
+        let secs_duration = Duration::<u64, NOM, DENOM>::from_secs(secs);
+        let remainder = val.saturating_sub(secs_duration);
+        let nanos = remainder.as_nanos() as u32;
+
+        core::time::Duration::new(secs, nanos)
+    }
+}
 
 //
 // Operations between u32 and u64 Durations
