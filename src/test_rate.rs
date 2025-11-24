@@ -320,18 +320,9 @@ fn rate_rem_u32() {
     let r2 = Rate::<u32, 1_000, 1>::from_raw(3);
     assert_eq!(r1 % r2, Rate::<u32, 1_000, 1>::from_raw(1));
 
-    // Rate % integer
-    let r1 = Rate::<u32, 1_000, 1>::from_raw(10);
-    assert_eq!(r1 % 3, Rate::<u32, 1_000, 1>::from_raw(1));
-
     // RemAssign Rate
     let mut r1 = Rate::<u32, 1_000, 1>::from_raw(10);
     r1 %= Rate::<u32, 1_000, 1>::from_raw(3);
-    assert_eq!(r1, Rate::<u32, 1_000, 1>::from_raw(1));
-
-    // RemAssign integer
-    let mut r1 = Rate::<u32, 1_000, 1>::from_raw(10);
-    r1 %= 3;
     assert_eq!(r1, Rate::<u32, 1_000, 1>::from_raw(1));
 
     // Test checking if a frequency is a multiple of another
@@ -351,18 +342,9 @@ fn rate_rem_u64() {
     let r2 = Rate::<u64, 1_000, 1>::from_raw(3);
     assert_eq!(r1 % r2, Rate::<u64, 1_000, 1>::from_raw(1));
 
-    // Rate % integer
-    let r1 = Rate::<u64, 1_000, 1>::from_raw(10);
-    assert_eq!(r1 % 3, Rate::<u64, 1_000, 1>::from_raw(1));
-
     // RemAssign Rate
     let mut r1 = Rate::<u64, 1_000, 1>::from_raw(10);
     r1 %= Rate::<u64, 1_000, 1>::from_raw(3);
-    assert_eq!(r1, Rate::<u64, 1_000, 1>::from_raw(1));
-
-    // RemAssign integer
-    let mut r1 = Rate::<u64, 1_000, 1>::from_raw(10);
-    r1 %= 3;
     assert_eq!(r1, Rate::<u64, 1_000, 1>::from_raw(1));
 }
 

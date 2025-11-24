@@ -858,33 +858,12 @@ macro_rules! impl_duration_for_integer {
             }
         }
 
-        // Duration % integer = Duration
-        impl<const NOM: u64, const DENOM: u64> ops::Rem<u32> for Duration<$i, NOM, DENOM> {
-            type Output = Duration<$i, NOM, DENOM>;
-
-            #[inline]
-            fn rem(mut self, other: u32) -> Self::Output {
-                self.ticks %= other as $i;
-                self
-            }
-        }
-
         // Duration %= Duration
         impl<const NOM: u64, const DENOM: u64> ops::RemAssign<Duration<$i, NOM, DENOM>>
             for Duration<$i, NOM, DENOM>
         {
             #[inline]
             fn rem_assign(&mut self, other: Self) {
-                *self = *self % other;
-            }
-        }
-
-        // Duration %= integer
-        impl<const NOM: u64, const DENOM: u64> ops::RemAssign<u32>
-            for Duration<$i, NOM, DENOM>
-        {
-            #[inline]
-            fn rem_assign(&mut self, other: u32) {
                 *self = *self % other;
             }
         }
