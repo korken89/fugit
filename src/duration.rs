@@ -1,4 +1,4 @@
-use crate::helpers::{self, Helpers};
+use crate::helpers::Helpers;
 use crate::Rate;
 use core::cmp::Ordering;
 use core::convert;
@@ -83,11 +83,7 @@ macro_rules! shorthand {
 
             let mul = Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i * val;
             let ld_times_rn = Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i;
-            Self::from_ticks(if mul % ld_times_rn == 0 {
-                mul / ld_times_rn
-            } else {
-                mul / ld_times_rn + 1
-            })
+            Self::from_ticks(mul.div_ceil(ld_times_rn))
         }
     };
 }
@@ -103,8 +99,8 @@ macro_rules! impl_duration_for_integer {
             /// ```
             #[inline]
             pub const fn from_ticks(ticks: $i) -> Self {
-                helpers::greater_than_0::<NOM>();
-                helpers::greater_than_0::<DENOM>();
+                const { assert!(NOM > 0) };
+                const { assert!(DENOM > 0) };
 
                 Duration { ticks }
             }

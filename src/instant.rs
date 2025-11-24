@@ -1,5 +1,5 @@
 use crate::duration::Duration;
-use crate::helpers::{self, Helpers};
+use crate::helpers::Helpers;
 use core::cmp::Ordering;
 use core::ops;
 
@@ -28,8 +28,8 @@ macro_rules! impl_instant_for_integer {
             /// ```
             #[inline]
             pub const fn from_ticks(ticks: $i) -> Self {
-                helpers::greater_than_0::<NOM>();
-                helpers::greater_than_0::<DENOM>();
+                const { assert!(NOM > 0) };
+                const { assert!(DENOM > 0) };
 
                 Instant { ticks }
             }

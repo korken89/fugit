@@ -1,4 +1,4 @@
-use crate::helpers::{self, Helpers};
+use crate::helpers::Helpers;
 use crate::Duration;
 use core::cmp::Ordering;
 use core::convert;
@@ -29,8 +29,8 @@ macro_rules! impl_rate_for_integer {
             /// ```
             #[inline]
             pub const fn from_raw(raw: $i) -> Self {
-                helpers::greater_than_0::<NOM>();
-                helpers::greater_than_0::<DENOM>();
+                const { assert!(NOM > 0) };
+                const { assert!(DENOM > 0) };
 
                 Rate { raw }
             }
