@@ -23,7 +23,7 @@ serde = { version = "1", optional = true, default-features = false }
 postcard = { version = "1.1", features = ["experimental-derive"], optional = true }
 
 [dependencies.defmt]
-version = ">=0.2.0,<0.4"
+version = ">=0.2.0, <1.1"
 optional = true
 
 [package.metadata.docs.rs]
