@@ -842,3 +842,102 @@ fn duration_checked_rem() {
         Some(Duration::<u32, 1, 1_000>::from_ticks(50)) // 350 ms % 100 ms = 50 ms
     );
 }
+
+#[test]
+fn duration_from_core_duration() {
+    use core::convert::TryFrom;
+
+    // Converting to milliseconds (u32).
+    let std_duration = core::time::Duration::new(2, 500_000_000); // 2.5 seconds
+    let fugit_duration: Duration<u32, 1, 1_000> = Duration::try_from(std_duration).unwrap();
+    assert_eq!(fugit_duration.as_ticks(), 2_500);
+
+    // Converting to microseconds (u64).
+    let std_duration = core::time::Duration::new(1, 234_567_000); // 1.234567 seconds
+    let fugit_duration: Duration<u64, 1, 1_000_000> = Duration::try_from(std_duration).unwrap();
+    assert_eq!(fugit_duration.as_ticks(), 1_234_567);
+
+    // Converting to seconds (u32).
+    let std_duration = core::time::Duration::new(42, 0);
+    let fugit_duration: Duration<u32, 1, 1> = Duration::try_from(std_duration).unwrap();
+    assert_eq!(fugit_duration.as_ticks(), 42);
+
+    // Rounding test - should round to nearest.
+    let std_duration = core::time::Duration::new(0, 1_500_000); // 1.5 ms = 1_500_000 ns
+    let fugit_duration: Duration<u32, 1, 1_000> = Duration::try_from(std_duration).unwrap();
+    assert_eq!(fugit_duration.as_ticks(), 2); // Should round to 2ms
+
+    // Another rounding test.
+    let std_duration = core::time::Duration::new(0, 1_499_999); // ~1.5 ms
+    let fugit_duration: Duration<u32, 1, 1_000> = Duration::try_from(std_duration).unwrap();
+    assert_eq!(fugit_duration.as_ticks(), 1); // Should round to 1ms
+
+    // Zero duration.
+    let std_duration = core::time::Duration::new(0, 0);
+    let fugit_duration: Duration<u64, 1, 1_000> = Duration::try_from(std_duration).unwrap();
+    assert_eq!(fugit_duration.as_ticks(), 0);
+    assert!(fugit_duration.is_zero());
+
+    // Nanoseconds to nanoseconds (should be exact).
+    let std_duration = core::time::Duration::new(1, 500_000_000); // 1.5 seconds
+    let fugit_duration: Duration<u64, 1, 1_000_000_000> = Duration::try_from(std_duration).unwrap();
+    assert_eq!(fugit_duration.as_ticks(), 1_500_000_000);
+
+    // Overflow test - should return None when converting large u64 duration to u32.
+    let std_duration = core::time::Duration::new(u64::MAX / 1_000, 0); // Very large duration
+    let result: Result<Duration<u32, 1, 1_000>, ()> = Duration::try_from(std_duration);
+    assert!(result.is_err());
+
+    // Conversion with both seconds and nanoseconds.
+    let std_duration = core::time::Duration::new(5, 123_456_789); // 5.123456789 seconds
+    let fugit_duration: Duration<u64, 1, 1_000_000_000> = Duration::try_from(std_duration).unwrap();
+    assert_eq!(fugit_duration.as_ticks(), 5_123_456_789);
+}
+
+#[test]
+fn duration_into_core_duration() {
+    use core::convert::From;
+
+    // Converting from milliseconds (u32).
+    let fugit_duration = Duration::<u32, 1, 1_000>::from_ticks(2_500);
+    let std_duration = core::time::Duration::from(fugit_duration);
+    assert_eq!(std_duration.as_secs(), 2);
+    assert_eq!(std_duration.subsec_nanos(), 500_000_000);
+
+    // Converting from microseconds (u64).
+    let fugit_duration = Duration::<u64, 1, 1_000_000>::from_ticks(1_234_567);
+    let std_duration = core::time::Duration::from(fugit_duration);
+    assert_eq!(std_duration.as_secs(), 1);
+    assert_eq!(std_duration.subsec_nanos(), 234_567_000);
+
+    // Converting from seconds (u32).
+    let fugit_duration = Duration::<u32, 1, 1>::from_ticks(42);
+    let std_duration = core::time::Duration::from(fugit_duration);
+    assert_eq!(std_duration.as_secs(), 42);
+    assert_eq!(std_duration.subsec_nanos(), 0);
+
+    // Zero duration.
+    let fugit_duration = Duration::<u64, 1, 1_000>::from_ticks(0);
+    let std_duration = core::time::Duration::from(fugit_duration);
+    assert_eq!(std_duration.as_secs(), 0);
+    assert_eq!(std_duration.subsec_nanos(), 0);
+
+    // Nanoseconds to nanoseconds.
+    let fugit_duration = Duration::<u64, 1, 1_000_000_000>::from_ticks(1_500_000_000);
+    let std_duration = core::time::Duration::from(fugit_duration);
+    assert_eq!(std_duration.as_secs(), 1);
+    assert_eq!(std_duration.subsec_nanos(), 500_000_000);
+
+    // Conversion with fractional part.
+    let fugit_duration = Duration::<u64, 1, 1_000_000_000>::from_ticks(5_123_456_789);
+    let std_duration = core::time::Duration::from(fugit_duration);
+    assert_eq!(std_duration.as_secs(), 5);
+    assert_eq!(std_duration.subsec_nanos(), 123_456_789);
+
+    // Round-trip test.
+    let original = core::time::Duration::new(10, 250_000_000);
+    let fugit = Duration::<u64, 1, 1_000>::try_from(original).unwrap();
+    let back = core::time::Duration::from(fugit);
+    assert_eq!(back.as_secs(), 10);
+    assert_eq!(back.subsec_nanos(), 250_000_000);
+}
