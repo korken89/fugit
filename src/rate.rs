@@ -65,7 +65,7 @@ macro_rules! impl_rate_for_integer {
             ) -> Option<Self> {
                 if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
                     if let Some(raw) = self.raw.checked_add(other.raw) {
-                        Some(Rate::<$i, NOM, DENOM>::from_raw(raw))
+                        Some(Self::from_raw(raw))
                     } else {
                         None
                     }
@@ -77,7 +77,7 @@ macro_rules! impl_rate_for_integer {
                         let raw = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i;
 
                         if let Some(raw) = self.raw.checked_add(raw) {
-                            Some(Rate::<$i, NOM, DENOM>::from_raw(raw))
+                            Some(Self::from_raw(raw))
                         } else {
                             None
                         }
@@ -104,7 +104,7 @@ macro_rules! impl_rate_for_integer {
             ) -> Option<Self> {
                 if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
                     if let Some(raw) = self.raw.checked_sub(other.raw) {
-                        Some(Rate::<$i, NOM, DENOM>::from_raw(raw))
+                        Some(Self::from_raw(raw))
                     } else {
                         None
                     }
@@ -116,7 +116,7 @@ macro_rules! impl_rate_for_integer {
                         let raw = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i;
 
                         if let Some(raw) = self.raw.checked_sub(raw) {
-                            Some(Rate::<$i, NOM, DENOM>::from_raw(raw))
+                            Some(Self::from_raw(raw))
                         } else {
                             None
                         }
@@ -142,7 +142,7 @@ macro_rules! impl_rate_for_integer {
                 if other.raw == 0 {
                     None
                 } else if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
-                    Some(Rate::<$i, NOM, DENOM>::from_raw(self.raw % other.raw))
+                    Some(Self::from_raw(self.raw % other.raw))
                 } else {
                     if let Some(lh) = other
                         .raw
@@ -151,7 +151,7 @@ macro_rules! impl_rate_for_integer {
                         let raw = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i;
 
                         if raw > 0 {
-                            Some(Rate::<$i, NOM, DENOM>::from_raw(self.raw % raw))
+                            Some(Self::from_raw(self.raw % raw))
                         } else {
                             None
                         }
@@ -488,14 +488,13 @@ macro_rules! impl_rate_for_integer {
 
         // Rate - Rate = Rate (only same base until const_generics_defaults is
         // stabilized)
-        impl<const NOM: u64, const DENOM: u64> ops::Sub<Rate<$i, NOM, DENOM>>
-            for Rate<$i, NOM, DENOM>
+        impl<const NOM: u64, const DENOM: u64> ops::Sub for Rate<$i, NOM, DENOM>
         {
-            type Output = Rate<$i, NOM, DENOM>;
+            type Output = Self;
 
             #[inline]
             #[track_caller]
-            fn sub(self, other: Rate<$i, NOM, DENOM>) -> Self::Output {
+            fn sub(self, other: Self) -> Self::Output {
                 if let Some(v) = self.checked_sub(other) {
                     v
                 } else {
@@ -506,14 +505,13 @@ macro_rules! impl_rate_for_integer {
 
         // Rate + Rate = Rate (only same base until const_generics_defaults is
         // stabilized)
-        impl<const NOM: u64, const DENOM: u64> ops::Add<Rate<$i, NOM, DENOM>>
-            for Rate<$i, NOM, DENOM>
+        impl<const NOM: u64, const DENOM: u64> ops::Add for Rate<$i, NOM, DENOM>
         {
-            type Output = Rate<$i, NOM, DENOM>;
+            type Output = Self;
 
             #[inline]
             #[track_caller]
-            fn add(self, other: Rate<$i, NOM, DENOM>) -> Self::Output {
+            fn add(self, other: Self) -> Self::Output {
                 if let Some(v) = self.checked_add(other) {
                     v
                 } else {
@@ -523,8 +521,7 @@ macro_rules! impl_rate_for_integer {
         }
 
         // Rate += Rate
-        impl<const NOM: u64, const DENOM: u64> ops::AddAssign<Rate<$i, NOM, DENOM>>
-            for Rate<$i, NOM, DENOM>
+        impl<const NOM: u64, const DENOM: u64> ops::AddAssign for Rate<$i, NOM, DENOM>
         {
             #[inline]
             fn add_assign(&mut self, other: Self) {
@@ -545,7 +542,7 @@ macro_rules! impl_rate_for_integer {
 
         // Rate * integer = Rate
         impl<const NOM: u64, const DENOM: u64> ops::Mul<u32> for Rate<$i, NOM, DENOM> {
-            type Output = Rate<$i, NOM, DENOM>;
+            type Output = Self;
 
             #[inline]
             fn mul(mut self, other: u32) -> Self::Output {
@@ -566,7 +563,7 @@ macro_rules! impl_rate_for_integer {
 
         // Rate / integer = Rate
         impl<const NOM: u64, const DENOM: u64> ops::Div<u32> for Rate<$i, NOM, DENOM> {
-            type Output = Rate<$i, NOM, DENOM>;
+            type Output = Self;
 
             #[inline]
             fn div(mut self, other: u32) -> Self::Output {
@@ -601,14 +598,13 @@ macro_rules! impl_rate_for_integer {
 
         // Rate % Rate = Rate (only same base until const_generics_defaults is
         // stabilized)
-        impl<const NOM: u64, const DENOM: u64> ops::Rem<Rate<$i, NOM, DENOM>>
-            for Rate<$i, NOM, DENOM>
+        impl<const NOM: u64, const DENOM: u64> ops::Rem for Rate<$i, NOM, DENOM>
         {
-            type Output = Rate<$i, NOM, DENOM>;
+            type Output = Self;
 
             #[inline]
             #[track_caller]
-            fn rem(self, other: Rate<$i, NOM, DENOM>) -> Self::Output {
+            fn rem(self, other: Self) -> Self::Output {
                 if let Some(v) = self.checked_rem(other) {
                     v
                 } else {
@@ -618,8 +614,7 @@ macro_rules! impl_rate_for_integer {
         }
 
         // Rate %= Rate
-        impl<const NOM: u64, const DENOM: u64> ops::RemAssign<Rate<$i, NOM, DENOM>>
-            for Rate<$i, NOM, DENOM>
+        impl<const NOM: u64, const DENOM: u64> ops::RemAssign for Rate<$i, NOM, DENOM>
         {
             #[inline]
             fn rem_assign(&mut self, other: Self) {
@@ -683,7 +678,7 @@ impl<const NOM: u64, const DENOM: u64> convert::TryFrom<Rate<u64, NOM, DENOM>>
     type Error = ();
 
     #[inline]
-    fn try_from(val: Rate<u64, NOM, DENOM>) -> Result<Rate<u32, NOM, DENOM>, ()> {
+    fn try_from(val: Rate<u64, NOM, DENOM>) -> Result<Self, ()> {
         Ok(Rate::<u32, NOM, DENOM>::from_raw(
             val.to_raw().try_into().map_err(|_| ())?,
         ))
@@ -693,7 +688,7 @@ impl<const NOM: u64, const DENOM: u64> convert::TryFrom<Rate<u64, NOM, DENOM>>
 // Rate - Rate = Rate (to make shorthands work, until const_generics_defaults is
 // stabilized)
 impl<const NOM: u64, const DENOM: u64> ops::Sub<Rate<u32, NOM, DENOM>> for Rate<u64, NOM, DENOM> {
-    type Output = Rate<u64, NOM, DENOM>;
+    type Output = Self;
 
     #[inline]
     #[track_caller]
@@ -720,7 +715,7 @@ impl<const NOM: u64, const DENOM: u64> ops::SubAssign<Rate<u32, NOM, DENOM>>
 // Rate + Rate = Rate (to make shorthands work, until const_generics_defaults is
 // stabilized)
 impl<const NOM: u64, const DENOM: u64> ops::Add<Rate<u32, NOM, DENOM>> for Rate<u64, NOM, DENOM> {
-    type Output = Rate<u64, NOM, DENOM>;
+    type Output = Self;
 
     #[inline]
     #[track_caller]
