@@ -386,3 +386,58 @@ fn rate_checked_rem() {
         Some(Rate::<u32, 1_000, 1>::from_raw(50)) // 350 kHz % 100 kHz = 50 kHz
     );
 }
+
+#[test]
+fn rate_conversion_rounding() {
+    // Issue #50: Rate conversion should use half-up rounding instead of truncating.
+
+    // Test case 1: Conversion that should round up.
+    // Rate<u32, 2, 1> raw=4 means 4 * 2/1 = 8 Hz
+    // Converting to Rate<u32, 3, 1>: 8 Hz = x * 3/1 => x = 8/3 = 2.666...
+    // With half-up rounding: (8 + 1.5) / 3 = 9.5 / 3 = 3 (rounds up)
+    // Without rounding: 8 / 3 = 2 (truncates)
+    let rate1 = Rate::<u32, 2, 1>::from_raw(4);
+    let rate2: Rate<u32, 3, 1> = rate1.const_try_into().unwrap();
+    assert_eq!(rate2.to_raw(), 3, "8 Hz should round to 3 in base 3/1");
+
+    // Test case 2: Conversion that should round down.
+    // Rate<u32, 2, 1> raw=2 means 2 * 2/1 = 4 Hz
+    // Converting to Rate<u32, 3, 1>: 4 Hz = x * 3/1 => x = 4/3 = 1.333...
+    // With half-up rounding: (4 + 1.5) / 3 = 5.5 / 3 = 1 (rounds down)
+    // Without rounding: 4 / 3 = 1 (truncates)
+    let rate3 = Rate::<u32, 2, 1>::from_raw(2);
+    let rate4: Rate<u32, 3, 1> = rate3.const_try_into().unwrap();
+    assert_eq!(rate4.to_raw(), 1, "4 Hz should round to 1 in base 3/1");
+
+    // Test case 3: Another rounding up case.
+    // Rate<u32, 5, 1> raw=3 means 3 * 5/1 = 15 Hz
+    // Converting to Rate<u32, 7, 1>: 15 Hz = x * 7/1 => x = 15/7 = 2.142...
+    // With half-up rounding: (15 + 3.5) / 7 = 18.5 / 7 = 2 (rounds down)
+    let rate5 = Rate::<u32, 5, 1>::from_raw(3);
+    let rate6: Rate<u32, 7, 1> = rate5.const_try_into().unwrap();
+    assert_eq!(rate6.to_raw(), 2, "15 Hz should round to 2 in base 7/1");
+
+    // Test case 4: Conversion that rounds up at exactly 0.5.
+    // Rate<u32, 1, 1> raw=5 means 5 * 1/1 = 5 Hz
+    // Converting to Rate<u32, 2, 1>: 5 Hz = x * 2/1 => x = 5/2 = 2.5
+    // With half-up rounding: (5 + 1) / 2 = 6 / 2 = 3 (rounds up)
+    // Without rounding: 5 / 2 = 2 (truncates)
+    let rate7 = Rate::<u32, 1, 1>::from_raw(5);
+    let rate8: Rate<u32, 2, 1> = rate7.const_try_into().unwrap();
+    assert_eq!(
+        rate8.to_raw(),
+        3,
+        "5 Hz should round up to 3 in base 2/1 (half-up rounding)"
+    );
+
+    // Test case 5: Exact conversion (no rounding needed).
+    // Rate<u32, 1, 1> raw=6 means 6 * 1/1 = 6 Hz
+    // Converting to Rate<u32, 2, 1>: 6 Hz = x * 2/1 => x = 6/2 = 3 (exact)
+    let rate9 = Rate::<u32, 1, 1>::from_raw(6);
+    let rate10: Rate<u32, 2, 1> = rate9.const_try_into().unwrap();
+    assert_eq!(
+        rate10.to_raw(),
+        3,
+        "6 Hz should convert exactly to 3 in base 2/1"
+    );
+}
