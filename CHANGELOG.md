@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 - Modernized CI
+- Updated `gcd` dependency to 2.3
+- Updated `defmt` dependency to 1.0
 
 ### Breaking Changes
 
