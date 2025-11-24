@@ -173,7 +173,7 @@ macro_rules! impl_duration_for_integer {
             ) -> Option<Self> {
                 if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
                     if let Some(ticks) = self.ticks.checked_add(other.ticks) {
-                        Some(Duration::<$i, NOM, DENOM>::from_ticks(ticks))
+                        Some(Self::from_ticks(ticks))
                     } else {
                         None
                     }
@@ -185,7 +185,7 @@ macro_rules! impl_duration_for_integer {
                         let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i;
 
                         if let Some(ticks) = self.ticks.checked_add(ticks) {
-                            Some(Duration::<$i, NOM, DENOM>::from_ticks(ticks))
+                            Some(Self::from_ticks(ticks))
                         } else {
                             None
                         }
@@ -212,7 +212,7 @@ macro_rules! impl_duration_for_integer {
             ) -> Option<Self> {
                 if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
                     if let Some(ticks) = self.ticks.checked_sub(other.ticks) {
-                        Some(Duration::<$i, NOM, DENOM>::from_ticks(ticks))
+                        Some(Self::from_ticks(ticks))
                     } else {
                         None
                     }
@@ -224,7 +224,7 @@ macro_rules! impl_duration_for_integer {
                         let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i;
 
                         if let Some(ticks) = self.ticks.checked_sub(ticks) {
-                            Some(Duration::<$i, NOM, DENOM>::from_ticks(ticks))
+                            Some(Self::from_ticks(ticks))
                         } else {
                             None
                         }
@@ -246,7 +246,7 @@ macro_rules! impl_duration_for_integer {
             #[inline]
             pub const fn checked_mul(self, rhs: $i) -> Option<Self> {
                 if let Some(ticks) = self.ticks.checked_mul(rhs) {
-                    Some(Duration::<$i, NOM, DENOM>::from_ticks(ticks))
+                    Some(Self::from_ticks(ticks))
                 } else {
                     None
                 }
@@ -266,7 +266,7 @@ macro_rules! impl_duration_for_integer {
                 if rhs == 0 {
                     None
                 } else {
-                    Some(Duration::<$i, NOM, DENOM>::from_ticks(self.ticks / rhs))
+                    Some(Self::from_ticks(self.ticks / rhs))
                 }
             }
 
@@ -286,7 +286,7 @@ macro_rules! impl_duration_for_integer {
                 if other.ticks == 0 {
                     None
                 } else if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
-                    Some(Duration::<$i, NOM, DENOM>::from_ticks(self.ticks % other.ticks))
+                    Some(Self::from_ticks(self.ticks % other.ticks))
                 } else {
                     if let Some(lh) = other
                         .ticks
@@ -295,7 +295,7 @@ macro_rules! impl_duration_for_integer {
                         let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i;
 
                         if ticks > 0 {
-                            Some(Duration::<$i, NOM, DENOM>::from_ticks(self.ticks % ticks))
+                            Some(Self::from_ticks(self.ticks % ticks))
                         } else {
                             None
                         }
@@ -322,7 +322,7 @@ macro_rules! impl_duration_for_integer {
             #[inline]
             #[track_caller]
             pub const fn div_ceil(self, rhs: $i) -> Self {
-                Duration::<$i, NOM, DENOM>::from_ticks(self.ticks.div_ceil(rhs))
+                Self::from_ticks(self.ticks.div_ceil(rhs))
             }
 
             /// Saturating duration addition. Computes `self + other`, saturating at the maximum value.
@@ -732,14 +732,13 @@ macro_rules! impl_duration_for_integer {
 
         // Duration - Duration = Duration (only same base until const_generics_defaults is
         // stabilized)
-        impl<const NOM: u64, const DENOM: u64> ops::Sub<Duration<$i, NOM, DENOM>>
-            for Duration<$i, NOM, DENOM>
+        impl<const NOM: u64, const DENOM: u64> ops::Sub for Duration<$i, NOM, DENOM>
         {
-            type Output = Duration<$i, NOM, DENOM>;
+            type Output = Self;
 
             #[inline]
             #[track_caller]
-            fn sub(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
+            fn sub(self, other: Self) -> Self::Output {
                 if let Some(v) = self.checked_sub(other) {
                     v
                 } else {
@@ -749,8 +748,7 @@ macro_rules! impl_duration_for_integer {
         }
 
         // Duration -= Duration
-        impl<const NOM: u64, const DENOM: u64> ops::SubAssign<Duration<$i, NOM, DENOM>>
-            for Duration<$i, NOM, DENOM>
+        impl<const NOM: u64, const DENOM: u64> ops::SubAssign for Duration<$i, NOM, DENOM>
         {
             #[inline]
             fn sub_assign(&mut self, other: Self) {
@@ -760,14 +758,13 @@ macro_rules! impl_duration_for_integer {
 
         // Duration + Duration = Duration (only same base until const_generics_defaults is
         // stabilized)
-        impl<const NOM: u64, const DENOM: u64> ops::Add<Duration<$i, NOM, DENOM>>
-            for Duration<$i, NOM, DENOM>
+        impl<const NOM: u64, const DENOM: u64> ops::Add for Duration<$i, NOM, DENOM>
         {
-            type Output = Duration<$i, NOM, DENOM>;
+            type Output = Self;
 
             #[inline]
             #[track_caller]
-            fn add(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
+            fn add(self, other: Self) -> Self::Output {
                 if let Some(v) = self.checked_add(other) {
                     v
                 } else {
@@ -777,8 +774,7 @@ macro_rules! impl_duration_for_integer {
         }
 
         // Duration += Duration
-        impl<const NOM: u64, const DENOM: u64> ops::AddAssign<Duration<$i, NOM, DENOM>>
-            for Duration<$i, NOM, DENOM>
+        impl<const NOM: u64, const DENOM: u64> ops::AddAssign for Duration<$i, NOM, DENOM>
         {
             #[inline]
             fn add_assign(&mut self, other: Self) {
@@ -799,7 +795,7 @@ macro_rules! impl_duration_for_integer {
 
         // Duration * integer = Duration
         impl<const NOM: u64, const DENOM: u64> ops::Mul<u32> for Duration<$i, NOM, DENOM> {
-            type Output = Duration<$i, NOM, DENOM>;
+            type Output = Self;
 
             #[inline]
             fn mul(mut self, other: u32) -> Self::Output {
@@ -820,7 +816,7 @@ macro_rules! impl_duration_for_integer {
 
         // Duration / integer = Duration
         impl<const NOM: u64, const DENOM: u64> ops::Div<u32> for Duration<$i, NOM, DENOM> {
-            type Output = Duration<$i, NOM, DENOM>;
+            type Output = Self;
 
             #[inline]
             fn div(mut self, other: u32) -> Self::Output {
@@ -841,14 +837,13 @@ macro_rules! impl_duration_for_integer {
 
         // Duration % Duration = Duration (only same base until const_generics_defaults is
         // stabilized)
-        impl<const NOM: u64, const DENOM: u64> ops::Rem<Duration<$i, NOM, DENOM>>
-            for Duration<$i, NOM, DENOM>
+        impl<const NOM: u64, const DENOM: u64> ops::Rem for Duration<$i, NOM, DENOM>
         {
-            type Output = Duration<$i, NOM, DENOM>;
+            type Output = Self;
 
             #[inline]
             #[track_caller]
-            fn rem(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
+            fn rem(self, other: Self) -> Self::Output {
                 if let Some(v) = self.checked_rem(other) {
                     v
                 } else {
@@ -858,8 +853,7 @@ macro_rules! impl_duration_for_integer {
         }
 
         // Duration %= Duration
-        impl<const NOM: u64, const DENOM: u64> ops::RemAssign<Duration<$i, NOM, DENOM>>
-            for Duration<$i, NOM, DENOM>
+        impl<const NOM: u64, const DENOM: u64> ops::RemAssign for Duration<$i, NOM, DENOM>
         {
             #[inline]
             fn rem_assign(&mut self, other: Self) {
@@ -992,7 +986,7 @@ impl<const NOM: u64, const DENOM: u64> From<Duration<u32, NOM, DENOM>>
     for Duration<u64, NOM, DENOM>
 {
     #[inline]
-    fn from(val: Duration<u32, NOM, DENOM>) -> Duration<u64, NOM, DENOM> {
+    fn from(val: Duration<u32, NOM, DENOM>) -> Self {
         Duration::<u64, NOM, DENOM>::from_ticks(val.as_ticks() as u64)
     }
 }
@@ -1003,7 +997,7 @@ impl<const NOM: u64, const DENOM: u64> convert::TryFrom<Duration<u64, NOM, DENOM
     type Error = ();
 
     #[inline]
-    fn try_from(val: Duration<u64, NOM, DENOM>) -> Result<Duration<u32, NOM, DENOM>, ()> {
+    fn try_from(val: Duration<u64, NOM, DENOM>) -> Result<Self, ()> {
         Ok(Duration::<u32, NOM, DENOM>::from_ticks(
             val.as_ticks().try_into().map_err(|_| ())?,
         ))
@@ -1015,14 +1009,12 @@ impl<const NOM: u64, const DENOM: u64> convert::TryFrom<Duration<u64, NOM, DENOM
 impl<const NOM: u64, const DENOM: u64> ops::Sub<Duration<u32, NOM, DENOM>>
     for Duration<u64, NOM, DENOM>
 {
-    type Output = Duration<u64, NOM, DENOM>;
+    type Output = Self;
 
     #[inline]
     #[track_caller]
     fn sub(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
-        if let Some(v) = self.checked_sub(Duration::<u64, NOM, DENOM>::from_ticks(
-            other.as_ticks() as u64
-        )) {
+        if let Some(v) = self.checked_sub(Self::from_ticks(other.as_ticks() as u64)) {
             v
         } else {
             panic!("Sub failed!");
@@ -1045,14 +1037,12 @@ impl<const NOM: u64, const DENOM: u64> ops::SubAssign<Duration<u32, NOM, DENOM>>
 impl<const NOM: u64, const DENOM: u64> ops::Add<Duration<u32, NOM, DENOM>>
     for Duration<u64, NOM, DENOM>
 {
-    type Output = Duration<u64, NOM, DENOM>;
+    type Output = Self;
 
     #[inline]
     #[track_caller]
     fn add(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
-        if let Some(v) = self.checked_add(Duration::<u64, NOM, DENOM>::from_ticks(
-            other.as_ticks() as u64
-        )) {
+        if let Some(v) = self.checked_add(Self::from_ticks(other.as_ticks() as u64)) {
             v
         } else {
             panic!("Add failed!");

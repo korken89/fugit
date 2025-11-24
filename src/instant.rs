@@ -139,7 +139,7 @@ macro_rules! impl_instant_for_integer {
                 other: Duration<$i, O_NOM, O_DENOM>,
             ) -> Option<Self> {
                 if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
-                    Some(Instant::<$i, NOM, DENOM>::from_ticks(
+                    Some(Self::from_ticks(
                         self.ticks.wrapping_sub(other.as_ticks()),
                     ))
                 } else {
@@ -149,9 +149,7 @@ macro_rules! impl_instant_for_integer {
                     {
                         let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i;
 
-                        Some(Instant::<$i, NOM, DENOM>::from_ticks(
-                            self.ticks.wrapping_sub(ticks),
-                        ))
+                        Some(Self::from_ticks(self.ticks.wrapping_sub(ticks)))
                     } else {
                         None
                     }
@@ -172,7 +170,7 @@ macro_rules! impl_instant_for_integer {
                 other: Duration<$i, O_NOM, O_DENOM>,
             ) -> Option<Self> {
                 if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
-                    Some(Instant::<$i, NOM, DENOM>::from_ticks(
+                    Some(Self::from_ticks(
                         self.ticks.wrapping_add(other.as_ticks()),
                     ))
                 } else {
@@ -182,9 +180,7 @@ macro_rules! impl_instant_for_integer {
                     {
                         let ticks = lh / Helpers::<NOM, DENOM, O_NOM, O_DENOM>::RD_TIMES_LN as $i;
 
-                        Some(Instant::<$i, NOM, DENOM>::from_ticks(
-                            self.ticks.wrapping_add(ticks),
-                        ))
+                        Some(Self::from_ticks(self.ticks.wrapping_add(ticks)))
                     } else {
                         None
                     }
@@ -259,7 +255,7 @@ macro_rules! impl_instant_for_integer {
         impl<const NOM: u64, const DENOM: u64> ops::Sub<Duration<$i, NOM, DENOM>>
             for Instant<$i, NOM, DENOM>
         {
-            type Output = Instant<$i, NOM, DENOM>;
+            type Output = Self;
 
             #[inline]
             #[track_caller]
@@ -292,7 +288,7 @@ macro_rules! impl_instant_for_integer {
         impl<const NOM: u64, const DENOM: u64> ops::Add<Duration<$i, NOM, DENOM>>
             for Instant<$i, NOM, DENOM>
         {
-            type Output = Instant<$i, NOM, DENOM>;
+            type Output = Self;
 
             #[inline]
             #[track_caller]
@@ -375,7 +371,7 @@ impl_instant_for_integer!(u64);
 impl<const NOM: u64, const DENOM: u64> ops::Sub<Duration<u32, NOM, DENOM>>
     for Instant<u64, NOM, DENOM>
 {
-    type Output = Instant<u64, NOM, DENOM>;
+    type Output = Self;
 
     #[inline]
     #[track_caller]
@@ -408,7 +404,7 @@ impl<const NOM: u64, const DENOM: u64> ops::SubAssign<Duration<u32, NOM, DENOM>>
 impl<const NOM: u64, const DENOM: u64> ops::Add<Duration<u32, NOM, DENOM>>
     for Instant<u64, NOM, DENOM>
 {
-    type Output = Instant<u64, NOM, DENOM>;
+    type Output = Self;
 
     #[inline]
     #[track_caller]
