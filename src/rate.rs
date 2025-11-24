@@ -617,33 +617,12 @@ macro_rules! impl_rate_for_integer {
             }
         }
 
-        // Rate % integer = Rate
-        impl<const NOM: u64, const DENOM: u64> ops::Rem<u32> for Rate<$i, NOM, DENOM> {
-            type Output = Rate<$i, NOM, DENOM>;
-
-            #[inline]
-            fn rem(mut self, other: u32) -> Self::Output {
-                self.raw %= other as $i;
-                self
-            }
-        }
-
         // Rate %= Rate
         impl<const NOM: u64, const DENOM: u64> ops::RemAssign<Rate<$i, NOM, DENOM>>
             for Rate<$i, NOM, DENOM>
         {
             #[inline]
             fn rem_assign(&mut self, other: Self) {
-                *self = *self % other;
-            }
-        }
-
-        // Rate %= integer
-        impl<const NOM: u64, const DENOM: u64> ops::RemAssign<u32>
-            for Rate<$i, NOM, DENOM>
-        {
-            #[inline]
-            fn rem_assign(&mut self, other: u32) {
                 *self = *self % other;
             }
         }

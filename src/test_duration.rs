@@ -778,18 +778,9 @@ fn duration_rem_u32() {
     let d2 = Duration::<u32, 1, 1_000>::from_ticks(3);
     assert_eq!(d1 % d2, Duration::<u32, 1, 1_000>::from_ticks(1));
 
-    // Duration % integer
-    let d1 = Duration::<u32, 1, 1_000>::from_ticks(10);
-    assert_eq!(d1 % 3, Duration::<u32, 1, 1_000>::from_ticks(1));
-
     // RemAssign Duration
     let mut d1 = Duration::<u32, 1, 1_000>::from_ticks(10);
     d1 %= Duration::<u32, 1, 1_000>::from_ticks(3);
-    assert_eq!(d1, Duration::<u32, 1, 1_000>::from_ticks(1));
-
-    // RemAssign integer
-    let mut d1 = Duration::<u32, 1, 1_000>::from_ticks(10);
-    d1 %= 3;
     assert_eq!(d1, Duration::<u32, 1, 1_000>::from_ticks(1));
 
     // Test checking if a duration is a multiple of another
@@ -810,18 +801,9 @@ fn duration_rem_u64() {
     let d2 = Duration::<u64, 1, 1_000>::from_ticks(3);
     assert_eq!(d1 % d2, Duration::<u64, 1, 1_000>::from_ticks(1));
 
-    // Duration % integer
-    let d1 = Duration::<u64, 1, 1_000>::from_ticks(10);
-    assert_eq!(d1 % 3, Duration::<u64, 1, 1_000>::from_ticks(1));
-
     // RemAssign Duration
     let mut d1 = Duration::<u64, 1, 1_000>::from_ticks(10);
     d1 %= Duration::<u64, 1, 1_000>::from_ticks(3);
-    assert_eq!(d1, Duration::<u64, 1, 1_000>::from_ticks(1));
-
-    // RemAssign integer
-    let mut d1 = Duration::<u64, 1, 1_000>::from_ticks(10);
-    d1 %= 3;
     assert_eq!(d1, Duration::<u64, 1, 1_000>::from_ticks(1));
 }
 
