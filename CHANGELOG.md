@@ -25,7 +25,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Issue #50: Rate conversions now use half-up rounding instead of truncating for better accuracy
 - Issue #53: Overflow detection in shorthand conversions (e.g., `NanosDurationU32.minutes()`)
 - Added `#[track_caller]` to all panicking functions for better error locations
-- `Duration::const_try_from` rounds to nearest
 
 ### Changed
 
@@ -35,6 +34,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Breaking Changes
 
+- **BREAKING**: `Duration::const_try_from` now rounds-to-nearest, before it was truncating
 - **BREAKING**: Standardized API naming conventions
   - Constructors now use `from_*` prefix (e.g., `from_ticks`, `from_rate`)
   - Getters now use `to_*` or `as_*` prefix (e.g., `to_rate`, `as_ticks`)
