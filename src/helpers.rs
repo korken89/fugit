@@ -1,3 +1,5 @@
+use super::Fraction;
+
 /// Needed due to not being allowed to call const-fn in `PartialEq` for some reason
 /// get the error:
 ///
@@ -13,34 +15,32 @@
 ///
 /// For more information about this error, try `rustc --explain E0401`
 /// ```
-pub struct Helpers<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64>;
+pub struct Helpers<const L: Fraction, const R: Fraction>;
 
-impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64>
-    Helpers<L_NOM, L_DENOM, R_NOM, R_DENOM>
-{
+impl<const L: Fraction, const R: Fraction> Helpers<L, R> {
     /// Helper constants generated at compile time (intermediate u128 calculation)
     const DIVISOR_U128: u128 = gcd::binary_u128(
-        L_DENOM as u128 * R_NOM as u128,
-        R_DENOM as u128 * L_NOM as u128,
+        L.denom as u128 * R.num as u128,
+        R.denom as u128 * L.num as u128,
     );
 
     /// Helper constants generated at compile time (intermediate u128 calculation)
     const DIVISOR_2_U128: u128 = gcd::binary_u128(
-        L_NOM as u128 * R_NOM as u128,
-        R_DENOM as u128 * L_DENOM as u128,
+        L.num as u128 * R.num as u128,
+        R.denom as u128 * L.denom as u128,
     );
 
     /// Helper constants generated at compile time for Durations (intermediate u128 calculation)
-    const RD_TIMES_LN_U128: u128 = (R_DENOM as u128 * L_NOM as u128) / Self::DIVISOR_U128;
+    const RD_TIMES_LN_U128: u128 = (R.denom as u128 * L.num as u128) / Self::DIVISOR_U128;
 
     /// Helper constants generated at compile time (intermediate u128 calculation)
-    const LD_TIMES_RN_U128: u128 = (L_DENOM as u128 * R_NOM as u128) / Self::DIVISOR_U128;
+    const LD_TIMES_RN_U128: u128 = (L.denom as u128 * R.num as u128) / Self::DIVISOR_U128;
 
     /// Helper constants generated at compile time for Rates (intermediate u128 calculation)
-    const LN_TIMES_RN_U128: u128 = (L_NOM as u128 * R_NOM as u128) / Self::DIVISOR_2_U128;
+    const LN_TIMES_RN_U128: u128 = (L.num as u128 * R.num as u128) / Self::DIVISOR_2_U128;
 
     /// Helper constants generated at compile time for Rates (intermediate u128 calculation)
-    const RD_TIMES_LD_U128: u128 = (R_DENOM as u128 * L_DENOM as u128) / Self::DIVISOR_2_U128;
+    const RD_TIMES_LD_U128: u128 = (R.denom as u128 * L.denom as u128) / Self::DIVISOR_2_U128;
 
     /// Helper constants generated at compile time for Rates (intermediate u128 calculation)
     const RATE_TO_DURATION_NUMERATOR_U128: u128 = Self::RD_TIMES_LD_U128 / Self::LN_TIMES_RN_U128;
