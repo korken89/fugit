@@ -19,14 +19,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Support for picosecond-level precision (enabled by u64 const generics)
 - `picos()` shorthand method to `ExtU32`, `ExtU64`, `ExtU32Ceil`, and `ExtU64Ceil` traits
 - `Duration::from_picos`, `as_picos`, `from_picos_at_least` methods
+- `PicosDuration<T>`, `PicosDurationU32`, `PicosDurationU64` aliases
+- `Gigahertz<T>`, `GigahertzU32`, `GigahertzU64` aliases (the `defmt`/`Display` impls already formatted this base as `GHz`)
 - `core::ops::Rem` and `core::ops::RemAssign` trait implementations for `Rate` and `Duration` (fixes #41)
+- `core::ops::SubAssign` for `Rate` (was missing; asymmetric with `Add`/`AddAssign`/`Sub`)
 - Conversion to/from `core::time::Duration`
 
 ### Fixed
 
 - Issue #50: Rate conversions now use half-up rounding instead of truncating for better accuracy
 - Issue #53: Overflow detection in shorthand conversions (e.g., `NanosDurationU32.minutes()`)
-- Added `#[track_caller]` to all panicking functions for better error locations
+- Added `#[track_caller]` to all panicking functions and operator impls (including `*Assign` wrappers, `Mul`/`Div`/`Rem` on integers, and the cross-type `u32`<->`u64` ops) so panic locations point at the user's call site.
+- Documentation clarifications across `Instant::checked_*_duration`, `Instant::checked_duration_since`, `Duration::checked_*` / `Rate::checked_*`, the `try_from_*`/`try_to_*` conversions, and the `const_partial_cmp`/`const_eq` methods. Several methods previously claimed to "check for overflow" or "check for divide-by-zero" while the actual contract was different (e.g. wrapping ticks, returning `None` on cross-base conversion overflow).
 - `Duration::const_try_from`/`const_try_into`/`convert` (and the same on `Rate`) no longer overflow `u64` silently when ticks are close to `u64::MAX`. The rounding step `(lh + d/2) / d` was replaced with an overflow-free divmod-based form that produces the same rounded result without ever wrapping.
 - `Duration::Hz`/`kHz`/`MHz`, `Rate::Hz`/`kHz`/`MHz`, `Rate::to_Hz`/`to_kHz`/`to_MHz`, `Duration::try_from_rate`, and `Rate::try_from_duration` now produce a compile-time error when the conversion constants don't fit the storage type, instead of silently truncating `u64` constants on a `u32` cast.
 - The `Duration` shorthand methods (`as_*`, `from_*`, `from_*_at_least`) and the `Rate::Hz`/`kHz`/`MHz`/`to_Hz`/`to_kHz`/`to_MHz` family now panic on multiplication overflow instead of silently wrapping in release builds. All gained `#[track_caller]` so the panic points at the user's call site.

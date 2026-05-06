@@ -4,6 +4,15 @@ use crate::Duration;
 use crate::Instant;
 use crate::Rate;
 
+/// Alias for picosecond duration
+pub type PicosDuration<T> = Duration<T, 1, 1_000_000_000_000>;
+
+/// Alias for picosecond duration (`u32` backing storage)
+pub type PicosDurationU32 = Duration<u32, 1, 1_000_000_000_000>;
+
+/// Alias for picosecond duration (`u64` backing storage)
+pub type PicosDurationU64 = Duration<u64, 1, 1_000_000_000_000>;
+
 /// Alias for nanosecond duration
 pub type NanosDuration<T> = Duration<T, 1, 1_000_000_000>;
 
@@ -106,6 +115,15 @@ pub type MegahertzU32 = Rate<u32, 1_000_000, 1>;
 
 /// Alias for megahertz rate (`u64` backing storage)
 pub type MegahertzU64 = Rate<u64, 1_000_000, 1>;
+
+/// Alias for gigahertz rate
+pub type Gigahertz<T> = Rate<T, 1_000_000_000, 1>;
+
+/// Alias for gigahertz rate (`u32` backing storage)
+pub type GigahertzU32 = Rate<u32, 1_000_000_000, 1>;
+
+/// Alias for gigahertz rate (`u64` backing storage)
+pub type GigahertzU64 = Rate<u64, 1_000_000_000, 1>;
 
 /// Alias for rate that come from timers with a specific frequency
 pub type TimerRate<T, const FREQ_HZ: u64> = Rate<T, FREQ_HZ, 1>;
