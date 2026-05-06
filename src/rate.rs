@@ -91,7 +91,9 @@ macro_rules! impl_rate_for_integer {
                 self.raw
             }
 
-            /// Add two rates while checking for overflow.
+            /// Add two rates.
+            ///
+            /// Returns `None` on raw overflow or cross-base conversion overflow.
             ///
             /// ```
             /// # use fugit::*;
@@ -130,7 +132,9 @@ macro_rules! impl_rate_for_integer {
                 }
             }
 
-            /// Subtract two rates while checking for overflow.
+            /// Subtract two rates.
+            ///
+            /// Returns `None` on raw underflow or cross-base conversion overflow.
             ///
             /// ```
             /// # use fugit::*;
@@ -169,7 +173,9 @@ macro_rules! impl_rate_for_integer {
                 }
             }
 
-            /// Get the remainder of dividing two rates while checking for divide-by-zero.
+            /// Remainder of dividing two rates.
+            ///
+            /// Returns `None` if `other` is zero or the cross-base conversion overflows.
             ///
             /// ```
             /// # use fugit::*;
@@ -218,6 +224,9 @@ macro_rules! impl_rate_for_integer {
 
             /// Const partial comparison.
             ///
+            /// Returns `None` if either side's raw value cannot be expressed in
+            /// the common base without overflowing the storage type.
+            ///
             /// ```
             /// # use fugit::*;
             #[doc = concat!("let r1 = Rate::<", stringify!($i), ", 1, 1_00>::from_raw(1);")]
@@ -250,6 +259,9 @@ macro_rules! impl_rate_for_integer {
             }
 
             /// Const equality check.
+            ///
+            /// Returns `false` (rather than panicking) if the cross-base
+            /// conversion overflows the storage type.
             ///
             /// ```
             /// # use fugit::*;
@@ -332,7 +344,7 @@ macro_rules! impl_rate_for_integer {
                 Rate::<$i, O_NOM, O_DENOM>::const_try_from(self)
             }
 
-            /// Const try into duration, checking for divide-by-zero.
+            /// Convert to a duration. Returns `None` if this rate is zero.
             ///
             /// ```
             /// # use fugit::*;
@@ -347,7 +359,7 @@ macro_rules! impl_rate_for_integer {
                 Duration::<$i, O_NOM, O_DENOM>::try_from_rate(self)
             }
 
-            /// Convert from rate to duration.
+            /// Convert to a duration. Panics if this rate is zero.
             #[track_caller]
             pub const fn to_duration<const O_NOM: u64, const O_DENOM: u64>(
                 self,
@@ -359,7 +371,7 @@ macro_rules! impl_rate_for_integer {
                 }
             }
 
-            /// Const try from duration, checking for divide-by-zero.
+            /// Convert from a duration. Returns `None` if the duration is zero.
             ///
             /// ```
             /// # use fugit::*;
@@ -388,7 +400,7 @@ macro_rules! impl_rate_for_integer {
                 }
             }
 
-            /// Convert from duration to rate.
+            /// Convert from a duration. Panics if the duration is zero.
             #[inline]
             #[track_caller]
             pub const fn from_duration<const I_NOM: u64, const I_DENOM: u64>(
@@ -535,20 +547,23 @@ macro_rules! impl_rate_for_integer {
                 Self::from_raw(prod / Helpers::<1_000_000, 1, NOM, DENOM>::LD_TIMES_RN as $i)
             }
 
-            /// Shorthand for creating a rate which represents nanoseconds.
+            /// Rate from a nanosecond period. Panics if `val` is zero.
             #[inline]
+            #[track_caller]
             pub const fn nanos(val: $i) -> Self {
                 Self::from_duration(crate::Duration::<$i, 1, 1_000_000_000>::from_ticks(val))
             }
 
-            /// Shorthand for creating a rate which represents microseconds.
+            /// Rate from a microsecond period. Panics if `val` is zero.
             #[inline]
+            #[track_caller]
             pub const fn micros(val: $i) -> Self {
                 Self::from_duration(crate::Duration::<$i, 1, 1_000_000>::from_ticks(val))
             }
 
-            /// Shorthand for creating a rate which represents milliseconds.
+            /// Rate from a millisecond period. Panics if `val` is zero.
             #[inline]
+            #[track_caller]
             pub const fn millis(val: $i) -> Self {
                 Self::from_duration(crate::Duration::<$i, 1, 1_000>::from_ticks(val))
             }
