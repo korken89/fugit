@@ -75,3 +75,27 @@ impl<const L_NOM: u64, const L_DENOM: u64, const R_NOM: u64, const R_DENOM: u64>
     /// Helper constants generated at compile time
     pub const SAME_BASE: bool = Self::LD_TIMES_RN == Self::RD_TIMES_LN;
 }
+
+/// Compute `numerator / divisor` rounded to nearest, half-up, without overflow.
+///
+/// Equivalent to `(numerator + divisor / 2) / divisor` when the latter does not
+/// overflow, but stays correct when `numerator` is close to `u64::MAX` (where
+/// adding `divisor / 2` would wrap). `divisor` must be `> 0`.
+///
+/// This is the embedded-friendly form: a single `u64` divmod plus a couple of
+/// cheap 32-bit ops. On 32-bit cores (Cortex-M, RISC-V32) it avoids pulling in
+/// the `u128` libgcc routines that the alternative `(u128 + d/2) / d` shape
+/// would require.
+#[inline]
+pub const fn div_round_nearest_u64(numerator: u64, divisor: u64) -> u64 {
+    let q = numerator / divisor;
+    let r = numerator % divisor;
+    // `r >= d - r` is equivalent to `2 * r >= d` but never overflows because
+    // `r < d`. When d == 1, r is always 0 so the branch is never taken; when
+    // d >= 2, q <= u64::MAX / 2, so `q + 1` cannot overflow either.
+    if r >= divisor - r {
+        q + 1
+    } else {
+        q
+    }
+}

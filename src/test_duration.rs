@@ -941,3 +941,89 @@ fn duration_into_core_duration() {
     assert_eq!(back.as_secs(), 10);
     assert_eq!(back.subsec_nanos(), 250_000_000);
 }
+
+#[test]
+fn duration_const_try_from_no_rounding_overflow_u64() {
+    // Regression: previously the rounding step `lh + LD_TIMES_RN/2` overflowed
+    // u64 silently when ticks were close to u64::MAX, producing Some(garbage)
+    // instead of either the correct value or None.
+
+    // u64::MAX milliseconds to seconds. lh = u64::MAX, divisor = 1000,
+    // remainder 615 so it rounds up.
+    let big_ms = Duration::<u64, 1, 1_000>::from_ticks(u64::MAX);
+    let secs: Option<Duration<u64, 1, 1>> = big_ms.const_try_into();
+    assert_eq!(secs.unwrap().as_ticks(), u64::MAX / 1000 + 1);
+
+    // u64::MAX nanoseconds to microseconds, same divisor.
+    let big_ns = Duration::<u64, 1, 1_000_000_000>::from_ticks(u64::MAX);
+    let us: Option<Duration<u64, 1, 1_000_000>> = big_ns.const_try_into();
+    assert_eq!(us.unwrap().as_ticks(), u64::MAX / 1000 + 1);
+
+    // u64::MAX nanoseconds to seconds. divisor = 1_000_000_000.
+    let big_ns = Duration::<u64, 1, 1_000_000_000>::from_ticks(u64::MAX);
+    let s: Option<Duration<u64, 1, 1>> = big_ns.const_try_into();
+    // u64::MAX / 1_000_000_000 = 18_446_744_073, remainder 709_551_615
+    // (above half), so result rounds up by one.
+    assert_eq!(s.unwrap().as_ticks(), u64::MAX / 1_000_000_000 + 1);
+
+    // Half-down case: r strictly below half should not round up.
+    let d = 1_000u64;
+    let q = (u64::MAX / d) - 1;
+    let r = d / 2 - 1;
+    let ticks = q * d + r;
+    let dur = Duration::<u64, 1, 1_000>::from_ticks(ticks);
+    let secs: Option<Duration<u64, 1, 1>> = dur.const_try_into();
+    assert_eq!(secs.unwrap().as_ticks(), q);
+
+    // Half-up case: r = d/2 should round up.
+    let r = d / 2;
+    let ticks = q * d + r;
+    let dur = Duration::<u64, 1, 1_000>::from_ticks(ticks);
+    let secs: Option<Duration<u64, 1, 1>> = dur.const_try_into();
+    assert_eq!(secs.unwrap().as_ticks(), q + 1);
+}
+
+#[test]
+fn duration_const_try_from_returns_none_on_target_overflow() {
+    // When the rounded result genuinely doesn't fit the target type, the
+    // function must return None (it must not silently truncate).
+
+    // u32::MAX ms to seconds: u32::MAX % 1000 = 295 (below half), no round-up.
+    let many_ms = Duration::<u32, 1, 1_000>::from_ticks(u32::MAX);
+    let secs: Option<Duration<u32, 1, 1>> = many_ms.const_try_into();
+    assert_eq!(secs.unwrap().as_ticks(), u32::MAX / 1000);
+
+    // u64::MAX ms to seconds in u32: clearly doesn't fit, must be None.
+    // (Conversion from u64 Duration into u32 Duration via try_from chain.)
+    let big = Duration::<u64, 1, 1_000>::from_ticks(u64::MAX);
+    let as_u64_s: Duration<u64, 1, 1> = big.convert();
+    let as_u32: Result<Duration<u32, 1, 1>, _> = as_u64_s.try_into();
+    assert!(as_u32.is_err());
+}
+
+#[test]
+#[should_panic(expected = "Duration::as_picos: multiplication overflowed storage type")]
+fn duration_as_unit_panics_on_runtime_overflow_u32() {
+    // Regression: shorthand methods used to silently wrap on overflow.
+    // u32::MAX microseconds as picoseconds = u32::MAX * 1_000_000, overflows u32.
+    let d = Duration::<u32, 1, 1_000_000>::from_ticks(u32::MAX);
+    let _ = d.as_picos();
+}
+
+#[test]
+#[should_panic(expected = "Duration::from_minutes: multiplication overflowed storage type")]
+fn duration_from_unit_panics_on_runtime_overflow_u32() {
+    // u32::MAX minutes as a seconds-based Duration: val * 60 overflows u32.
+    let _ = Duration::<u32, 1, 1>::from_minutes(u32::MAX);
+}
+
+#[test]
+fn duration_shorthand_works_for_valid_u32() {
+    // Make sure the const_checked path doesn't break valid uses.
+    let d = Duration::<u32, 1, 1_000>::from_ticks(5_000);
+    assert_eq!(d.as_secs(), 5);
+    assert_eq!(d.as_millis(), 5_000);
+
+    let d = Duration::<u32, 1, 1>::from_ticks(120);
+    assert_eq!(d.as_minutes(), 2);
+}

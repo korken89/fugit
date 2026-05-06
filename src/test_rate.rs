@@ -423,3 +423,45 @@ fn rate_conversion_rounding() {
         "6 Hz should convert exactly to 3 in base 2/1"
     );
 }
+
+#[test]
+fn rate_const_try_from_no_rounding_overflow_u64() {
+    // Regression: previously the rounding step `lh + LD_TIMES_RN/2` overflowed
+    // u64 silently when raw was close to u64::MAX, producing Some(garbage).
+
+    // u64::MAX of (1/1000) base into (1/1) base. RD_TIMES_LN = 1, LD_TIMES_RN
+    // = 1000, lh = u64::MAX, remainder 615 so the answer rounds up.
+    let r1 = Rate::<u64, 1, 1_000>::from_raw(u64::MAX);
+    let r2: Option<Rate<u64, 1, 1>> = r1.const_try_into();
+    assert_eq!(r2.unwrap().to_raw(), u64::MAX / 1000 + 1);
+}
+
+#[test]
+#[should_panic(expected = "Rate::to_Hz: multiplication overflowed storage type")]
+fn rate_to_hz_panics_on_runtime_overflow_u32() {
+    // Regression: 5 GHz expressed as Rate<u32, 1e9, 1>::from_raw(5) used to
+    // silently wrap to 705_032_704 in release. Now it panics.
+    let r = Rate::<u32, 1_000_000_000, 1>::from_raw(5);
+    let _ = r.to_Hz();
+}
+
+#[test]
+fn rate_to_hz_works_for_valid_u32() {
+    // Make sure the const_checked path doesn't break valid uses.
+    let r = Rate::<u32, 1, 1>::from_raw(1_234);
+    assert_eq!(r.to_Hz(), 1_234);
+
+    let r = Rate::<u32, 1_000, 1>::from_raw(2);
+    assert_eq!(r.to_Hz(), 2_000);
+}
+
+#[test]
+#[should_panic(expected = "Rate::Hz: multiplication overflowed storage type")]
+fn rate_hz_constructor_panics_on_runtime_overflow_u32() {
+    // Try to construct 5 GHz in a Rate type whose period (1 raw unit) is 1 Hz:
+    // Rate<u32, 1, 1>::Hz(5_000_000_000) - val itself overflows u32 but use a
+    // different combination that overflows the multiplication.
+    // Rate<u32, 1, 5>::Hz(val): RD_TIMES_LN = 5, so val * 5 must fit u32.
+    // For val = u32::MAX, 5*u32::MAX overflows.
+    let _ = Rate::<u32, 1, 5>::Hz(u32::MAX);
+}

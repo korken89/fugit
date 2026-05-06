@@ -1,4 +1,4 @@
-use crate::helpers::Helpers;
+use crate::helpers::{div_round_nearest_u64, Helpers};
 use crate::NanosDurationU64;
 use crate::Rate;
 use crate::SecsDurationU64;
@@ -20,14 +20,26 @@ pub struct Duration<T, const NOM: u64, const DENOM: u64> {
     pub(crate) ticks: T,
 }
 
+// Unwrap a const-time `Option` or panic with the given static message. Lets the
+// shorthand methods turn `checked_mul` failures into a clear panic at the user's
+// call site instead of silently wrapping in release builds.
+macro_rules! const_checked {
+    ($e:expr, $msg:expr) => {
+        match $e {
+            Some(v) => v,
+            None => panic!("{}", $msg),
+        }
+    };
+}
+
 macro_rules! shorthand {
     ($i:ty, $nom:literal, $denum:literal, $from_unit:ident, $as_unit:ident, $from_unital:ident, $unitstr:literal) => {
         #[doc = concat!("Convert the Duration to an integer number of ", $unitstr, ".")]
         #[doc = ""]
-        #[doc = concat!("**Warning**: This function will cause a compilation error if the conversion constants don't fit in `", stringify!($i), "`.")]
+        #[doc = concat!("**Compile-time error** if the conversion constants don't fit in `", stringify!($i), "`. **Panics** if the multiplication overflows `", stringify!($i), "`.")]
         #[inline]
+        #[track_caller]
         pub const fn $as_unit(&self) -> $i {
-            // Compile-time/runtime check - will fail if constants don't fit in target type
             const {
                 assert!(
                     Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN <= <$i>::MAX as u64,
@@ -39,16 +51,19 @@ macro_rules! shorthand {
                 );
             }
 
-            (Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i * self.ticks)
-                / Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i
+            let prod = const_checked!(
+                (Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i).checked_mul(self.ticks),
+                concat!("Duration::", stringify!($as_unit), ": multiplication overflowed storage type")
+            );
+            prod / Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i
         }
 
         #[doc = concat!("Create a duration from a number of ", $unitstr, ".")]
         #[doc = ""]
-        #[doc = concat!("**Warning**: This function will cause a compilation error if the conversion constants don't fit in `", stringify!($i), "`.")]
+        #[doc = concat!("**Compile-time error** if the conversion constants don't fit in `", stringify!($i), "`. **Panics** if the multiplication overflows `", stringify!($i), "`.")]
         #[inline]
+        #[track_caller]
         pub const fn $from_unit(val: $i) -> Self {
-            // Compile-time/runtime check - will fail if constants don't fit in target type
             const {
                 assert!(
                     Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN <= <$i>::MAX as u64,
@@ -60,18 +75,19 @@ macro_rules! shorthand {
                 );
             }
 
-            Self::from_ticks(
-                (Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i * val)
-                    / Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i
-            )
+            let prod = const_checked!(
+                (Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i).checked_mul(val),
+                concat!("Duration::", stringify!($from_unit), ": multiplication overflowed storage type")
+            );
+            Self::from_ticks(prod / Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i)
         }
 
         #[doc = concat!("Create a duration from a number of ", $unitstr, " (ceil rounded).")]
         #[doc = ""]
-        #[doc = concat!("**Warning**: This function will cause a compilation error if the conversion constants don't fit in `", stringify!($i), "`.")]
+        #[doc = concat!("**Compile-time error** if the conversion constants don't fit in `", stringify!($i), "`. **Panics** if the multiplication overflows `", stringify!($i), "`.")]
         #[inline]
+        #[track_caller]
         pub const fn $from_unital(val: $i) -> Self {
-            // Compile-time/runtime check - will fail if constants don't fit in target type
             const {
                 assert!(
                     Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN <= <$i>::MAX as u64,
@@ -83,7 +99,10 @@ macro_rules! shorthand {
                 );
             }
 
-            let mul = Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i * val;
+            let mul = const_checked!(
+                (Helpers::<$nom, $denum, NOM, DENOM>::RD_TIMES_LN as $i).checked_mul(val),
+                concat!("Duration::", stringify!($from_unital), ": multiplication overflowed storage type")
+            );
             let ld_times_rn = Helpers::<$nom, $denum, NOM, DENOM>::LD_TIMES_RN as $i;
             Self::from_ticks(mul.div_ceil(ld_times_rn))
         }
@@ -496,8 +515,10 @@ macro_rules! impl_duration_for_integer {
                     if let Some(lh) = (duration.ticks as u64)
                         .checked_mul(Helpers::<I_NOM, I_DENOM, NOM, DENOM>::RD_TIMES_LN)
                     {
-                        let ticks = (lh + Helpers::<I_NOM, I_DENOM, NOM, DENOM>::LD_TIMES_RN / 2)
-                            / Helpers::<I_NOM, I_DENOM, NOM, DENOM>::LD_TIMES_RN;
+                        let ticks = div_round_nearest_u64(
+                            lh,
+                            Helpers::<I_NOM, I_DENOM, NOM, DENOM>::LD_TIMES_RN,
+                        );
 
                         if ticks <= <$i>::MAX as u64 {
                             Some(Self::from_ticks(ticks as $i))
@@ -568,6 +589,12 @@ macro_rules! impl_duration_for_integer {
             pub const fn try_from_rate<const I_NOM: u64, const I_DENOM: u64>(
                 rate: Rate<$i, I_NOM, I_DENOM>,
             ) -> Option<Self> {
+                const {
+                    assert!(
+                        Helpers::<I_NOM, I_DENOM, NOM, DENOM>::RATE_TO_DURATION_NUMERATOR <= <$i>::MAX as u64,
+                        concat!("RATE_TO_DURATION_NUMERATOR doesn't fit in ", stringify!($i), " for this Rate/Duration combination")
+                    );
+                }
                 if rate.raw > 0 {
                     Some(Self::from_ticks(
                         Helpers::<I_NOM, I_DENOM, NOM, DENOM>::RATE_TO_DURATION_NUMERATOR as $i

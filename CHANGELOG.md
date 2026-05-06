@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.4.0] - 2026-05-06
+
 ### Added
 
 - `Duration::ZERO` and `Duration::MAX` constants
@@ -25,6 +27,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Issue #50: Rate conversions now use half-up rounding instead of truncating for better accuracy
 - Issue #53: Overflow detection in shorthand conversions (e.g., `NanosDurationU32.minutes()`)
 - Added `#[track_caller]` to all panicking functions for better error locations
+- `Duration::const_try_from`/`const_try_into`/`convert` (and the same on `Rate`) no longer overflow `u64` silently when ticks are close to `u64::MAX`. The rounding step `(lh + d/2) / d` was replaced with an overflow-free divmod-based form that produces the same rounded result without ever wrapping.
+- `Duration::Hz`/`kHz`/`MHz`, `Rate::Hz`/`kHz`/`MHz`, `Rate::to_Hz`/`to_kHz`/`to_MHz`, `Duration::try_from_rate`, and `Rate::try_from_duration` now produce a compile-time error when the conversion constants don't fit the storage type, instead of silently truncating `u64` constants on a `u32` cast.
+- The `Duration` shorthand methods (`as_*`, `from_*`, `from_*_at_least`) and the `Rate::Hz`/`kHz`/`MHz`/`to_Hz`/`to_kHz`/`to_MHz` family now panic on multiplication overflow instead of silently wrapping in release builds. All gained `#[track_caller]` so the panic points at the user's call site.
 
 ### Changed
 
@@ -137,7 +142,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Now supports a `defmt` version span (0.2 and 0.3 is supported)
 
-[Unreleased]: https://github.com/korken89/fugit/compare/v0.3.9...HEAD
+[Unreleased]: https://github.com/korken89/fugit/compare/v0.4.0...HEAD
+[v0.4.0]: https://github.com/korken89/fugit/compare/v0.3.9...v0.4.0
 [v0.3.9]: https://github.com/korken89/fugit/compare/v0.3.8...v0.3.9
 [v0.3.8]: https://github.com/korken89/fugit/compare/v0.3.7...v0.3.8
 [v0.3.7]: https://github.com/korken89/fugit/compare/v0.3.6...v0.3.7
