@@ -175,7 +175,9 @@ macro_rules! impl_duration_for_integer {
                 self.ticks == 0
             }
 
-            /// Add two durations while checking for overflow.
+            /// Add two durations.
+            ///
+            /// Returns `None` on tick overflow or cross-base conversion overflow.
             ///
             /// ```
             /// # use fugit::*;
@@ -214,7 +216,9 @@ macro_rules! impl_duration_for_integer {
                 }
             }
 
-            /// Subtract two durations while checking for overflow.
+            /// Subtract two durations.
+            ///
+            /// Returns `None` on tick underflow or cross-base conversion overflow.
             ///
             /// ```
             /// # use fugit::*;
@@ -289,7 +293,9 @@ macro_rules! impl_duration_for_integer {
                 }
             }
 
-            /// Get the remainder of dividing two durations while checking for divide-by-zero.
+            /// Remainder of dividing two durations.
+            ///
+            /// Returns `None` if `other` is zero or the cross-base conversion overflows.
             ///
             /// ```
             /// # use fugit::*;
@@ -418,6 +424,9 @@ macro_rules! impl_duration_for_integer {
 
             /// Const partial comparison.
             ///
+            /// Returns `None` if either side's tick value cannot be expressed in
+            /// the common base without overflowing the storage type.
+            ///
             /// ```
             /// # use fugit::*;
             #[doc = concat!("let d1 = Duration::<", stringify!($i), ", 1, 100>::from_ticks(1);")]
@@ -465,6 +474,9 @@ macro_rules! impl_duration_for_integer {
             }
 
             /// Const equality check.
+            ///
+            /// Returns `false` (rather than panicking) if the cross-base
+            /// conversion overflows the storage type.
             ///
             /// ```
             /// # use fugit::*;
@@ -547,7 +559,7 @@ macro_rules! impl_duration_for_integer {
                 Duration::<$i, O_NOM, O_DENOM>::const_try_from(self)
             }
 
-            /// Const try into rate, checking for divide-by-zero.
+            /// Convert to a rate. Returns `None` if this duration is zero.
             ///
             /// ```
             /// # use fugit::*;
@@ -563,7 +575,7 @@ macro_rules! impl_duration_for_integer {
                 Rate::<$i, O_NOM, O_DENOM>::try_from_duration(self)
             }
 
-            /// Convert from duration to rate.
+            /// Convert to a rate. Panics if this duration is zero.
             #[inline]
             #[track_caller]
             pub const fn to_rate<const O_NOM: u64, const O_DENOM: u64>(
@@ -576,7 +588,7 @@ macro_rules! impl_duration_for_integer {
                 }
             }
 
-            /// Const try from rate, checking for divide-by-zero.
+            /// Convert from a rate. Returns `None` if the rate is zero.
             ///
             /// ```
             /// # use fugit::*;
@@ -605,7 +617,7 @@ macro_rules! impl_duration_for_integer {
                 }
             }
 
-            /// Convert from rate to duration.
+            /// Convert from a rate. Panics if the rate is zero.
             #[inline]
             #[track_caller]
             pub const fn from_rate<const I_NOM: u64, const I_DENOM: u64>(
@@ -708,22 +720,25 @@ macro_rules! impl_duration_for_integer {
                 Self::from_ticks((secs * factor + 0.5) as $i)
             }
 
-            /// Shorthand for creating a duration which represents hertz.
+            /// Period of a hertz rate. Panics if `val` is zero.
             #[inline]
+            #[track_caller]
             #[allow(non_snake_case)]
             pub const fn Hz(val: $i) -> Self {
                 Self::from_rate(crate::Hertz::<$i>::from_raw(val))
             }
 
-            /// Shorthand for creating a duration which represents kilohertz.
+            /// Period of a kilohertz rate. Panics if `val` is zero.
             #[inline]
+            #[track_caller]
             #[allow(non_snake_case)]
             pub const fn kHz(val: $i) -> Self {
                 Self::from_rate(crate::Kilohertz::<$i>::from_raw(val))
             }
 
-            /// Shorthand for creating a duration which represents megahertz.
+            /// Period of a megahertz rate. Panics if `val` is zero.
             #[inline]
+            #[track_caller]
             #[allow(non_snake_case)]
             pub const fn MHz(val: $i) -> Self {
                 Self::from_rate(crate::Megahertz::<$i>::from_raw(val))

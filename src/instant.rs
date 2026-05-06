@@ -102,6 +102,11 @@ macro_rules! impl_instant_for_integer {
 
             /// Duration between `Instant`s.
             ///
+            /// Returns `None` if `self` is before `other` under the wrap-aware
+            /// ordering used by [`const_cmp`](Self::const_cmp): if `self` and
+            /// `other` differ by more than half the tick range, the result is
+            /// reversed.
+            ///
             /// ```
             /// # use fugit::*;
             #[doc = concat!("let i1 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
@@ -125,7 +130,11 @@ macro_rules! impl_instant_for_integer {
                 }
             }
 
-            /// Subtract a `Duration` from an `Instant` while checking for overflow.
+            /// Subtract a `Duration` from an `Instant`.
+            ///
+            /// The tick subtraction itself wraps (Instants are circular). Returns
+            /// `None` only when converting `other` into this Instant's base
+            /// overflows.
             ///
             /// ```
             /// # use fugit::*;
@@ -156,7 +165,11 @@ macro_rules! impl_instant_for_integer {
                 }
             }
 
-            /// Add a `Duration` to an `Instant` while checking for overflow.
+            /// Add a `Duration` to an `Instant`.
+            ///
+            /// The tick addition itself wraps (Instants are circular). Returns
+            /// `None` only when converting `other` into this Instant's base
+            /// overflows.
             ///
             /// ```
             /// # use fugit::*;
