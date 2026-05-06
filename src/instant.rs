@@ -289,6 +289,7 @@ macro_rules! impl_instant_for_integer {
             for Instant<$i, NOM, DENOM>
         {
             #[inline]
+            #[track_caller]
             fn sub_assign(&mut self, other: Duration<$i, NOM, DENOM>) {
                 *self = *self - other;
             }
@@ -322,6 +323,7 @@ macro_rules! impl_instant_for_integer {
             for Instant<$i, NOM, DENOM>
         {
             #[inline]
+            #[track_caller]
             fn add_assign(&mut self, other: Duration<$i, NOM, DENOM>) {
                 *self = *self + other;
             }
@@ -405,6 +407,7 @@ impl<const NOM: u64, const DENOM: u64> ops::SubAssign<Duration<u32, NOM, DENOM>>
     for Instant<u64, NOM, DENOM>
 {
     #[inline]
+    #[track_caller]
     fn sub_assign(&mut self, other: Duration<u32, NOM, DENOM>) {
         *self = *self - other;
     }
@@ -438,6 +441,7 @@ impl<const NOM: u64, const DENOM: u64> ops::AddAssign<Duration<u32, NOM, DENOM>>
     for Instant<u64, NOM, DENOM>
 {
     #[inline]
+    #[track_caller]
     fn add_assign(&mut self, other: Duration<u32, NOM, DENOM>) {
         *self = *self + other;
     }

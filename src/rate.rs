@@ -630,10 +630,21 @@ macro_rules! impl_rate_for_integer {
             }
         }
 
+        // Rate -= Rate
+        impl<const NOM: u64, const DENOM: u64> ops::SubAssign for Rate<$i, NOM, DENOM>
+        {
+            #[inline]
+            #[track_caller]
+            fn sub_assign(&mut self, other: Self) {
+                *self = *self - other;
+            }
+        }
+
         // Rate += Rate
         impl<const NOM: u64, const DENOM: u64> ops::AddAssign for Rate<$i, NOM, DENOM>
         {
             #[inline]
+            #[track_caller]
             fn add_assign(&mut self, other: Self) {
                 *self = *self + other;
             }
@@ -644,6 +655,7 @@ macro_rules! impl_rate_for_integer {
             type Output = Rate<$i, NOM, DENOM>;
 
             #[inline]
+            #[track_caller]
             fn mul(self, mut other: Rate<$i, NOM, DENOM>) -> Self::Output {
                 other.raw *= self as $i;
                 other
@@ -655,6 +667,7 @@ macro_rules! impl_rate_for_integer {
             type Output = Self;
 
             #[inline]
+            #[track_caller]
             fn mul(mut self, other: u32) -> Self::Output {
                 self.raw *= other as $i;
                 self
@@ -666,6 +679,7 @@ macro_rules! impl_rate_for_integer {
             for Rate<$i, NOM, DENOM>
         {
             #[inline]
+            #[track_caller]
             fn mul_assign(&mut self, other: u32) {
                 *self = *self * other;
             }
@@ -676,6 +690,7 @@ macro_rules! impl_rate_for_integer {
             type Output = Self;
 
             #[inline]
+            #[track_caller]
             fn div(mut self, other: u32) -> Self::Output {
                 self.raw /= other as $i;
                 self
@@ -701,6 +716,7 @@ macro_rules! impl_rate_for_integer {
             for Rate<$i, NOM, DENOM>
         {
             #[inline]
+            #[track_caller]
             fn div_assign(&mut self, other: u32) {
                 *self = *self / other;
             }
@@ -727,6 +743,7 @@ macro_rules! impl_rate_for_integer {
         impl<const NOM: u64, const DENOM: u64> ops::RemAssign for Rate<$i, NOM, DENOM>
         {
             #[inline]
+            #[track_caller]
             fn rem_assign(&mut self, other: Self) {
                 *self = *self % other;
             }
@@ -817,6 +834,7 @@ impl<const NOM: u64, const DENOM: u64> ops::SubAssign<Rate<u32, NOM, DENOM>>
     for Rate<u64, NOM, DENOM>
 {
     #[inline]
+    #[track_caller]
     fn sub_assign(&mut self, other: Rate<u32, NOM, DENOM>) {
         *self = *self - other;
     }
@@ -844,6 +862,7 @@ impl<const NOM: u64, const DENOM: u64> ops::AddAssign<Rate<u32, NOM, DENOM>>
     for Rate<u64, NOM, DENOM>
 {
     #[inline]
+    #[track_caller]
     fn add_assign(&mut self, other: Rate<u32, NOM, DENOM>) {
         *self = *self + other;
     }

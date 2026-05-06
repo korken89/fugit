@@ -793,6 +793,7 @@ macro_rules! impl_duration_for_integer {
         impl<const NOM: u64, const DENOM: u64> ops::SubAssign for Duration<$i, NOM, DENOM>
         {
             #[inline]
+            #[track_caller]
             fn sub_assign(&mut self, other: Self) {
                 *self = *self - other;
             }
@@ -819,6 +820,7 @@ macro_rules! impl_duration_for_integer {
         impl<const NOM: u64, const DENOM: u64> ops::AddAssign for Duration<$i, NOM, DENOM>
         {
             #[inline]
+            #[track_caller]
             fn add_assign(&mut self, other: Self) {
                 *self = *self + other;
             }
@@ -829,6 +831,7 @@ macro_rules! impl_duration_for_integer {
             type Output = Duration<$i, NOM, DENOM>;
 
             #[inline]
+            #[track_caller]
             fn mul(self, mut other: Duration<$i, NOM, DENOM>) -> Self::Output {
                 other.ticks *= self as $i;
                 other
@@ -840,6 +843,7 @@ macro_rules! impl_duration_for_integer {
             type Output = Self;
 
             #[inline]
+            #[track_caller]
             fn mul(mut self, other: u32) -> Self::Output {
                 self.ticks *= other as $i;
                 self
@@ -851,6 +855,7 @@ macro_rules! impl_duration_for_integer {
             for Duration<$i, NOM, DENOM>
         {
             #[inline]
+            #[track_caller]
             fn mul_assign(&mut self, other: u32) {
                 *self = *self * other;
             }
@@ -861,6 +866,7 @@ macro_rules! impl_duration_for_integer {
             type Output = Self;
 
             #[inline]
+            #[track_caller]
             fn div(mut self, other: u32) -> Self::Output {
                 self.ticks /= other as $i;
                 self
@@ -872,6 +878,7 @@ macro_rules! impl_duration_for_integer {
             for Duration<$i, NOM, DENOM>
         {
             #[inline]
+            #[track_caller]
             fn div_assign(&mut self, other: u32) {
                 *self = *self / other;
             }
@@ -898,6 +905,7 @@ macro_rules! impl_duration_for_integer {
         impl<const NOM: u64, const DENOM: u64> ops::RemAssign for Duration<$i, NOM, DENOM>
         {
             #[inline]
+            #[track_caller]
             fn rem_assign(&mut self, other: Self) {
                 *self = *self % other;
             }
@@ -1069,6 +1077,7 @@ impl<const NOM: u64, const DENOM: u64> ops::SubAssign<Duration<u32, NOM, DENOM>>
     for Duration<u64, NOM, DENOM>
 {
     #[inline]
+    #[track_caller]
     fn sub_assign(&mut self, other: Duration<u32, NOM, DENOM>) {
         *self = *self - other;
     }
@@ -1097,6 +1106,7 @@ impl<const NOM: u64, const DENOM: u64> ops::AddAssign<Duration<u32, NOM, DENOM>>
     for Duration<u64, NOM, DENOM>
 {
     #[inline]
+    #[track_caller]
     fn add_assign(&mut self, other: Duration<u32, NOM, DENOM>) {
         *self = *self + other;
     }
