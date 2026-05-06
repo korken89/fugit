@@ -1,4 +1,4 @@
-use crate::helpers::Helpers;
+use crate::helpers::{div_round_nearest_u64, Helpers};
 use crate::Duration;
 use core::cmp::Ordering;
 use core::convert;
@@ -16,6 +16,49 @@ use core::ops;
 #[derive(Clone, Copy, Debug)]
 pub struct Rate<T, const NOM: u64, const DENOM: u64> {
     pub(crate) raw: T,
+}
+
+// Unwrap a const-time `Option` or panic with the given static message. Lets the
+// shorthand methods turn `checked_mul`/`checked_add` failures into a clear panic
+// at the user's call site instead of silently wrapping in release builds.
+macro_rules! const_checked {
+    ($e:expr, $msg:expr) => {
+        match $e {
+            Some(v) => v,
+            None => panic!("{}", $msg),
+        }
+    };
+}
+
+// Compile-time assert that the helper constants for (l_nom, l_denom, NOM, DENOM)
+// fit in `$i`. The Hz/kHz/MHz/to_Hz/to_kHz/to_MHz shorthands cast both constants
+// `as $i`; without this check those casts silently truncate when the value fits
+// `u64` but not the target storage type.
+macro_rules! assert_helpers_fit {
+    ($i:ty, $l_nom:literal, $l_denom:literal, $method:literal) => {
+        const {
+            assert!(
+                Helpers::<$l_nom, $l_denom, NOM, DENOM>::LD_TIMES_RN <= <$i>::MAX as u64,
+                concat!(
+                    "LD_TIMES_RN doesn't fit in ",
+                    stringify!($i),
+                    " for ",
+                    $method,
+                    " on this Rate type"
+                )
+            );
+            assert!(
+                Helpers::<$l_nom, $l_denom, NOM, DENOM>::RD_TIMES_LN <= <$i>::MAX as u64,
+                concat!(
+                    "RD_TIMES_LN doesn't fit in ",
+                    stringify!($i),
+                    " for ",
+                    $method,
+                    " on this Rate type"
+                )
+            );
+        }
+    };
 }
 
 macro_rules! impl_rate_for_integer {
@@ -257,9 +300,10 @@ macro_rules! impl_rate_for_integer {
                     if let Some(lh) = (rate.raw as u64)
                         .checked_mul(Helpers::<I_NOM, I_DENOM, NOM, DENOM>::RD_TIMES_LN)
                     {
-                        // Add half of divisor for proper rounding (half-up)
-                        let raw = (lh + Helpers::<I_NOM, I_DENOM, NOM, DENOM>::LD_TIMES_RN / 2)
-                            / Helpers::<I_NOM, I_DENOM, NOM, DENOM>::LD_TIMES_RN;
+                        let raw = div_round_nearest_u64(
+                            lh,
+                            Helpers::<I_NOM, I_DENOM, NOM, DENOM>::LD_TIMES_RN,
+                        );
 
                         if raw <= <$i>::MAX as u64 {
                             Some(Self::from_raw(raw as $i))
@@ -328,6 +372,12 @@ macro_rules! impl_rate_for_integer {
             pub const fn try_from_duration<const I_NOM: u64, const I_DENOM: u64>(
                 duration: Duration<$i, I_NOM, I_DENOM>,
             ) -> Option<Self> {
+                const {
+                    assert!(
+                        Helpers::<I_NOM, I_DENOM, NOM, DENOM>::RATE_TO_DURATION_NUMERATOR <= <$i>::MAX as u64,
+                        concat!("RATE_TO_DURATION_NUMERATOR doesn't fit in ", stringify!($i), " for this Duration/Rate combination")
+                    );
+                }
                 if duration.ticks > 0 {
                     Some(Self::from_raw(
                         Helpers::<I_NOM, I_DENOM, NOM, DENOM>::RATE_TO_DURATION_NUMERATOR as $i
@@ -384,60 +434,105 @@ macro_rules! impl_rate_for_integer {
             }
 
             /// Convert the Rate to an interger number of Hz.
+            ///
+            /// Panics if the result overflows the storage type.
             #[inline]
+            #[track_caller]
             #[allow(non_snake_case)]
             pub const fn to_Hz(&self) -> $i {
-                    (Helpers::<1, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.raw
-                        + Helpers::<1, 1, NOM, DENOM>::RD_TIMES_LN as $i / 2)
-                        / Helpers::<1, 1, NOM, DENOM>::RD_TIMES_LN as $i
+                assert_helpers_fit!($i, 1, 1, "to_Hz");
+                let prod = const_checked!(
+                    (Helpers::<1, 1, NOM, DENOM>::LD_TIMES_RN as $i).checked_mul(self.raw),
+                    "Rate::to_Hz: multiplication overflowed storage type"
+                );
+                let sum = const_checked!(
+                    prod.checked_add(Helpers::<1, 1, NOM, DENOM>::RD_TIMES_LN as $i / 2),
+                    "Rate::to_Hz: rounding addition overflowed storage type"
+                );
+                sum / Helpers::<1, 1, NOM, DENOM>::RD_TIMES_LN as $i
             }
 
             /// Convert the Rate to an interger number of kHz.
+            ///
+            /// Panics if the result overflows the storage type.
             #[inline]
+            #[track_caller]
             #[allow(non_snake_case)]
             pub const fn to_kHz(&self) -> $i {
-                    (Helpers::<1_000, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.raw
-                        + Helpers::<1_000, 1, NOM, DENOM>::RD_TIMES_LN as $i / 2)
-                        / Helpers::<1_000, 1, NOM, DENOM>::RD_TIMES_LN as $i
+                assert_helpers_fit!($i, 1_000, 1, "to_kHz");
+                let prod = const_checked!(
+                    (Helpers::<1_000, 1, NOM, DENOM>::LD_TIMES_RN as $i).checked_mul(self.raw),
+                    "Rate::to_kHz: multiplication overflowed storage type"
+                );
+                let sum = const_checked!(
+                    prod.checked_add(Helpers::<1_000, 1, NOM, DENOM>::RD_TIMES_LN as $i / 2),
+                    "Rate::to_kHz: rounding addition overflowed storage type"
+                );
+                sum / Helpers::<1_000, 1, NOM, DENOM>::RD_TIMES_LN as $i
             }
 
             /// Convert the Rate to an interger number of MHz.
+            ///
+            /// Panics if the result overflows the storage type.
             #[inline]
+            #[track_caller]
             #[allow(non_snake_case)]
             pub const fn to_MHz(&self) -> $i {
-                    (Helpers::<1_000_000, 1, NOM, DENOM>::LD_TIMES_RN as $i * self.raw
-                        + Helpers::<1_000_000, 1, NOM, DENOM>::RD_TIMES_LN as $i / 2)
-                        / Helpers::<1_000_000, 1, NOM, DENOM>::RD_TIMES_LN as $i
+                assert_helpers_fit!($i, 1_000_000, 1, "to_MHz");
+                let prod = const_checked!(
+                    (Helpers::<1_000_000, 1, NOM, DENOM>::LD_TIMES_RN as $i).checked_mul(self.raw),
+                    "Rate::to_MHz: multiplication overflowed storage type"
+                );
+                let sum = const_checked!(
+                    prod.checked_add(Helpers::<1_000_000, 1, NOM, DENOM>::RD_TIMES_LN as $i / 2),
+                    "Rate::to_MHz: rounding addition overflowed storage type"
+                );
+                sum / Helpers::<1_000_000, 1, NOM, DENOM>::RD_TIMES_LN as $i
             }
 
             /// Shorthand for creating a rate which represents hertz.
+            ///
+            /// Panics if the resulting raw value overflows the storage type.
             #[inline]
+            #[track_caller]
             #[allow(non_snake_case)]
             pub const fn Hz(val: $i) -> Self {
-                Self::from_raw(
-                    (Helpers::<1, 1, NOM, DENOM>::RD_TIMES_LN as $i * val)
-                        / Helpers::<1, 1, NOM, DENOM>::LD_TIMES_RN as $i,
-                )
+                assert_helpers_fit!($i, 1, 1, "Hz");
+                let prod = const_checked!(
+                    (Helpers::<1, 1, NOM, DENOM>::RD_TIMES_LN as $i).checked_mul(val),
+                    "Rate::Hz: multiplication overflowed storage type"
+                );
+                Self::from_raw(prod / Helpers::<1, 1, NOM, DENOM>::LD_TIMES_RN as $i)
             }
 
             /// Shorthand for creating a rate which represents kilohertz.
+            ///
+            /// Panics if the resulting raw value overflows the storage type.
             #[inline]
+            #[track_caller]
             #[allow(non_snake_case)]
             pub const fn kHz(val: $i) -> Self {
-                Self::from_raw(
-                    (Helpers::<1_000, 1, NOM, DENOM>::RD_TIMES_LN as $i * val)
-                        / Helpers::<1_000, 1, NOM, DENOM>::LD_TIMES_RN as $i,
-                )
+                assert_helpers_fit!($i, 1_000, 1, "kHz");
+                let prod = const_checked!(
+                    (Helpers::<1_000, 1, NOM, DENOM>::RD_TIMES_LN as $i).checked_mul(val),
+                    "Rate::kHz: multiplication overflowed storage type"
+                );
+                Self::from_raw(prod / Helpers::<1_000, 1, NOM, DENOM>::LD_TIMES_RN as $i)
             }
 
             /// Shorthand for creating a rate which represents megahertz.
+            ///
+            /// Panics if the resulting raw value overflows the storage type.
             #[inline]
+            #[track_caller]
             #[allow(non_snake_case)]
             pub const fn MHz(val: $i) -> Self {
-                Self::from_raw(
-                    (Helpers::<1_000_000, 1, NOM, DENOM>::RD_TIMES_LN as $i * val)
-                        / Helpers::<1_000_000, 1, NOM, DENOM>::LD_TIMES_RN as $i,
-                )
+                assert_helpers_fit!($i, 1_000_000, 1, "MHz");
+                let prod = const_checked!(
+                    (Helpers::<1_000_000, 1, NOM, DENOM>::RD_TIMES_LN as $i).checked_mul(val),
+                    "Rate::MHz: multiplication overflowed storage type"
+                );
+                Self::from_raw(prod / Helpers::<1_000_000, 1, NOM, DENOM>::LD_TIMES_RN as $i)
             }
 
             /// Shorthand for creating a rate which represents nanoseconds.
