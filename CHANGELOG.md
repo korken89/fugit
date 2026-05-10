@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+* Rename `checked_sub_duration` to `convert_sub_duration` and `checked_add_duration` to `convert_add_duration` with improved docs.
+
 ## [v0.4.0] - 2026-05-06
 
 ### Added
