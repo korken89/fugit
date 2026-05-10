@@ -86,8 +86,9 @@ macro_rules! impl_instant_for_integer {
                 }
             }
 
-            /// Duration between since the start of the `Instant`. This assumes an instant which
-            /// won't wrap within the execution of the program.
+            /// The duration between this instant and `Instant::from_ticks(0)`.
+            /// This duration is only valid if the `Instant` does not wrap during
+            /// the execution of the program.
             ///
             /// ```
             /// # use fugit::*;
