@@ -131,11 +131,14 @@ macro_rules! impl_instant_for_integer {
                 }
             }
 
-            /// Subtract a `Duration` from an `Instant`.
+            /// Try to convert `other` into the `Self::NOM / Self::DENOM` timebase, and
+            /// subtract it from this [`Instant`].
             ///
-            /// The tick subtraction itself wraps (Instants are circular). Returns
-            /// `None` only when converting `other` into this Instant's base
-            /// overflows.
+            /// Returns `None` only if the time-base conversion fails. The subtraction itself
+            /// is wrapping, as [`Instant`]s are circular.
+            ///
+            /// The implementations of [`core::ops::Sub`] and [`core::ops::SubAssign`] are
+            /// implemented by `unwrap`-ing the value returned by this function.
             ///
             /// ```
             /// # use fugit::*;
@@ -143,6 +146,28 @@ macro_rules! impl_instant_for_integer {
             #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             ///
             /// assert_eq!(i.checked_sub_duration(d).unwrap().as_ticks(), 0);
+            /// ```
+            ///
+            /// The subtraction itself is wrapping:
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
+            ///
+            #[doc = concat!("assert_eq!(i.checked_sub_duration(d).unwrap().as_ticks(), ", stringify!($i), "::MAX);")]
+            /// ```
+            ///
+            /// Overflow during [`Duration`] base conversion returns `None`:
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            /// // A duration whose conversion from the `1/500` base to the `1/1000` base
+            /// // will overflow.
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 500>::from_ticks(", stringify!($i),"::MAX / 2 + 1);")]
+            ///
+            /// assert_eq!(i.checked_sub_duration(d), None);
             /// ```
             pub const fn checked_sub_duration<const O_NOM: u64, const O_DENOM: u64>(
                 self,
@@ -166,11 +191,14 @@ macro_rules! impl_instant_for_integer {
                 }
             }
 
-            /// Add a `Duration` to an `Instant`.
+            /// Try to convert `other` into the `Self::NOM / Self::DENOM` timebase, and
+            /// add it to this [`Instant`].
             ///
-            /// The tick addition itself wraps (Instants are circular). Returns
-            /// `None` only when converting `other` into this Instant's base
-            /// overflows.
+            /// Returns `None` only if the time-base conversion fails. The addition itself
+            /// is wrapping, as [`Instant`]s are circular.
+            ///
+            /// The implementations of [`core::ops::Add`] and [`core::ops::AddAssign`] are
+            /// implemented by `unwrap`-ing the value returned by this function.
             ///
             /// ```
             /// # use fugit::*;
@@ -178,6 +206,28 @@ macro_rules! impl_instant_for_integer {
             #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             ///
             /// assert_eq!(i.checked_add_duration(d).unwrap().as_ticks(), 2);
+            /// ```
+            ///
+            /// The addition itself is wrapping:
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(", stringify!($i), "::MAX);")]
+            ///
+            /// assert_eq!(i.checked_add_duration(d).unwrap().as_ticks(), 0);
+            /// ```
+            ///
+            /// Overflow during [`Duration`] base conversion returns `None`:
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            /// // A duration whose conversion from the `1/500` base to the `1/1000` base
+            /// // will overflow.
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 500>::from_ticks(", stringify!($i),"::MAX / 2 + 1);")]
+            ///
+            /// assert_eq!(i.checked_add_duration(d), None);
             /// ```
             pub const fn checked_add_duration<const O_NOM: u64, const O_DENOM: u64>(
                 self,
