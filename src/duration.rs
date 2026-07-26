@@ -1,4 +1,4 @@
-use crate::helpers::{div_round_nearest_u64, Helpers};
+use crate::helpers::{assert_conversion_fits, div_round_nearest_u64, Helpers};
 use crate::NanosDurationU64;
 use crate::Rate;
 use crate::SecsDurationU64;
@@ -10,6 +10,23 @@ use core::ops;
 ///
 /// The generic `T` can either be `u32` or `u64`, and the const generics represent the ratio of the
 /// ticks contained within the duration: `duration in seconds = NOM / DENOM * ticks`
+///
+/// # Base ratio limits
+///
+/// Operations between two different time bases convert through constants derived from the two
+/// ratios, and those constants have to fit the storage type `T`. Bases differing by more than
+/// `T::MAX` are rejected at compile time rather than silently truncating:
+///
+/// ```compile_fail
+/// # use fugit::*;
+/// let a = Duration::<u32, 1, 1>::from_ticks(1);
+/// // 1/2^32 s against 1 s exceeds what a u32 can express, so this does not build.
+/// let b = Duration::<u32, 1, 4_294_967_296>::from_ticks(1);
+/// let _ = a.checked_add(b);
+/// ```
+///
+/// The same pair is fine with `u64` storage, and the largest legal ratio for `u32` is
+/// `u32::MAX`.
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(
     feature = "postcard_max_size",
@@ -192,6 +209,12 @@ macro_rules! impl_duration_for_integer {
                 self,
                 other: Duration<$i, O_NOM, O_DENOM>,
             ) -> Option<Self> {
+                assert_conversion_fits!(
+                    $i,
+                    Helpers::<NOM, DENOM, O_NOM, O_DENOM>,
+                    "Duration::checked_add"
+                );
+
                 if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
                     if let Some(ticks) = self.ticks.checked_add(other.ticks) {
                         Some(Self::from_ticks(ticks))
@@ -233,6 +256,12 @@ macro_rules! impl_duration_for_integer {
                 self,
                 other: Duration<$i, O_NOM, O_DENOM>,
             ) -> Option<Self> {
+                assert_conversion_fits!(
+                    $i,
+                    Helpers::<NOM, DENOM, O_NOM, O_DENOM>,
+                    "Duration::checked_sub"
+                );
+
                 if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
                     if let Some(ticks) = self.ticks.checked_sub(other.ticks) {
                         Some(Self::from_ticks(ticks))
@@ -308,6 +337,12 @@ macro_rules! impl_duration_for_integer {
                 self,
                 other: Duration<$i, O_NOM, O_DENOM>,
             ) -> Option<Self> {
+                assert_conversion_fits!(
+                    $i,
+                    Helpers::<NOM, DENOM, O_NOM, O_DENOM>,
+                    "Duration::checked_rem"
+                );
+
                 if other.ticks == 0 {
                     None
                 } else if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
@@ -454,6 +489,12 @@ macro_rules! impl_duration_for_integer {
                 // then perform the comparison in a comparable basis
                 //
 
+                assert_conversion_fits!(
+                    $i,
+                    Helpers::<NOM, DENOM, R_NOM, R_DENOM>,
+                    "Duration::const_partial_cmp"
+                );
+
                 if Helpers::<NOM, DENOM, R_NOM, R_DENOM>::SAME_BASE {
                     // If we are in the same base, comparison in trivial
                     Some(Self::_const_cmp(self.ticks, other.ticks))
@@ -490,6 +531,12 @@ macro_rules! impl_duration_for_integer {
                 self,
                 other: Duration<$i, R_NOM, R_DENOM>
             ) -> bool {
+                assert_conversion_fits!(
+                    $i,
+                    Helpers::<NOM, DENOM, R_NOM, R_DENOM>,
+                    "Duration::const_eq"
+                );
+
                 if Helpers::<NOM, DENOM, R_NOM, R_DENOM>::SAME_BASE {
                     // If we are in the same base, comparison in trivial
                     self.ticks == other.ticks

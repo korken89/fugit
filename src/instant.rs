@@ -1,5 +1,5 @@
 use crate::duration::Duration;
-use crate::helpers::Helpers;
+use crate::helpers::{assert_conversion_fits, Helpers};
 use core::cmp::Ordering;
 use core::ops;
 
@@ -7,6 +7,10 @@ use core::ops;
 ///
 /// The generic `T` can either be `u32` or `u64`, and the const generics represent the ratio of the
 /// ticks contained within the instant: `instant in seconds = NOM / DENOM * ticks`
+///
+/// Adding or subtracting a [`Duration`] in a different time base is subject to the same base
+/// ratio limits as [`Duration`] itself: bases differing by more than `T::MAX` are a compile-time
+/// error rather than a silent truncation.
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(
     feature = "postcard_max_size",
@@ -184,6 +188,12 @@ macro_rules! impl_instant_for_integer {
                 self,
                 other: Duration<$i, O_NOM, O_DENOM>,
             ) -> Option<Self> {
+                assert_conversion_fits!(
+                    $i,
+                    Helpers::<NOM, DENOM, O_NOM, O_DENOM>,
+                    "Instant::convert_sub_duration"
+                );
+
                 if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
                     Some(Self::from_ticks(
                         self.ticks.wrapping_sub(other.as_ticks()),
@@ -244,6 +254,12 @@ macro_rules! impl_instant_for_integer {
                 self,
                 other: Duration<$i, O_NOM, O_DENOM>,
             ) -> Option<Self> {
+                assert_conversion_fits!(
+                    $i,
+                    Helpers::<NOM, DENOM, O_NOM, O_DENOM>,
+                    "Instant::convert_add_duration"
+                );
+
                 if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
                     Some(Self::from_ticks(
                         self.ticks.wrapping_add(other.as_ticks()),

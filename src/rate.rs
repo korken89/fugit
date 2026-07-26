@@ -1,4 +1,4 @@
-use crate::helpers::{div_round_nearest_u64, Helpers};
+use crate::helpers::{assert_conversion_fits, div_round_nearest_u64, Helpers};
 use crate::Duration;
 use core::cmp::Ordering;
 use core::convert;
@@ -8,6 +8,10 @@ use core::ops;
 ///
 /// The generic `T` can either be `u32` or `u64`, and the const generics represent the ratio of the
 /// raw contained within the rate: `rate in Hz = NOM / DENOM * raw`
+///
+/// Operations between two different bases are subject to the same base ratio limits as
+/// [`Duration`]: bases differing by more than `T::MAX` are a compile-time error rather than a
+/// silent truncation.
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(
     feature = "postcard_max_size",
@@ -108,6 +112,12 @@ macro_rules! impl_rate_for_integer {
                 self,
                 other: Rate<$i, O_NOM, O_DENOM>,
             ) -> Option<Self> {
+                assert_conversion_fits!(
+                    $i,
+                    Helpers::<NOM, DENOM, O_NOM, O_DENOM>,
+                    "Rate::checked_add"
+                );
+
                 if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
                     if let Some(raw) = self.raw.checked_add(other.raw) {
                         Some(Self::from_raw(raw))
@@ -149,6 +159,12 @@ macro_rules! impl_rate_for_integer {
                 self,
                 other: Rate<$i, O_NOM, O_DENOM>,
             ) -> Option<Self> {
+                assert_conversion_fits!(
+                    $i,
+                    Helpers::<NOM, DENOM, O_NOM, O_DENOM>,
+                    "Rate::checked_sub"
+                );
+
                 if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
                     if let Some(raw) = self.raw.checked_sub(other.raw) {
                         Some(Self::from_raw(raw))
@@ -188,6 +204,12 @@ macro_rules! impl_rate_for_integer {
                 self,
                 other: Rate<$i, O_NOM, O_DENOM>,
             ) -> Option<Self> {
+                assert_conversion_fits!(
+                    $i,
+                    Helpers::<NOM, DENOM, O_NOM, O_DENOM>,
+                    "Rate::checked_rem"
+                );
+
                 if other.raw == 0 {
                     None
                 } else if Helpers::<NOM, DENOM, O_NOM, O_DENOM>::SAME_BASE {
@@ -239,6 +261,12 @@ macro_rules! impl_rate_for_integer {
                 self,
                 other: Rate<$i, R_NOM, R_DENOM>
             ) -> Option<Ordering> {
+                assert_conversion_fits!(
+                    $i,
+                    Helpers::<NOM, DENOM, R_NOM, R_DENOM>,
+                    "Rate::const_partial_cmp"
+                );
+
                 if Helpers::<NOM, DENOM, R_NOM, R_DENOM>::SAME_BASE {
                     // If we are in the same base, comparison in trivial
                     Some(Self::_const_cmp(self.raw, other.raw))
@@ -275,6 +303,12 @@ macro_rules! impl_rate_for_integer {
                 self,
                 other: Rate<$i, R_NOM, R_DENOM>
             ) -> bool {
+                assert_conversion_fits!(
+                    $i,
+                    Helpers::<NOM, DENOM, R_NOM, R_DENOM>,
+                    "Rate::const_eq"
+                );
+
                 if Helpers::<NOM, DENOM, R_NOM, R_DENOM>::SAME_BASE {
                     // If we are in the same base, comparison in trivial
                     self.raw == other.raw

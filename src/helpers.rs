@@ -99,3 +99,39 @@ pub const fn div_round_nearest_u64(numerator: u64, divisor: u64) -> u64 {
         q
     }
 }
+
+// Compile-time assert that the cross-base conversion constants fit `$i`. Both are cast
+// `as $i` before use; a constant that fits `u64` but not the storage type would silently
+// truncate, and a divisor truncated to zero traps at runtime. This is the same check the
+// `Duration`/`Rate` shorthands already perform for their fixed bases, extended to the
+// conversions whose bases come from the caller.
+//
+// A same-base conversion reduces both constants to 1, so this never rejects one.
+macro_rules! assert_conversion_fits {
+    ($i:ty, $h:ty, $method:literal) => {
+        const {
+            assert!(
+                <$h>::LD_TIMES_RN <= <$i>::MAX as u64,
+                concat!(
+                    "LD_TIMES_RN doesn't fit in ",
+                    stringify!($i),
+                    " for ",
+                    $method,
+                    " between these time bases"
+                )
+            );
+            assert!(
+                <$h>::RD_TIMES_LN <= <$i>::MAX as u64,
+                concat!(
+                    "RD_TIMES_LN doesn't fit in ",
+                    stringify!($i),
+                    " for ",
+                    $method,
+                    " between these time bases"
+                )
+            );
+        }
+    };
+}
+
+pub(crate) use assert_conversion_fits;

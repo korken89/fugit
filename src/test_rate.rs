@@ -5,6 +5,30 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 use crate::{Duration, Rate};
+
+#[test]
+fn rate_largest_fitting_conversion_constants_u32() {
+    // See `instant_largest_fitting_conversion_constants_u32`: a base ratio above the
+    // storage type is a compile-time error, so pin that the largest legal one works.
+    const MAX_RATIO: u64 = u32::MAX as u64;
+
+    let r = Rate::<u32, 1, 1>::from_raw(1);
+    let one = Rate::<u32, 1, MAX_RATIO>::from_raw(MAX_RATIO as u32);
+    let tiny = Rate::<u32, 1, MAX_RATIO>::from_raw(1);
+
+    assert_eq!(r.checked_add(one), Some(Rate::<u32, 1, 1>::from_raw(2)));
+    assert_eq!(r.checked_sub(one), Some(Rate::<u32, 1, 1>::from_raw(0)));
+    assert_eq!(r.checked_rem(tiny), None);
+
+    assert_eq!(
+        r.const_partial_cmp(tiny),
+        Some(core::cmp::Ordering::Greater)
+    );
+    assert!(r > tiny);
+    assert!(!r.const_eq(tiny));
+    assert!(r.const_eq(one));
+}
+
 use crate::{
     Hertz, HertzU32, HertzU64, Kilohertz, KilohertzU32, KilohertzU64, Megahertz, MegahertzU32,
     MegahertzU64, TimerRate, TimerRateU32, TimerRateU64,
