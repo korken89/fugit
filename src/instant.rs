@@ -201,7 +201,6 @@ macro_rules! impl_instant_for_integer {
             }
         }
 
-        #[allow(clippy::non_canonical_partial_ord_impl)]
         impl<const NOM: u64, const DENOM: u64> PartialOrd for Instant<$i, NOM, DENOM> {
             /// This implementation deviates from the definition of
             /// [PartialOrd::partial_cmp](core::cmp::PartialOrd::partial_cmp):
@@ -211,24 +210,12 @@ macro_rules! impl_instant_for_integer {
             /// assumed that an overflow occured and the result is reversed.
             ///
             /// That breaks the transitivity invariant: a < b and b < c no longer implies a < c.
+            /// [`Ord`](core::cmp::Ord) is for that reason deliberately not implemented, as its
+            /// users - `BTreeMap`, `sort`, `max` - need a transitive total order and silently
+            /// misbehave without one.
             #[inline]
             fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
                 Some(self.const_cmp(*other))
-            }
-        }
-
-        impl<const NOM: u64, const DENOM: u64> Ord for Instant<$i, NOM, DENOM> {
-            /// This implementation deviates from the definition of
-            /// [Ord::cmp](core::cmp::Ord::cmp):
-            ///
-            /// It takes into account that ticks might wrap around. If the absolute
-            /// values of `self` and `other` differ by more than half the possible range, it is
-            /// assumed that an overflow occured and the result is reversed.
-            ///
-            /// That breaks the transitivity invariant: a < b and b < c no longer implies a < c.
-            #[inline]
-            fn cmp(&self, other: &Self) -> Ordering {
-                self.const_cmp(*other)
             }
         }
 

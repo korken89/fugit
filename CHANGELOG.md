@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Breaking Changes
+
+- **BREAKING**: Issue #83: `Instant` is no longer `Ord`, the wrapping compare is not transitive.
+  `PartialOrd` is kept, so `<`, `>`, `<=` and `>=` are unaffected.
+
 ## [v0.4.0] - 2026-05-06
 
 ### Added
