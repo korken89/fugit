@@ -7,10 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Issue #84: `Instant` comparison no longer reports `Equal` for instants that are not equal.
+
 ### Breaking Changes
 
 - **BREAKING**: Issue #83: `Instant` is no longer `Ord`, the wrapping compare is not transitive.
   `PartialOrd` is kept, so `<`, `>`, `<=` and `>=` are unaffected.
+- **BREAKING**: Issue #84: `Instant::const_cmp` is replaced by `const_partial_cmp`, which returns
+  `None` for instants exactly half the tick range apart.
 
 ## [v0.4.0] - 2026-05-06
 
