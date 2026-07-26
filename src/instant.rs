@@ -98,8 +98,9 @@ macro_rules! impl_instant_for_integer {
                 }
             }
 
-            /// Duration between since the start of the `Instant`. This assumes an instant which
-            /// won't wrap within the execution of the program.
+            /// The duration between this instant and `Instant::from_ticks(0)`.
+            /// This duration is only valid if the `Instant` does not wrap during
+            /// the execution of the program.
             ///
             /// ```
             /// # use fugit::*;
@@ -141,20 +142,45 @@ macro_rules! impl_instant_for_integer {
                 }
             }
 
-            /// Subtract a `Duration` from an `Instant`.
+            /// Try to convert `other` into the `Self::NOM / Self::DENOM` timebase, and
+            /// subtract it from this [`Instant`].
             ///
-            /// The tick subtraction itself wraps (Instants are circular). Returns
-            /// `None` only when converting `other` into this Instant's base
-            /// overflows.
+            /// Returns `None` only if the time-base conversion fails. The subtraction itself
+            /// is wrapping, as [`Instant`]s are circular.
+            ///
+            /// The implementations of [`core::ops::Sub`] and [`core::ops::SubAssign`] are
+            /// implemented by `unwrap`-ing the value returned by this function.
             ///
             /// ```
             /// # use fugit::*;
             #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             ///
-            /// assert_eq!(i.checked_sub_duration(d).unwrap().as_ticks(), 0);
+            /// assert_eq!(i.convert_sub_duration(d).unwrap().as_ticks(), 0);
             /// ```
-            pub const fn checked_sub_duration<const O_NOM: u64, const O_DENOM: u64>(
+            ///
+            /// The subtraction itself is wrapping:
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
+            ///
+            #[doc = concat!("assert_eq!(i.convert_sub_duration(d).unwrap().as_ticks(), ", stringify!($i), "::MAX);")]
+            /// ```
+            ///
+            /// Overflow during [`Duration`] base conversion returns `None`:
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            /// // A duration whose conversion from the `1/500` base to the `1/1000` base
+            /// // will overflow.
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 500>::from_ticks(", stringify!($i),"::MAX / 2 + 1);")]
+            ///
+            /// assert_eq!(i.convert_sub_duration(d), None);
+            /// ```
+            pub const fn convert_sub_duration<const O_NOM: u64, const O_DENOM: u64>(
                 self,
                 other: Duration<$i, O_NOM, O_DENOM>,
             ) -> Option<Self> {
@@ -176,20 +202,45 @@ macro_rules! impl_instant_for_integer {
                 }
             }
 
-            /// Add a `Duration` to an `Instant`.
+            /// Try to convert `other` into the `Self::NOM / Self::DENOM` timebase, and
+            /// add it to this [`Instant`].
             ///
-            /// The tick addition itself wraps (Instants are circular). Returns
-            /// `None` only when converting `other` into this Instant's base
-            /// overflows.
+            /// Returns `None` only if the time-base conversion fails. The addition itself
+            /// is wrapping, as [`Instant`]s are circular.
+            ///
+            /// The implementations of [`core::ops::Add`] and [`core::ops::AddAssign`] are
+            /// implemented by `unwrap`-ing the value returned by this function.
             ///
             /// ```
             /// # use fugit::*;
             #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             ///
-            /// assert_eq!(i.checked_add_duration(d).unwrap().as_ticks(), 2);
+            /// assert_eq!(i.convert_add_duration(d).unwrap().as_ticks(), 2);
             /// ```
-            pub const fn checked_add_duration<const O_NOM: u64, const O_DENOM: u64>(
+            ///
+            /// The addition itself is wrapping:
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 1_000>::from_ticks(", stringify!($i), "::MAX);")]
+            ///
+            /// assert_eq!(i.convert_add_duration(d).unwrap().as_ticks(), 0);
+            /// ```
+            ///
+            /// Overflow during [`Duration`] base conversion returns `None`:
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let i = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
+            /// // A duration whose conversion from the `1/500` base to the `1/1000` base
+            /// // will overflow.
+            #[doc = concat!("let d = Duration::<", stringify!($i), ", 1, 500>::from_ticks(", stringify!($i),"::MAX / 2 + 1);")]
+            ///
+            /// assert_eq!(i.convert_add_duration(d), None);
+            /// ```
+            pub const fn convert_add_duration<const O_NOM: u64, const O_DENOM: u64>(
                 self,
                 other: Duration<$i, O_NOM, O_DENOM>,
             ) -> Option<Self> {
@@ -265,7 +316,7 @@ macro_rules! impl_instant_for_integer {
         // Instant - Duration = Instant
         // We have limited this to use same numerator and denominator in both left and right hand sides,
         // this allows for the extension traits to work. For usage with different fraction, use
-        // `checked_sub_duration`.
+        // [`Self::convert_sub_duration`].
         impl<const NOM: u64, const DENOM: u64> ops::Sub<Duration<$i, NOM, DENOM>>
             for Instant<$i, NOM, DENOM>
         {
@@ -274,7 +325,7 @@ macro_rules! impl_instant_for_integer {
             #[inline]
             #[track_caller]
             fn sub(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
-                if let Some(v) = self.checked_sub_duration(other) {
+                if let Some(v) = self.convert_sub_duration(other) {
                     v
                 } else {
                     panic!("Sub failed! Overflow");
@@ -285,7 +336,7 @@ macro_rules! impl_instant_for_integer {
         // Instant -= Duration
         // We have limited this to use same numerator and denominator in both left and right hand sides,
         // this allows for the extension traits to work. For usage with different fraction, use
-        // `checked_sub_duration`.
+        // [`Self::convert_sub_duration`].
         impl<const NOM: u64, const DENOM: u64> ops::SubAssign<Duration<$i, NOM, DENOM>>
             for Instant<$i, NOM, DENOM>
         {
@@ -299,7 +350,7 @@ macro_rules! impl_instant_for_integer {
         // Instant + Duration = Instant
         // We have limited this to use same numerator and denominator in both left and right hand sides,
         // this allows for the extension traits to work. For usage with different fraction, use
-        // `checked_add_duration`.
+        // [`Self::convert_add_duration`].
         impl<const NOM: u64, const DENOM: u64> ops::Add<Duration<$i, NOM, DENOM>>
             for Instant<$i, NOM, DENOM>
         {
@@ -308,7 +359,7 @@ macro_rules! impl_instant_for_integer {
             #[inline]
             #[track_caller]
             fn add(self, other: Duration<$i, NOM, DENOM>) -> Self::Output {
-                if let Some(v) = self.checked_add_duration(other) {
+                if let Some(v) = self.convert_add_duration(other) {
                     v
                 } else {
                     panic!("Add failed! Overflow");
@@ -319,7 +370,7 @@ macro_rules! impl_instant_for_integer {
         // Instant += Duration
         // We have limited this to use same numerator and denominator in both left and right hand sides,
         // this allows for the extension traits to work. For usage with different fraction, use
-        // `checked_add_duration`.
+        // [`Self::convert_add_duration`].
         impl<const NOM: u64, const DENOM: u64> ops::AddAssign<Duration<$i, NOM, DENOM>>
             for Instant<$i, NOM, DENOM>
         {
@@ -383,7 +434,7 @@ impl_instant_for_integer!(u64);
 // Instant - Duration = Instant
 // We have limited this to use same numerator and denominator in both left and right hand sides,
 // this allows for the extension traits to work. For usage with different fraction, use
-// `checked_sub_duration`.
+// [`Self::convert_sub_duration`].
 impl<const NOM: u64, const DENOM: u64> ops::Sub<Duration<u32, NOM, DENOM>>
     for Instant<u64, NOM, DENOM>
 {
@@ -392,7 +443,7 @@ impl<const NOM: u64, const DENOM: u64> ops::Sub<Duration<u32, NOM, DENOM>>
     #[inline]
     #[track_caller]
     fn sub(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
-        if let Some(v) = self.checked_sub_duration(other.into()) {
+        if let Some(v) = self.convert_sub_duration(other.into()) {
             v
         } else {
             panic!("Sub failed! Overflow");
@@ -403,7 +454,7 @@ impl<const NOM: u64, const DENOM: u64> ops::Sub<Duration<u32, NOM, DENOM>>
 // Instant -= Duration
 // We have limited this to use same numerator and denominator in both left and right hand sides,
 // this allows for the extension traits to work. For usage with different fraction, use
-// `checked_sub_duration`.
+// [`Self::convert_sub_duration`].
 impl<const NOM: u64, const DENOM: u64> ops::SubAssign<Duration<u32, NOM, DENOM>>
     for Instant<u64, NOM, DENOM>
 {
@@ -417,7 +468,7 @@ impl<const NOM: u64, const DENOM: u64> ops::SubAssign<Duration<u32, NOM, DENOM>>
 // Instant + Duration = Instant
 // We have limited this to use same numerator and denominator in both left and right hand sides,
 // this allows for the extension traits to work. For usage with different fraction, use
-// `checked_add_duration`.
+// [`Self::convert_add_duration`].
 impl<const NOM: u64, const DENOM: u64> ops::Add<Duration<u32, NOM, DENOM>>
     for Instant<u64, NOM, DENOM>
 {
@@ -426,7 +477,7 @@ impl<const NOM: u64, const DENOM: u64> ops::Add<Duration<u32, NOM, DENOM>>
     #[inline]
     #[track_caller]
     fn add(self, other: Duration<u32, NOM, DENOM>) -> Self::Output {
-        if let Some(v) = self.checked_add_duration(other.into()) {
+        if let Some(v) = self.convert_add_duration(other.into()) {
             v
         } else {
             panic!("Add failed! Overflow");
@@ -437,7 +488,7 @@ impl<const NOM: u64, const DENOM: u64> ops::Add<Duration<u32, NOM, DENOM>>
 // Instant += Duration
 // We have limited this to use same numerator and denominator in both left and right hand sides,
 // this allows for the extension traits to work. For usage with different fraction, use
-// `checked_add_duration`.
+// [`Self::convert_add_duration`].
 impl<const NOM: u64, const DENOM: u64> ops::AddAssign<Duration<u32, NOM, DENOM>>
     for Instant<u64, NOM, DENOM>
 {
