@@ -47,42 +47,54 @@ macro_rules! impl_instant_for_integer {
                 self.ticks
             }
 
-            /// Const comparison of `Instant`s.
+            /// Const partial comparison of `Instant`s.
             ///
             /// ```
             /// # use fugit::*;
             #[doc = concat!("let i1 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             #[doc = concat!("let i2 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(2);")]
             ///
-            /// assert_eq!(i1.const_cmp(i2), core::cmp::Ordering::Less);
+            /// assert_eq!(i1.const_partial_cmp(i2), Some(core::cmp::Ordering::Less));
             /// ```
             ///
-            /// This function takes into account that ticks might wrap around. If the absolute
-            /// values of `self` and `other` differ by more than half the possible range, it is
-            /// assumed that an overflow occured and the result is reversed:
+            /// This function takes into account that ticks might wrap around: `self - other` is
+            /// read as a signed offset, so an `Instant` just past the wrap point comes after one
+            /// just before it:
             ///
             /// ```
             /// # use fugit::*;
             #[doc = concat!("let i1 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(", stringify!($i),"::MAX);")]
             #[doc = concat!("let i2 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1);")]
             ///
-            /// assert_eq!(i1.const_cmp(i2), core::cmp::Ordering::Less);
+            /// assert_eq!(i1.const_partial_cmp(i2), Some(core::cmp::Ordering::Less));
+            /// ```
+            ///
+            /// Returns `None` when the two are exactly half the tick range apart. There
+            /// `self - other` and `other - self` are the same value, so neither can be said to
+            /// come first:
+            ///
+            /// ```
+            /// # use fugit::*;
+            #[doc = concat!("let i1 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(0);")]
+            #[doc = concat!("let i2 = Instant::<", stringify!($i), ", 1, 1_000>::from_ticks(1 << (", stringify!($i), "::BITS - 1));")]
+            ///
+            /// assert_eq!(i1.const_partial_cmp(i2), None);
             /// ```
             #[inline]
-            pub const fn const_cmp(self, other: Self) -> Ordering {
-                if self.ticks == other.ticks {
-                    Ordering::Equal
-                } else {
-                    let v = self.ticks.wrapping_sub(other.ticks);
+            pub const fn const_partial_cmp(self, other: Self) -> Option<Ordering> {
+                const HALF: $i = <$i>::MAX / 2 + 1;
 
-                    // not using `v.cmp(<$i>::MAX / 2).reverse()` due to `cmp` being non-const
-                    if v > <$i>::MAX / 2 {
-                        Ordering::Less
-                    } else if v < <$i>::MAX / 2 {
-                        Ordering::Greater
-                    } else {
-                        Ordering::Equal
-                    }
+                let v = self.ticks.wrapping_sub(other.ticks);
+
+                // not using `cmp` due to it being non-const
+                if v == 0 {
+                    Some(Ordering::Equal)
+                } else if v < HALF {
+                    Some(Ordering::Greater)
+                } else if v > HALF {
+                    Some(Ordering::Less)
+                } else {
+                    None
                 }
             }
 
@@ -103,10 +115,9 @@ macro_rules! impl_instant_for_integer {
 
             /// Duration between `Instant`s.
             ///
-            /// Returns `None` if `self` is before `other` under the wrap-aware
-            /// ordering used by [`const_cmp`](Self::const_cmp): if `self` and
-            /// `other` differ by more than half the tick range, the result is
-            /// reversed.
+            /// Returns `None` if `self` is before `other`, or if the two cannot be
+            /// ordered at all, under the wrap-aware ordering used by
+            /// [`const_partial_cmp`](Self::const_partial_cmp).
             ///
             /// ```
             /// # use fugit::*;
@@ -121,13 +132,13 @@ macro_rules! impl_instant_for_integer {
                 self,
                 other: Self,
             ) -> Option<Duration<$i, NOM, DENOM>> {
-                match self.const_cmp(other) {
-                    Ordering::Greater | Ordering::Equal => {
+                match self.const_partial_cmp(other) {
+                    Some(Ordering::Greater) | Some(Ordering::Equal) => {
                         Some(Duration::<$i, NOM, DENOM>::from_ticks(
                             self.ticks.wrapping_sub(other.ticks),
                         ))
                     }
-                    Ordering::Less => None,
+                    Some(Ordering::Less) | None => None,
                 }
             }
 
@@ -252,7 +263,6 @@ macro_rules! impl_instant_for_integer {
             }
         }
 
-        #[allow(clippy::non_canonical_partial_ord_impl)]
         impl<const NOM: u64, const DENOM: u64> PartialOrd for Instant<$i, NOM, DENOM> {
             /// This implementation deviates from the definition of
             /// [PartialOrd::partial_cmp](core::cmp::PartialOrd::partial_cmp):
@@ -262,24 +272,15 @@ macro_rules! impl_instant_for_integer {
             /// assumed that an overflow occured and the result is reversed.
             ///
             /// That breaks the transitivity invariant: a < b and b < c no longer implies a < c.
+            /// [`Ord`](core::cmp::Ord) is for that reason deliberately not implemented, as its
+            /// users - `BTreeMap`, `sort`, `max` - need a transitive total order and silently
+            /// misbehave without one.
+            ///
+            /// Instants exactly half the tick range apart are incomparable, see
+            /// [`const_partial_cmp`](Instant::const_partial_cmp).
             #[inline]
             fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-                Some(self.const_cmp(*other))
-            }
-        }
-
-        impl<const NOM: u64, const DENOM: u64> Ord for Instant<$i, NOM, DENOM> {
-            /// This implementation deviates from the definition of
-            /// [Ord::cmp](core::cmp::Ord::cmp):
-            ///
-            /// It takes into account that ticks might wrap around. If the absolute
-            /// values of `self` and `other` differ by more than half the possible range, it is
-            /// assumed that an overflow occured and the result is reversed.
-            ///
-            /// That breaks the transitivity invariant: a < b and b < c no longer implies a < c.
-            #[inline]
-            fn cmp(&self, other: &Self) -> Ordering {
-                self.const_cmp(*other)
+                self.const_partial_cmp(*other)
             }
         }
 
