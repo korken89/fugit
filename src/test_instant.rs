@@ -109,6 +109,30 @@ fn instant_compare_u64() {
 }
 
 #[test]
+fn instant_compare_is_not_transitive_u32() {
+    // The wrapping compare is not transitive, which is why `Instant` is deliberately not
+    // `Ord`: `BTreeMap`, `sort` and friends silently misbehave on such an ordering.
+    let a = Instant::<u32, 1, 1_000>::from_ticks(0);
+    let b = Instant::<u32, 1, 1_000>::from_ticks(0x6000_0000);
+    let c = Instant::<u32, 1, 1_000>::from_ticks(0xC000_0000);
+
+    assert!(a < b);
+    assert!(b < c);
+    assert!(a > c);
+}
+
+#[test]
+fn instant_compare_is_not_transitive_u64() {
+    let a = Instant::<u64, 1, 1_000>::from_ticks(0);
+    let b = Instant::<u64, 1, 1_000>::from_ticks(0x6000_0000_0000_0000);
+    let c = Instant::<u64, 1, 1_000>::from_ticks(0xC000_0000_0000_0000);
+
+    assert!(a < b);
+    assert!(b < c);
+    assert!(a > c);
+}
+
+#[test]
 fn instant_duration_math_u32() {
     use crate::ExtU32;
 
