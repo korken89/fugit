@@ -10,9 +10,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 - Issue #84: `Instant` comparison no longer reports `Equal` for instants that are not equal.
+- Cross-base operations on `u32` storage truncated their `u64` conversion constants, panicking with
+  a divide-by-zero or returning silently wrong results.
 
 ### Breaking Changes
 
+- **BREAKING**: Operations between time bases differing by more than the storage type's maximum are
+  now a compile-time error. Only `u32` storage with a base ratio above `u32::MAX` is affected.
 - **BREAKING**: Issue #83: `Instant` is no longer `Ord`, the wrapping compare is not transitive.
   `PartialOrd` is kept, so `<`, `>`, `<=` and `>=` are unaffected.
 - **BREAKING**: Issue #84: `Instant::const_cmp` is replaced by `const_partial_cmp`, which returns

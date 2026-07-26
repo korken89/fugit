@@ -230,6 +230,33 @@ fn instant_compare_is_not_transitive_u64() {
 }
 
 #[test]
+fn instant_largest_fitting_conversion_constants_u32() {
+    // The conversion constants are `u64` and get cast to the storage type, so bases whose
+    // ratio exceeds it are rejected at compile time. Right below that boundary the
+    // conversion must still work: a ratio of exactly `u32::MAX` is the largest legal one.
+    const MAX_RATIO: u64 = u32::MAX as u64;
+
+    let i = Instant::<u32, 1, 1>::from_ticks(1);
+    let d = Duration::<u32, 1, MAX_RATIO>::from_ticks(MAX_RATIO as u32);
+
+    // MAX_RATIO ticks of 1/MAX_RATIO s is exactly one second.
+    assert_eq!(
+        i.convert_add_duration(d),
+        Some(Instant::<u32, 1, 1>::from_ticks(2))
+    );
+    assert_eq!(
+        i.convert_sub_duration(d),
+        Some(Instant::<u32, 1, 1>::from_ticks(0))
+    );
+
+    // Sub-second remainders truncate toward zero rather than trapping.
+    assert_eq!(
+        i.convert_add_duration(Duration::<u32, 1, MAX_RATIO>::from_ticks(1)),
+        Some(Instant::<u32, 1, 1>::from_ticks(1))
+    );
+}
+
+#[test]
 fn instant_duration_math_u32() {
     use crate::ExtU32;
 

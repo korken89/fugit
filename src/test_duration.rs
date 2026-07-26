@@ -8,6 +8,42 @@ use crate::Instant;
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
+fn duration_largest_fitting_conversion_constants_u32() {
+    // See `instant_largest_fitting_conversion_constants_u32`: a base ratio above the
+    // storage type is a compile-time error, so pin that the largest legal one works.
+    const MAX_RATIO: u64 = u32::MAX as u64;
+
+    let d = Duration::<u32, 1, 1>::from_ticks(1);
+    let one_second = Duration::<u32, 1, MAX_RATIO>::from_ticks(MAX_RATIO as u32);
+    let tiny = Duration::<u32, 1, MAX_RATIO>::from_ticks(1);
+
+    assert_eq!(
+        d.checked_add(one_second),
+        Some(Duration::<u32, 1, 1>::from_ticks(2))
+    );
+    assert_eq!(
+        d.checked_sub(one_second),
+        Some(Duration::<u32, 1, 1>::from_ticks(0))
+    );
+    assert_eq!(
+        d.checked_rem(one_second),
+        Some(Duration::<u32, 1, 1>::from_ticks(0))
+    );
+
+    // A sub-second operand converts to zero ticks, so a remainder by it is undefined.
+    assert_eq!(d.checked_rem(tiny), None);
+
+    // Comparison across the two bases has to respect the bases, not the raw ticks.
+    assert_eq!(
+        d.const_partial_cmp(tiny),
+        Some(core::cmp::Ordering::Greater)
+    );
+    assert!(d > tiny);
+    assert!(!d.const_eq(tiny));
+    assert!(d.const_eq(one_second));
+}
+
+#[test]
 fn large_duration_converstion() {
     use crate::ExtU64;
 
