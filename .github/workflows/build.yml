@@ -83,6 +83,9 @@ jobs:
       - name: Run tests
         run: cargo test --all-features
 
+      - name: Run tests (release)
+        run: cargo test --all-features --release
+
       - name: Run doc tests
         run: cargo test --doc
 

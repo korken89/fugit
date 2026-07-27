@@ -40,6 +40,25 @@
 //!     //                (Cortex-M3+) to perform the comparison.
 //! }
 //! ```
+//!
+//! # Two kinds of instant
+//!
+//! [`Instant`] takes a [`kind`] as its last type parameter, because the two
+//! readings of a timestamp need different operations to be correct.
+//!
+//! Pick [`Wrapping`](kind::Wrapping) for a raw hardware counter. Ticks wrap, and comparison is
+//! wrap-aware, which is only meaningful within half the tick range and is not transitive, so
+//! there is no [`Ord`].
+//!
+//! Pick [`Monotonic`](kind::Monotonic) for a timeline that does not wrap, such as a counter
+//! extended to 64 bits in software. Comparison is a plain integer compare, so it is [`Ord`].
+//!
+//! Nothing checks the claim that a monotonic timeline does not wrap: [`Instant::from_ticks`]
+//! takes any value, so a counter that wrapped before the value arrived is invisible here and
+//! [`Ord`] will simply place the instant in the past. The producer owns that guarantee.
+//!
+//! Use the aliases rather than naming a marker: [`WrappingTimerInstantU32`],
+//! [`MonotonicTimerInstantU64`] and friends.
 
 #![cfg_attr(not(test), no_std)]
 #![deny(missing_docs)]
@@ -48,6 +67,7 @@ mod aliases;
 mod duration;
 mod helpers;
 mod instant;
+pub mod kind;
 mod rate;
 
 pub use aliases::*;

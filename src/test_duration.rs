@@ -1,5 +1,5 @@
 use crate::Duration;
-use crate::Instant;
+use crate::WrappingInstant;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -91,35 +91,43 @@ fn duration_compare_u32() {
 
     // From instants
     assert!(
-        Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u32, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u32, 1, 1_000>::from_ticks(5)
             > Duration::<u32, 1, 1_000>::from_ticks(4)
     );
     assert!(
-        Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u32, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u32, 1, 1_000>::from_ticks(5)
             >= Duration::<u32, 1, 1_000>::from_ticks(4)
     );
     assert!(
-        Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u32, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u32, 1, 1_000>::from_ticks(5)
             >= Duration::<u32, 1, 1_000>::from_ticks(5)
     );
     assert!(
-        Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u32, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u32, 1, 1_000>::from_ticks(5)
             < Duration::<u32, 1, 1_000>::from_ticks(6)
     );
     assert!(
-        Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u32, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u32, 1, 1_000>::from_ticks(5)
             <= Duration::<u32, 1, 1_000>::from_ticks(6)
     );
     assert!(
-        Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u32, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u32, 1, 1_000>::from_ticks(5)
             <= Duration::<u32, 1, 1_000>::from_ticks(5)
     );
     assert!(
-        Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u32, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u32, 1, 1_000>::from_ticks(5)
             == Duration::<u32, 1, 1_000>::from_ticks(5)
     );
     assert!(
-        Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u32, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u32, 1, 1_000>::from_ticks(5)
             != Duration::<u32, 1, 1_000>::from_ticks(4)
     );
 }
@@ -148,35 +156,43 @@ fn duration_compare_u64() {
 
     // From instants
     assert!(
-        Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u64, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u64, 1, 1_000>::from_ticks(5)
             > Duration::<u64, 1, 1_000>::from_ticks(4)
     );
     assert!(
-        Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u64, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u64, 1, 1_000>::from_ticks(5)
             >= Duration::<u64, 1, 1_000>::from_ticks(4)
     );
     assert!(
-        Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u64, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u64, 1, 1_000>::from_ticks(5)
             >= Duration::<u64, 1, 1_000>::from_ticks(5)
     );
     assert!(
-        Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u64, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u64, 1, 1_000>::from_ticks(5)
             < Duration::<u64, 1, 1_000>::from_ticks(6)
     );
     assert!(
-        Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u64, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u64, 1, 1_000>::from_ticks(5)
             <= Duration::<u64, 1, 1_000>::from_ticks(6)
     );
     assert!(
-        Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u64, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u64, 1, 1_000>::from_ticks(5)
             <= Duration::<u64, 1, 1_000>::from_ticks(5)
     );
     assert!(
-        Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u64, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u64, 1, 1_000>::from_ticks(5)
             == Duration::<u64, 1, 1_000>::from_ticks(5)
     );
     assert!(
-        Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u64, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u64, 1, 1_000>::from_ticks(5)
             != Duration::<u64, 1, 1_000>::from_ticks(4)
     );
 }
@@ -205,35 +221,43 @@ fn duration_compare_u64_u32() {
 
     // From instants
     assert!(
-        Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u64, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u64, 1, 1_000>::from_ticks(5)
             > Duration::<u32, 1, 1_000>::from_ticks(4)
     );
     assert!(
-        Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u64, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u64, 1, 1_000>::from_ticks(5)
             >= Duration::<u32, 1, 1_000>::from_ticks(4)
     );
     assert!(
-        Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u64, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u64, 1, 1_000>::from_ticks(5)
             >= Duration::<u32, 1, 1_000>::from_ticks(5)
     );
     assert!(
-        Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u64, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u64, 1, 1_000>::from_ticks(5)
             < Duration::<u32, 1, 1_000>::from_ticks(6)
     );
     assert!(
-        Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u64, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u64, 1, 1_000>::from_ticks(5)
             <= Duration::<u32, 1, 1_000>::from_ticks(6)
     );
     assert!(
-        Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u64, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u64, 1, 1_000>::from_ticks(5)
             <= Duration::<u32, 1, 1_000>::from_ticks(5)
     );
     assert!(
-        Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u64, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u64, 1, 1_000>::from_ticks(5)
             == Duration::<u32, 1, 1_000>::from_ticks(5)
     );
     assert!(
-        Instant::<u64, 1, 1_000>::from_ticks(10) - Instant::<u64, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u64, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u64, 1, 1_000>::from_ticks(5)
             != Duration::<u32, 1, 1_000>::from_ticks(4)
     );
 }
@@ -262,35 +286,43 @@ fn duration_compare_u32_u64() {
 
     // From instants
     assert!(
-        Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u32, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u32, 1, 1_000>::from_ticks(5)
             > Duration::<u64, 1, 1_000>::from_ticks(4)
     );
     assert!(
-        Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u32, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u32, 1, 1_000>::from_ticks(5)
             >= Duration::<u64, 1, 1_000>::from_ticks(4)
     );
     assert!(
-        Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u32, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u32, 1, 1_000>::from_ticks(5)
             >= Duration::<u64, 1, 1_000>::from_ticks(5)
     );
     assert!(
-        Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u32, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u32, 1, 1_000>::from_ticks(5)
             < Duration::<u64, 1, 1_000>::from_ticks(6)
     );
     assert!(
-        Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u32, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u32, 1, 1_000>::from_ticks(5)
             <= Duration::<u64, 1, 1_000>::from_ticks(6)
     );
     assert!(
-        Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u32, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u32, 1, 1_000>::from_ticks(5)
             <= Duration::<u64, 1, 1_000>::from_ticks(5)
     );
     assert!(
-        Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u32, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u32, 1, 1_000>::from_ticks(5)
             == Duration::<u64, 1, 1_000>::from_ticks(5)
     );
     assert!(
-        Instant::<u32, 1, 1_000>::from_ticks(10) - Instant::<u32, 1, 1_000>::from_ticks(5)
+        WrappingInstant::<u32, 1, 1_000>::from_ticks(10)
+            - WrappingInstant::<u32, 1, 1_000>::from_ticks(5)
             != Duration::<u64, 1, 1_000>::from_ticks(4)
     );
 }
