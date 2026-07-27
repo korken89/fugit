@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The `Monotonic` instant kind (together with the old `Wrapping` kind), for timelines that do not
+  wrap. Before, the `Instant` started to get methods that were related to `Monotonic` instants -
+  this is now split.
+- `MonotonicInstant`, `MonotonicTimerInstant`, `MonotonicTimerInstantU32` and
+  `MonotonicTimerInstantU64` aliases.
+- `Instant::is_before` and `Instant::is_after`, wrap-aware on `Wrapping`, a plain tick compare on
+  `Monotonic`.
+- `Instant` now implements `Hash`.
+- `Instant`'s `Debug` output names the kind: `WrappingInstant { ticks: 7 }`.
+
 ### Fixed
 
 - Issue #84: `Instant` comparison no longer reports `Equal` for instants that are not equal.
@@ -17,11 +29,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - **BREAKING**: Operations between time bases differing by more than the storage type's maximum are
   now a compile-time error. Only `u32` storage with a base ratio above `u32::MAX` is affected.
-- **BREAKING**: Issue #83: `Instant` is no longer `Ord`, the wrapping compare is not transitive.
-  `PartialOrd` is kept, so `<`, `>`, `<=` and `>=` are unaffected.
-- **BREAKING**: Issue #84: `Instant::const_cmp` is replaced by `const_partial_cmp`, which returns
-  `None` for instants exactly half the tick range apart.
-- **BREAKING**: Rename `checked_sub_duration` to `convert_sub_duration` and `checked_add_duration` to `convert_add_duration` with improved docs.
+- **BREAKING**: Issue #83: wrapping instants are no longer `Ord`, that compare is not transitive.
+  `PartialOrd` is kept, so `<`, `>`, `<=` and `>=` are unaffected. Monotonic instants are `Ord`.
+- **BREAKING**: Issue #84: on wrapping instants `const_cmp` is replaced by `const_partial_cmp`,
+  which returns `None` for instants exactly half the tick range apart. Monotonic instants keep
+  `const_cmp`, where a total order makes it sound.
+- **BREAKING**: Rename `checked_sub_duration` to `convert_sub_duration` and `checked_add_duration`
+  to `convert_add_duration` with improved docs.
+- **BREAKING**: `Instant` takes a fourth type parameter naming its timeline kind.
+  `Instant<u32, 1, 1_000>` becomes `WrappingInstant<u32, 1, 1_000>`, or `Instant<u32, 1, 1_000, kind::Wrapping>`.
+- **BREAKING**: The `TimerInstant`, `TimerInstantU32` and `TimerInstantU64` aliases are replaced by
+  `WrappingTimerInstant`, `WrappingTimerInstantU32` and `WrappingTimerInstantU64`.
+- **BREAKING**: `duration_since_epoch` is removed from wrapping instants, where a fixed epoch is
+  meaningless. Use `Duration::from_ticks(i.as_ticks())` for the old ticks-to-`Duration` shorthand.
 
 ## [v0.4.0] - 2026-05-06
 

@@ -1,5 +1,6 @@
 //! Type aliases for common uses
 
+use crate::kind::{Monotonic, Wrapping};
 use crate::Duration;
 use crate::Instant;
 use crate::Rate;
@@ -78,14 +79,35 @@ pub type TimerDurationU64<const FREQ_HZ: u64> = Duration<u64, 1, FREQ_HZ>;
 
 // -------------------------------
 
-/// Alias for instants that come from timers with a specific frequency
-pub type TimerInstant<T, const FREQ_HZ: u64> = Instant<T, 1, FREQ_HZ>;
+/// Alias for instants on a monotonic timeline
+pub type MonotonicInstant<T, const NOM: u64, const DENOM: u64> = Instant<T, NOM, DENOM, Monotonic>;
 
-/// Alias for instants that come from timers with a specific frequency (`u32` backing storage)
-pub type TimerInstantU32<const FREQ_HZ: u64> = Instant<u32, 1, FREQ_HZ>;
+/// Alias for monotonic instants that come from timers with a specific frequency
+pub type MonotonicTimerInstant<T, const FREQ_HZ: u64> = Instant<T, 1, FREQ_HZ, Monotonic>;
 
-/// Alias for instants that come from timers with a specific frequency (`u64` backing storage)
-pub type TimerInstantU64<const FREQ_HZ: u64> = Instant<u64, 1, FREQ_HZ>;
+/// Alias for monotonic instants that come from timers with a specific frequency (`u32` backing
+/// storage)
+pub type MonotonicTimerInstantU32<const FREQ_HZ: u64> = Instant<u32, 1, FREQ_HZ, Monotonic>;
+
+/// Alias for monotonic instants that come from timers with a specific frequency (`u64` backing
+/// storage)
+pub type MonotonicTimerInstantU64<const FREQ_HZ: u64> = Instant<u64, 1, FREQ_HZ, Monotonic>;
+
+// -------------------------------
+
+/// Alias for instants on a wrapping counter
+pub type WrappingInstant<T, const NOM: u64, const DENOM: u64> = Instant<T, NOM, DENOM, Wrapping>;
+
+/// Alias for wrapping instants that come from timers with a specific frequency
+pub type WrappingTimerInstant<T, const FREQ_HZ: u64> = Instant<T, 1, FREQ_HZ, Wrapping>;
+
+/// Alias for wrapping instants that come from timers with a specific frequency (`u32` backing
+/// storage)
+pub type WrappingTimerInstantU32<const FREQ_HZ: u64> = Instant<u32, 1, FREQ_HZ, Wrapping>;
+
+/// Alias for wrapping instants that come from timers with a specific frequency (`u64` backing
+/// storage)
+pub type WrappingTimerInstantU64<const FREQ_HZ: u64> = Instant<u64, 1, FREQ_HZ, Wrapping>;
 
 // -------------------------------
 
