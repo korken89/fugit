@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.5.0] - 2026-08-15
+
 ### Added
 
 - The `Monotonic` instant kind (together with the old `Wrapping` kind), for timelines that do not
@@ -182,7 +184,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Now supports a `defmt` version span (0.2 and 0.3 is supported)
 
-[Unreleased]: https://github.com/korken89/fugit/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/korken89/fugit/compare/v0.5.0...HEAD
+[v0.5.0]: https://github.com/korken89/fugit/compare/v0.4.0...v0.5.0
 [v0.4.0]: https://github.com/korken89/fugit/compare/v0.3.9...v0.4.0
 [v0.3.9]: https://github.com/korken89/fugit/compare/v0.3.8...v0.3.9
 [v0.3.8]: https://github.com/korken89/fugit/compare/v0.3.7...v0.3.8
