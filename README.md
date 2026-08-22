@@ -20,7 +20,7 @@ Conversion to and from `core::time::Duration` is also provided, so values can cr
 
 ## Two kinds of instant
 
-`Instant` names the kind of timeline it sits on, because a raw counter and an extended one need different operations to be correct. `WrappingInstant` wraps and compares wrap-aware, which is only meaningful within half the tick range, and it only implements `PartialOrd`. `MonotonicInstant` compares as a plain integer, and implements `Ord`.
+`Instant` names the kind of timeline it sits on, because a raw counter and an extended one need different operations to be correct. `WrappingInstant` wraps and compares wrap-aware, which is only meaningful within half the tick range so comparison goes through the `InstantOrd` trait or `is_before`/`is_after`. `MonotonicInstant` compares as a plain integer, and implements `Ord`.
 
 Nothing verifies that a monotonic timeline really does not wrap. `from_ticks` accepts any value, so feeding it a raw counter that has wrapped just produces an instant that is placed in the past. Use `WrappingInstant` for raw hardware counters and `MonotonicInstant` where the producer guarantees the monotonic timeline.
 
@@ -28,7 +28,7 @@ Nothing verifies that a monotonic timeline really does not wrap. `from_ticks` ac
 
 `Duration` and `Rate` gain no kind parameter.
 
-| v0.4                      | >=v0.5, wrapping                          | >=v0.5, monotonic                     |
+| v0.4                      | >v0.5, wrapping                           | >v0.5, monotonic                      |
 |---------------------------|-------------------------------------------|---------------------------------------|
 | `Instant<T, NOM, DENOM>`  | `WrappingInstant<T, NOM, DENOM>`          | `MonotonicInstant<T, NOM, DENOM>`     |
 | `TimerInstantU32<FREQ>`   | `WrappingTimerInstantU32<FREQ>`           | `MonotonicTimerInstantU32<FREQ>`      |
@@ -37,7 +37,7 @@ Nothing verifies that a monotonic timeline really does not wrap. `from_ticks` ac
 | `checked_sub_duration`    | `convert_sub_duration`                    | same name, now checking the ticks too |
 | `const_cmp` -> `Ordering` | `const_partial_cmp` -> `Option<Ordering>` | unchanged                             |
 | `duration_since_epoch`    | `Duration::from_ticks(i.as_ticks())`      | unchanged                             |
-| `Ord`                     | removed                                   | unchanged                             |
+| `Ord`, `PartialOrd`, `<`  | removed, use `InstantOrd` / `is_before`   | unchanged                             |
 
 Watch the `checked_*_duration` rows: the name still compiles on a monotonic instant but now fails on tick overflow as well as on the base conversion.
 

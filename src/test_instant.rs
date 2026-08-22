@@ -4,44 +4,41 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-use crate::{Duration, MonotonicInstant, WrappingInstant};
+use crate::{Duration, InstantOrd, MonotonicInstant, WrappingInstant};
 
 #[test]
 fn instant_compare_u32() {
     // Wrapping
     assert!(
         WrappingInstant::<u32, 1, 1_000>::from_ticks(1)
-            > WrappingInstant::<u32, 1, 1_000>::from_ticks(u32::MAX)
+            .is_after(WrappingInstant::<u32, 1, 1_000>::from_ticks(u32::MAX))
     );
-    assert!(
-        WrappingInstant::<u32, 1, 1_000>::from_ticks(u32::MAX - 1)
-            < WrappingInstant::<u32, 1, 1_000>::from_ticks(u32::MAX)
-    );
+    assert!(WrappingInstant::<u32, 1, 1_000>::from_ticks(u32::MAX - 1)
+        .is_before(WrappingInstant::<u32, 1, 1_000>::from_ticks(u32::MAX)));
 
     // Non-wrapping
     assert!(
         WrappingInstant::<u32, 1, 1_000>::from_ticks(2)
-            > WrappingInstant::<u32, 1, 1_000>::from_ticks(1)
+            .is_after(WrappingInstant::<u32, 1, 1_000>::from_ticks(1))
     );
     assert!(
         WrappingInstant::<u32, 1, 1_000>::from_ticks(2)
-            >= WrappingInstant::<u32, 1, 1_000>::from_ticks(1)
+            .is_at_least(WrappingInstant::<u32, 1, 1_000>::from_ticks(1))
     );
     assert!(
         WrappingInstant::<u32, 1, 1_000>::from_ticks(1)
-            >= WrappingInstant::<u32, 1, 1_000>::from_ticks(1)
+            .is_at_least(WrappingInstant::<u32, 1, 1_000>::from_ticks(1))
     );
     assert!(
         WrappingInstant::<u32, 1, 1_000>::from_ticks(1)
-            < WrappingInstant::<u32, 1, 1_000>::from_ticks(2)
+            .is_before(WrappingInstant::<u32, 1, 1_000>::from_ticks(2))
     );
     assert!(
-        WrappingInstant::<u32, 1, 1_000>::from_ticks(1)
-            <= WrappingInstant::<u32, 1, 1_000>::from_ticks(1)
-    );
-    assert!(
-        WrappingInstant::<u32, 1, 1_000>::from_ticks(1)
-            <= WrappingInstant::<u32, 1, 1_000>::from_ticks(2)
+        !WrappingInstant::<u32, 1, 1_000>::from_ticks(1).is_at_least(WrappingInstant::<
+            u32,
+            1,
+            1_000,
+        >::from_ticks(2))
     );
     assert!(
         WrappingInstant::<u32, 1, 1_000>::from_ticks(1)
@@ -86,37 +83,34 @@ fn instant_compare_u64() {
     // Wrapping
     assert!(
         WrappingInstant::<u64, 1, 1_000>::from_ticks(1)
-            > WrappingInstant::<u64, 1, 1_000>::from_ticks(u64::MAX)
+            .is_after(WrappingInstant::<u64, 1, 1_000>::from_ticks(u64::MAX))
     );
-    assert!(
-        WrappingInstant::<u64, 1, 1_000>::from_ticks(u64::MAX - 1)
-            < WrappingInstant::<u64, 1, 1_000>::from_ticks(u64::MAX)
-    );
+    assert!(WrappingInstant::<u64, 1, 1_000>::from_ticks(u64::MAX - 1)
+        .is_before(WrappingInstant::<u64, 1, 1_000>::from_ticks(u64::MAX)));
 
     // Non-wrapping
     assert!(
         WrappingInstant::<u64, 1, 1_000>::from_ticks(2)
-            > WrappingInstant::<u64, 1, 1_000>::from_ticks(1)
+            .is_after(WrappingInstant::<u64, 1, 1_000>::from_ticks(1))
     );
     assert!(
         WrappingInstant::<u64, 1, 1_000>::from_ticks(2)
-            >= WrappingInstant::<u64, 1, 1_000>::from_ticks(1)
+            .is_at_least(WrappingInstant::<u64, 1, 1_000>::from_ticks(1))
     );
     assert!(
         WrappingInstant::<u64, 1, 1_000>::from_ticks(1)
-            >= WrappingInstant::<u64, 1, 1_000>::from_ticks(1)
+            .is_at_least(WrappingInstant::<u64, 1, 1_000>::from_ticks(1))
     );
     assert!(
         WrappingInstant::<u64, 1, 1_000>::from_ticks(1)
-            < WrappingInstant::<u64, 1, 1_000>::from_ticks(2)
+            .is_before(WrappingInstant::<u64, 1, 1_000>::from_ticks(2))
     );
     assert!(
-        WrappingInstant::<u64, 1, 1_000>::from_ticks(1)
-            <= WrappingInstant::<u64, 1, 1_000>::from_ticks(1)
-    );
-    assert!(
-        WrappingInstant::<u64, 1, 1_000>::from_ticks(1)
-            <= WrappingInstant::<u64, 1, 1_000>::from_ticks(2)
+        !WrappingInstant::<u64, 1, 1_000>::from_ticks(1).is_at_least(WrappingInstant::<
+            u64,
+            1,
+            1_000,
+        >::from_ticks(2))
     );
     assert!(
         WrappingInstant::<u64, 1, 1_000>::from_ticks(1)
@@ -178,14 +172,18 @@ fn instant_compare_half_range_u32() {
     assert_eq!(one.const_partial_cmp(one_plus_half), None);
     assert_eq!(one_plus_half.const_partial_cmp(one), None);
     for holds in [
-        one < one_plus_half,
-        one > one_plus_half,
-        one <= one_plus_half,
-        one >= one_plus_half,
+        one.is_before(one_plus_half),
+        one.is_after(one_plus_half),
         one == one_plus_half,
     ] {
         assert!(!holds);
     }
+
+    // `InstantOrd` reports the same.
+    assert_eq!(one.compare(one_plus_half), None);
+    assert_eq!(one_plus_half.compare(one), None);
+    assert!(!one.is_at_least(one_plus_half));
+    assert!(!one_plus_half.is_at_least(one));
 
     // Just past half the range, the comparison flips.
     assert_eq!(half_plus_one.const_partial_cmp(zero), Some(Ordering::Less));
@@ -222,14 +220,17 @@ fn instant_compare_half_range_u64() {
     assert_eq!(one.const_partial_cmp(one_plus_half), None);
     assert_eq!(one_plus_half.const_partial_cmp(one), None);
     for holds in [
-        one < one_plus_half,
-        one > one_plus_half,
-        one <= one_plus_half,
-        one >= one_plus_half,
+        one.is_before(one_plus_half),
+        one.is_after(one_plus_half),
         one == one_plus_half,
     ] {
         assert!(!holds);
     }
+
+    assert_eq!(one.compare(one_plus_half), None);
+    assert_eq!(one_plus_half.compare(one), None);
+    assert!(!one.is_at_least(one_plus_half));
+    assert!(!one_plus_half.is_at_least(one));
 
     assert_eq!(half_plus_one.const_partial_cmp(zero), Some(Ordering::Less));
     assert_eq!(
@@ -281,15 +282,15 @@ fn instant_compare_duality_u32() {
 
 #[test]
 fn instant_compare_is_not_transitive_u32() {
-    // The wrapping compare is not transitive, which is why `Instant` is deliberately not
-    // `Ord`: `BTreeMap`, `sort` and friends silently misbehave on such an ordering.
+    // The wrapping compare is not transitive, which is why `Instant` implements neither
+    // `PartialOrd` nor `Ord`.
     let a = WrappingInstant::<u32, 1, 1_000>::from_ticks(0);
     let b = WrappingInstant::<u32, 1, 1_000>::from_ticks(0x6000_0000);
     let c = WrappingInstant::<u32, 1, 1_000>::from_ticks(0xC000_0000);
 
-    assert!(a < b);
-    assert!(b < c);
-    assert!(a > c);
+    assert!(a.is_before(b));
+    assert!(b.is_before(c));
+    assert!(a.is_after(c));
 }
 
 #[test]
@@ -298,9 +299,9 @@ fn instant_compare_is_not_transitive_u64() {
     let b = WrappingInstant::<u64, 1, 1_000>::from_ticks(0x6000_0000_0000_0000);
     let c = WrappingInstant::<u64, 1, 1_000>::from_ticks(0xC000_0000_0000_0000);
 
-    assert!(a < b);
-    assert!(b < c);
-    assert!(a > c);
+    assert!(a.is_before(b));
+    assert!(b.is_before(c));
+    assert!(a.is_after(c));
 }
 
 #[test]
@@ -531,7 +532,9 @@ fn instant_sub_incomparable_instant_panics_u64() {
 }
 
 #[test]
-fn instant_is_before_is_after_agree_with_operators_u32() {
+fn instant_is_before_is_after_agree_with_compare_u32() {
+    use core::cmp::Ordering;
+
     const HALF: u32 = 1 << 31;
 
     for (a, b) in [
@@ -560,20 +563,22 @@ fn instant_is_before_is_after_agree_with_operators_u32() {
             WrappingInstant::<u32, 1, 1_000>::from_ticks(u32::MAX),
         ),
     ] {
-        assert_eq!(a.is_before(b), a < b);
-        assert_eq!(a.is_after(b), a > b);
+        assert_eq!(a.is_before(b), a.compare(b) == Some(Ordering::Less));
+        assert_eq!(a.is_after(b), a.compare(b) == Some(Ordering::Greater));
     }
 
-    // Incomparable: neither predicate holds, matching `<` and `>`.
+    // Incomparable: neither predicate holds and `compare` is `None`.
     let a = WrappingInstant::<u32, 1, 1_000>::from_ticks(1);
     let b = WrappingInstant::<u32, 1, 1_000>::from_ticks(1 + HALF);
     assert!(!a.is_before(b) && !a.is_after(b));
     assert!(!b.is_before(a) && !b.is_after(a));
+    assert_eq!(a.compare(b), None);
+    assert_eq!(b.compare(a), None);
 }
 
 #[test]
 fn instant_is_before_is_after_are_const_u32() {
-    // The reason these exist: `<` and `>` cannot be used in a const context.
+    // The reason these exist: trait methods cannot be used in a const context.
     const I1: WrappingInstant<u32, 1, 1_000> = WrappingInstant::<u32, 1, 1_000>::from_ticks(1);
     const I2: WrappingInstant<u32, 1, 1_000> = WrappingInstant::<u32, 1, 1_000>::from_ticks(2);
 
@@ -1050,6 +1055,36 @@ fn monotonic_instant_duration_math_u64_u32() {
 // Across the kinds
 //
 ////////////////////////////////////////////////////////////////////////////////
+
+#[test]
+fn both_kinds_implement_instant_ord() {
+    use core::cmp::Ordering;
+
+    fn assert_instant_ord<T: InstantOrd>() {}
+
+    assert_instant_ord::<WrappingInstant<u32, 1, 1_000>>();
+    assert_instant_ord::<WrappingInstant<u64, 1, 1_000>>();
+    assert_instant_ord::<MonotonicInstant<u32, 1, 1_000>>();
+    assert_instant_ord::<MonotonicInstant<u64, 1, 1_000>>();
+
+    // The same ticks, ordered by each kind's own rules.
+    assert_eq!(
+        WrappingInstant::<u32, 1, 1_000>::from_ticks(u32::MAX).compare(WrappingInstant::<
+            u32,
+            1,
+            1_000,
+        >::from_ticks(1)),
+        Some(Ordering::Less)
+    );
+    assert_eq!(
+        MonotonicInstant::<u32, 1, 1_000>::from_ticks(u32::MAX).compare(MonotonicInstant::<
+            u32,
+            1,
+            1_000,
+        >::from_ticks(1)),
+        Some(Ordering::Greater)
+    );
+}
 
 #[test]
 fn debug_output_names_the_kind() {

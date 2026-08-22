@@ -48,7 +48,8 @@
 //!
 //! Pick [`Wrapping`](kind::Wrapping) for a raw hardware counter. Ticks wrap, and comparison is
 //! wrap-aware, which is only meaningful within half the tick range and is not transitive, so
-//! there is no [`Ord`].
+//! there is no [`PartialOrd`] or [`Ord`]; compare through [`InstantOrd`] or the inherent
+//! `is_before`/`is_after`.
 //!
 //! Pick [`Monotonic`](kind::Monotonic) for a timeline that does not wrap, such as a counter
 //! extended to 64 bits in software. Comparison is a plain integer compare, so it is [`Ord`].
@@ -72,7 +73,7 @@ mod rate;
 
 pub use aliases::*;
 pub use duration::{Duration, ExtU32, ExtU32Ceil, ExtU64, ExtU64Ceil};
-pub use instant::Instant;
+pub use instant::{Instant, InstantOrd};
 pub use rate::{ExtU32 as RateExtU32, ExtU64 as RateExtU64, Rate};
 
 #[cfg(test)]

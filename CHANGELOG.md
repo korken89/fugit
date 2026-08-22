@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `InstantOrd`: the comparison interface shared by both instant kinds.
+
+### Breaking Changes
+
+- **BREAKING**: Wrapping instants no longer implement `PartialOrd`.
+
 ## [v0.5.0] - 2026-08-15
 
 ### Added
