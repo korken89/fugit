@@ -41,6 +41,36 @@ impl<T: core::fmt::Debug, const NOM: u64, const DENOM: u64, K: Kind> core::fmt::
     }
 }
 
+/// Ordering between two instants on the same timeline.
+///
+/// The comparison interface shared by both instant kinds: a total order on
+/// [`Monotonic`](crate::kind::Monotonic) instants, wrap-aware on
+/// [`Wrapping`](crate::kind::Wrapping) instants. Bound on [`Ord`] instead where a total order
+/// is required.
+pub trait InstantOrd: Copy {
+    /// Compare two instants, `None` when they have no order.
+    fn compare(self, other: Self) -> Option<Ordering>;
+
+    /// Whether `self` comes before `other`, `false` if they have no order.
+    fn is_before(self, other: Self) -> bool {
+        matches!(self.compare(other), Some(Ordering::Less))
+    }
+
+    /// Whether `self` comes after `other`, `false` if they have no order.
+    fn is_after(self, other: Self) -> bool {
+        matches!(self.compare(other), Some(Ordering::Greater))
+    }
+
+    /// Whether `self` is at the same time as `other` or later (a >= b filler), `false` if
+    /// they have no order.
+    fn is_at_least(self, other: Self) -> bool {
+        matches!(
+            self.compare(other),
+            Some(Ordering::Equal) | Some(Ordering::Greater)
+        )
+    }
+}
+
 /// Construction, equality and formatting: everything whose behaviour does not depend on how
 /// the instant's timeline is read.
 macro_rules! impl_instant_shared {
@@ -127,7 +157,7 @@ macro_rules! impl_instant_shared {
 }
 
 /// Comparison and arithmetic for instants read as a circular counter: ticks wrap, and the
-/// ordering is wrap-aware and therefore only partial.
+/// wrap-aware ordering is exposed through [`InstantOrd`] and the inherent methods.
 macro_rules! impl_instant_wrapping {
     ($i:ty) => {
         impl<const NOM: u64, const DENOM: u64> Instant<$i, NOM, DENOM, Wrapping> {
@@ -185,7 +215,7 @@ macro_rules! impl_instant_wrapping {
             /// Whether this `Instant` comes before `other`.
             ///
             /// Wrap-aware, like [`const_partial_cmp`](Self::const_partial_cmp), and usable in
-            /// const contexts where `<` is not. Instants exactly half the tick range apart are
+            /// const contexts. Instants exactly half the tick range apart are
             /// incomparable, so this and [`is_after`](Self::is_after) are both `false` for them.
             ///
             /// ```
@@ -206,7 +236,7 @@ macro_rules! impl_instant_wrapping {
             /// Whether this `Instant` comes after `other`.
             ///
             /// Wrap-aware, like [`const_partial_cmp`](Self::const_partial_cmp), and usable in
-            /// const contexts where `>` is not. Instants exactly half the tick range apart are
+            /// const contexts. Instants exactly half the tick range apart are
             /// incomparable, so this and [`is_before`](Self::is_before) are both `false` for them.
             ///
             /// ```
@@ -386,26 +416,11 @@ macro_rules! impl_instant_wrapping {
             }
         }
 
-        impl<const NOM: u64, const DENOM: u64> PartialOrd for Instant<$i, NOM, DENOM, Wrapping> {
-            /// This implementation deviates from the definition of
-            /// [PartialOrd::partial_cmp](core::cmp::PartialOrd::partial_cmp):
-            ///
-            /// It takes into account that ticks might wrap around. If the absolute
-            /// values of `self` and `other` differ by more than half the possible range, it is
-            /// assumed that an overflow occured and the result is reversed.
-            ///
-            /// That breaks the transitivity invariant: a < b and b < c no longer implies a < c,
-            /// which is formally more than [`PartialOrd`] permits. The impl is kept as a
-            /// conscious exception so `<` and `>` remain usable, see [`Wrapping`](crate::kind::Wrapping).
-            /// [`Ord`](core::cmp::Ord) is for that reason deliberately not implemented, as its
-            /// users - `BTreeMap`, `sort`, `max` - need a transitive total order and silently
-            /// misbehave without one.
-            ///
-            /// Instants exactly half the tick range apart are incomparable, see
-            /// [`const_partial_cmp`](Instant::const_partial_cmp).
+        impl<const NOM: u64, const DENOM: u64> InstantOrd for Instant<$i, NOM, DENOM, Wrapping> {
+            /// Wrap-aware, see [`const_partial_cmp`](Instant::const_partial_cmp).
             #[inline]
-            fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-                self.const_partial_cmp(*other)
+            fn compare(self, other: Self) -> Option<Ordering> {
+                self.const_partial_cmp(other)
             }
         }
 
@@ -641,6 +656,14 @@ macro_rules! impl_instant_monotonic {
             #[inline]
             fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
                 Some(self.cmp(other))
+            }
+        }
+
+        impl<const NOM: u64, const DENOM: u64> InstantOrd for Instant<$i, NOM, DENOM, Monotonic> {
+            /// Always `Some`, the timeline is totally ordered.
+            #[inline]
+            fn compare(self, other: Self) -> Option<Ordering> {
+                Some(self.const_cmp(other))
             }
         }
 
