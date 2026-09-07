@@ -28,7 +28,7 @@ Nothing verifies that a monotonic timeline really does not wrap. `from_ticks` ac
 
 `Duration` and `Rate` gain no kind parameter.
 
-| v0.4                      | >v0.5, wrapping                           | >v0.5, monotonic                      |
+| v0.4                      | >=v0.6, wrapping                          | >=v0.6, monotonic                     |
 |---------------------------|-------------------------------------------|---------------------------------------|
 | `Instant<T, NOM, DENOM>`  | `WrappingInstant<T, NOM, DENOM>`          | `MonotonicInstant<T, NOM, DENOM>`     |
 | `TimerInstantU32<FREQ>`   | `WrappingTimerInstantU32<FREQ>`           | `MonotonicTimerInstantU32<FREQ>`      |

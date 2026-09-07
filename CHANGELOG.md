@@ -7,13 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.6.0] - 2026-09-07
+
 ### Added
 
-- `InstantOrd`: the comparison interface shared by both instant kinds.
+- `InstantOrd`: the comparison interface shared by both instant kinds, with `compare`,
+  `is_before`, `is_after` and `is_at_least`.
 
 ### Breaking Changes
 
-- **BREAKING**: Wrapping instants no longer implement `PartialOrd`.
+- **BREAKING**: Wrapping instants no longer implement `PartialOrd`. Use `InstantOrd` or the
+  inherent `is_before`/`is_after` instead of `<`, `>`, `<=` and `>=`.
 
 ## [v0.5.0] - 2026-08-15
 
@@ -192,7 +196,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Now supports a `defmt` version span (0.2 and 0.3 is supported)
 
-[Unreleased]: https://github.com/korken89/fugit/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/korken89/fugit/compare/v0.6.0...HEAD
+[v0.6.0]: https://github.com/korken89/fugit/compare/v0.5.0...v0.6.0
 [v0.5.0]: https://github.com/korken89/fugit/compare/v0.4.0...v0.5.0
 [v0.4.0]: https://github.com/korken89/fugit/compare/v0.3.9...v0.4.0
 [v0.3.9]: https://github.com/korken89/fugit/compare/v0.3.8...v0.3.9
